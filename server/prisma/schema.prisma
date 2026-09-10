@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum ContactSource {
+  WEB_HOUZEZ
+  MANUAL
+  WHATSAPP
+  EMAIL
+  PHONE
+  REFERRAL
+  OTHER
+}
+
+enum PropertyType {
+  PISO
+  CASA
+  CHALET
+  ATICO
+  LOCAL
+  OFICINA
+  GARAJE
+  TERRENO
+  OTRO
+}
+
+enum PropertyStatus {
+  DISPONIBLE
+  RESERVADO
+  VENDIDO
+  ALQUILADO
+  RETIRADO
+}
+
+enum ListingType {
+  VENTA
+  ALQUILER
+}
+
+enum ActivityType {
+  LLAMADA
+  EMAIL
+  WHATSAPP
+  VISITA
+  NOTA
+  TAREA
+}
+
+enum DealStatus {
+  ABIERTO
+  GANADO
+  PERDIDO
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(AGENT)
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  deals      Deal[]
+  activities Activity[]
+  properties Property[]
+}
+
+model Contact {
+  id            String        @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  source        ContactSource @default(MANUAL)
+  budgetMin     Int?
+  budgetMax     Int?
+  preferredZone String?
+  propertyType  PropertyType?
+  listingType   ListingType?
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  deals      Deal[]
+  activities Activity[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model Property {
+  id            String         @id @default(cuid())
+  reference     String         @unique
+  title         String
+  type          PropertyType
+  listingType   ListingType    @default(VENTA)
+  status        PropertyStatus @default(DISPONIBLE)
+  price         Int
+  city          String?
+  zone          String?
+  address       String?
+  bedrooms      Int?
+  bathrooms     Int?
+  areaM2        Int?
+  description   String?        @db.Text
+  houzezId      String?        @unique
+  agentId       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  agent      User?       @relation(fields: [agentId], references: [id])
+  deals      Deal[]
+  valuations Valuation[]
+
+  @@index([city])
+  @@index([status])
+}
+
+model PipelineStage {
+  id    String @id @default(cuid())
+  name  String @unique
+  order Int    @unique
+
+  deals Deal[]
+}
+
+model Deal {
+  id                String     @id @default(cuid())
+  contactId         String
+  propertyId        String?
+  stageId           String
+  agentId           String?
+  status            DealStatus @default(ABIERTO)
+  value             Int?
+  expectedCloseDate DateTime?
+  notes             String?    @db.Text
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  contact    Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  property   Property?     @relation(fields: [propertyId], references: [id])
+  stage      PipelineStage @relation(fields: [stageId], references: [id])
+  agent      User?         @relation(fields: [agentId], references: [id])
+  activities Activity[]
+
+  @@index([stageId])
+  @@index([contactId])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  type        ActivityType
+  description String       @db.Text
+  dueDate     DateTime?
+  completed   Boolean      @default(false)
+  contactId   String?
+  dealId      String?
+  agentId     String?
+  createdAt   DateTime     @default(now())
+
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  agent   User?    @relation(fields: [agentId], references: [id])
+
+  @@index([contactId])
+  @@index([dealId])
+  @@index([dueDate])
+}
+
+/// Registro de valoraciones (manuales o generadas por IA en una fase posterior)
+model Valuation {
+  id             String   @id @default(cuid())
+  propertyId     String?
+  source         String   @default("manual") // "manual" | "ai"
+  estimatedValue Int
+  inputData      Json?
+  factors        Json?
+  createdAt      DateTime @default(now())
+
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
