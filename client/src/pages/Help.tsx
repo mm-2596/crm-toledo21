@@ -77,7 +77,7 @@ export function Help() {
           steps={[
             "En la ficha de un contacto, pulsa \"Cualificar lead con IA\" para lanzar una mini-entrevista guiada: zona, operación, presupuesto, habitaciones y financiación.",
             "Al terminar, el CRM calcula automáticamente una prioridad (alta, media o baja) y la guarda en la ficha.",
-            "Úsalo con leads nuevos para decidir a quién llamar primero.",
+            "Si hay propiedades que encajan con lo que busca, aparecerán justo debajo como \"Propiedades recomendadas\" — igual que cuando un asesor le pasa opciones al momento.",
           ]}
         />
         <GuideCard
@@ -93,9 +93,9 @@ export function Help() {
           icon={Bot}
           title="Asistente IA"
           steps={[
-            "El botón flotante de abajo a la derecha abre un asistente al que puedes preguntarle en lenguaje natural.",
-            'Prueba: "tareas", "buscar Ana", "propiedades en Toledo" o "resumen".',
-            "Consulta datos reales del CRM al momento, sin cambiar de pantalla.",
+            "El botón flotante de abajo a la derecha abre un asistente al que puedes escribirle instrucciones sencillas.",
+            'Consultar: "tareas", "citas de hoy", "buscar Ana", "propiedades en Toledo" o "resumen".',
+            'Crear sin cambiar de pantalla: "crear contacto Laura Díaz 622333444" o "nueva tarea Llamar para visita para Ana mañana".',
           ]}
         />
       </div>

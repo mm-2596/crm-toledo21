@@ -26,6 +26,7 @@ export const ContactsApi = {
   update: (id: string, data: Partial<Contact>) =>
     api.put<Contact>(`/contacts/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/contacts/${id}`),
+  matches: (id: string) => api.get<Property[]>(`/contacts/${id}/matches`).then((r) => r.data),
 };
 
 export const PropertiesApi = {

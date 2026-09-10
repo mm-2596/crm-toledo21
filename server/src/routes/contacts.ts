@@ -62,6 +62,47 @@ contactsRouter.get(
   }),
 );
 
+/**
+ * Sugerencia de propiedades para un lead ya cualificado (matching por reglas:
+ * mismo tipo de operacion/inmueble, zona, presupuesto y habitaciones minimas).
+ * Es la funcion que en la demo de Inmovilla aparece como "te paso 3 opciones"
+ * justo despues de cualificar un lead.
+ */
+contactsRouter.get(
+  "/:id/matches",
+  asyncHandler(async (req, res) => {
+    const contact = await prisma.contact.findUnique({ where: { id: String(req.params.id) } });
+    if (!contact) return res.status(404).json({ error: "Contacto no encontrado" });
+
+    if (!contact.propertyType && !contact.preferredZone && !contact.budgetMax) {
+      return res.json([]);
+    }
+
+    const properties = await prisma.property.findMany({
+      where: {
+        status: "DISPONIBLE",
+        type: contact.propertyType ?? undefined,
+        listingType: contact.listingType ?? undefined,
+        price: contact.budgetMax ? { lte: contact.budgetMax } : undefined,
+        bedrooms: contact.bedroomsMin ? { gte: contact.bedroomsMin } : undefined,
+      },
+      orderBy: { price: "desc" },
+      take: 20,
+    });
+
+    const zone = contact.preferredZone?.toLowerCase().trim();
+    const sorted = zone
+      ? [...properties].sort((a, b) => {
+          const aMatch = a.zone?.toLowerCase().includes(zone) ? 1 : 0;
+          const bMatch = b.zone?.toLowerCase().includes(zone) ? 1 : 0;
+          return bMatch - aMatch;
+        })
+      : properties;
+
+    res.json(sorted.slice(0, 3));
+  }),
+);
+
 contactsRouter.post(
   "/",
   asyncHandler(async (req, res) => {

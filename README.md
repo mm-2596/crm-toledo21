@@ -59,20 +59,32 @@ El frontend hace proxy de `/api` hacia `http://localhost:4000` (ver
 - **Pipeline de ventas**: kanban con arrastrar y soltar entre etapas
   (Nuevo lead → Contactado → Visita programada → Negociación → Cerrado).
 - **Tareas**: listado de actividades pendientes con fecha límite.
+- **Equipo** (`/equipo`, solo admins): activar/desactivar empleados, otorgar
+  o quitar el rol de administrador, y ver/copiar el código de invitación —
+  ver `client/src/pages/Team.tsx` y `server/src/routes/users.ts`.
 - **Calificador de leads (IA)**: mini-entrevista guiada en la ficha del
   contacto (zona, operación, presupuesto, habitaciones, financiación) que
   calcula una prioridad y la guarda — ver `client/src/components/LeadQualifier.tsx`.
-- **Asistente IA flotante**: chat con comandos en lenguaje natural
-  ("tareas", "buscar <nombre>", "propiedades en <ciudad>", "resumen") que
-  consulta datos reales del CRM — ver `client/src/components/AIAssistant.tsx`.
+- **Matching lead-propiedad (IA)**: en cuanto un contacto tiene preferencias
+  guardadas, su ficha muestra automáticamente las propiedades disponibles
+  que más encajan (mismo tipo, zona, presupuesto y habitaciones mínimas) —
+  ver `GET /api/contacts/:id/matches` en `server/src/routes/contacts.ts`.
+- **Asistente IA flotante**: chat con comandos en lenguaje natural. Consulta
+  ("tareas", "citas de hoy/mañana", "buscar <nombre>", "propiedades en
+  <ciudad>", "resumen") y también **crea** contactos y tareas sin cambiar de
+  pantalla ("crear contacto <nombre> <teléfono>", "nueva tarea <texto> para
+  <nombre> mañana") — ver `client/src/components/AIAssistant.tsx`.
 - **Redactor de descripciones (IA)**: genera o mejora la descripción de una
   propiedad a partir de sus datos — ver `client/src/lib/textGenerator.ts`.
 
-Estas tres últimas funciones están inspiradas en
-[Inmovilla IA Inmobiliaria](https://www.inmovilla.com/ia-inmobiliaria) y, por
-ahora, funcionan con reglas dentro del propio CRM (sin conectarse a WhatsApp
-ni a un proveedor de IA externo), para que ya sean utilizables por el equipo
-hoy mismo.
+Estas funciones están inspiradas en las 3 herramientas de
+[Inmovilla IA Inmobiliaria](https://www.inmovilla.com/ia-inmobiliaria)
+(calificador de leads por WhatsApp, asistente que consulta y crea datos por
+WhatsApp, e IA de Chrome para textos) y, por ahora, funcionan con reglas
+dentro del propio CRM (sin conectarse a WhatsApp ni a un proveedor de IA
+externo), para que ya sean utilizables por el equipo hoy mismo. Traducir,
+resumir y redactar emails con IA real de verdad quedan pendientes de
+conectar un proveedor de IA (ver más abajo).
 
 ## Diseño
 
@@ -92,15 +104,12 @@ Tailwind — ver `client/src/index.css` y `client/src/components/Layout.tsx`.
   leads vía la REST API de WordPress. Endpoint base ya creado en
   `server/src/routes/integrations.ts` (`/api/integrations/houzez/*`),
   pendiente de implementar cuando se defina el flujo con el sitio real.
-- **Proveedor de IA** (Anthropic/OpenAI): para enriquecer la valoración
-  automática con factores cualitativos y para redactar mensajes de
-  seguimiento. La valoración actual funciona sin IA (método por
-  comparables); cuando se elija proveedor, se añade como capa adicional
-  sin cambiar el contrato del endpoint `/api/valuations/estimate`.
-- **Gestión de usuarios**: de momento no hay pantalla para que un admin
-  edite o desactive cuentas de otros empleados (solo el registro con
-  código de invitación). Añadir esa pantalla es sencillo con lo que ya
-  existe en `server/src/routes/users.ts`.
+- **Proveedor de IA** (Anthropic/OpenAI): para traducir y resumir textos,
+  redactar emails, enriquecer la valoración con factores cualitativos, y
+  dar respuestas más flexibles en el asistente y el calificador. Todo lo
+  construido hasta ahora funciona sin IA (métodos por reglas/comparables);
+  cuando se elija proveedor, se añaden como capa adicional sin cambiar el
+  contrato de los endpoints existentes.
 - **Recuperar contraseña**: no implementado todavía (requeriría un
   proveedor de email).
 

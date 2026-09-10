@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bot, Send, Sparkles, X } from "lucide-react";
 import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency, formatDate } from "../lib/format";
+import type { QueryClient } from "@tanstack/react-query";
 
 interface Message {
   id: number;
@@ -13,16 +15,131 @@ interface Message {
 let msgId = 1;
 
 const WELCOME =
-  "Hola, soy el asistente del CRM. Puedo consultar cosas por ti mientras trabajas. Prueba:\n" +
+  "Hola, soy el asistente del CRM. Puedo consultar y anotar cosas por ti mientras trabajas. Prueba:\n" +
   "· \"tareas\" — tus pendientes\n" +
+  "· \"citas de hoy\" / \"citas de mañana\" — tu agenda\n" +
   "· \"buscar <nombre>\" — localizar un contacto\n" +
+  "· \"crear contacto <nombre> <teléfono>\" — dar de alta un lead\n" +
+  "· \"nueva tarea <texto> para <nombre> mañana\" — agendar un seguimiento\n" +
   "· \"propiedades en <ciudad>\" — inmuebles disponibles\n" +
   "· \"resumen\" — cifras del panel";
 
-async function answer(input: string): Promise<string> {
+function extractEmail(text: string): string | undefined {
+  return text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i)?.[0];
+}
+
+function extractPhone(text: string): string | undefined {
+  return text.match(/(\+?\d[\d\s]{5,}\d)/)?.[0]?.trim();
+}
+
+function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function isSameDay(a: Date, b: Date): boolean {
+  return startOfDay(a).getTime() === startOfDay(b).getTime();
+}
+
+/** Extrae una fecha en lenguaje natural simple (hoy, mañana, dd/mm) y devuelve el resto del texto sin ella. */
+function extractDate(text: string): { date: Date | null; rest: string } {
+  if (/\bmañana\b/i.test(text)) {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return { date, rest: text.replace(/\bmañana\b/i, "").trim() };
+  }
+  if (/\bhoy\b/i.test(text)) {
+    return { date: new Date(), rest: text.replace(/\bhoy\b/i, "").trim() };
+  }
+  const match = text.match(/(\d{1,2})\/(\d{1,2})/);
+  if (match) {
+    const date = new Date();
+    date.setMonth(Number(match[2]) - 1, Number(match[1]));
+    return { date, rest: text.replace(match[0], "").trim() };
+  }
+  return { date: null, rest: text };
+}
+
+async function answer(input: string, queryClient: QueryClient): Promise<string> {
   const q = input.toLowerCase().trim();
 
-  if (/^hola|ayuda/.test(q)) return WELCOME;
+  if (/^hola\b|^ayuda\b/.test(q)) return WELCOME;
+
+  if (q.startsWith("crear contacto")) {
+    const rest = input.replace(/crear contacto/i, "").trim();
+    const email = extractEmail(rest);
+    const phone = extractPhone(rest);
+    const name = rest
+      .replace(email ?? "", "")
+      .replace(phone ?? "", "")
+      .replace(/[,]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!name) return 'Dime al menos el nombre, por ejemplo: "crear contacto Laura Díaz 622333444".';
+    const contact = await ContactsApi.create({ name, phone: phone ?? null, email: email ?? null, source: "MANUAL" });
+    queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    return `Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
+  }
+
+  if (q.startsWith("nueva tarea")) {
+    let rest = input.replace(/nueva tarea/i, "").trim();
+    const { date, rest: withoutDate } = extractDate(rest);
+    rest = withoutDate;
+
+    // Se busca la ÚLTIMA aparición de "para" (no la primera), porque la propia
+    // descripción de la tarea puede contener esa palabra de forma natural
+    // ("llamar para concretar visita para Ana").
+    let contactName: string | undefined;
+    const paraIndex = rest.toLowerCase().lastIndexOf(" para ");
+    if (paraIndex !== -1) {
+      contactName = rest.slice(paraIndex + 6).trim();
+      rest = rest.slice(0, paraIndex).trim();
+    }
+
+    const description = rest.trim();
+    if (!description) return 'Dime qué tarea quieres crear, por ejemplo: "nueva tarea Llamar para visita para Ana mañana".';
+
+    let contactId: string | null = null;
+    let contactNote = "";
+    if (contactName) {
+      const matches = await ContactsApi.list(contactName);
+      if (matches[0]) {
+        contactId = matches[0].id;
+        contactNote = ` para ${matches[0].name}`;
+      } else {
+        contactNote = ` (no encontré ningún contacto llamado "${contactName}", se ha creado sin asociar)`;
+      }
+    }
+
+    await ActivitiesApi.create({
+      type: "TAREA",
+      description,
+      contactId,
+      dueDate: date ? date.toISOString() : null,
+    });
+    queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    if (contactId) queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+    return `Tarea creada${contactNote}${date ? ` · ${formatDate(date.toISOString())}` : ""}: "${description}".`;
+  }
+
+  if (q.includes("agenda") || q.includes("cita")) {
+    const targetDate = /mañana/.test(q) ? (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d;
+    })() : new Date();
+
+    const activities = await ActivitiesApi.list(true);
+    const dayActivities = activities.filter((a) => a.dueDate && isSameDay(new Date(a.dueDate), targetDate));
+    if (dayActivities.length === 0) return `No tienes citas ni tareas para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}.`;
+    return (
+      `Agenda para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}:\n` +
+      dayActivities.map((a) => `· ${a.description}${a.contact ? ` (${a.contact.name})` : ""}`).join("\n")
+    );
+  }
 
   if (q.includes("tarea") || q.includes("pendiente")) {
     const activities = await ActivitiesApi.list(true);
@@ -70,7 +187,7 @@ async function answer(input: string): Promise<string> {
     );
   }
 
-  return 'No entendí eso todavía. Prueba con "tareas", "buscar <nombre>", "propiedades en <ciudad>" o "resumen".';
+  return 'No entendí eso todavía. Escribe "ayuda" para ver lo que puedo hacer.';
 }
 
 export function AIAssistant() {
@@ -80,6 +197,7 @@ export function AIAssistant() {
   const [thinking, setThinking] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
+  const queryClient = useQueryClient();
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -89,8 +207,10 @@ export function AIAssistant() {
     setInput("");
     setThinking(true);
     try {
-      const reply = await answer(text);
+      const reply = await answer(text, queryClient);
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: reply }]);
+    } catch {
+      setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: "Algo falló al procesar eso. ¿Puedes reformularlo?" }]);
     } finally {
       setThinking(false);
       requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }));

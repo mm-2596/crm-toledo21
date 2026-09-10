@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Wand2 } from "lucide-react";
 import { ActivitiesApi, ContactsApi } from "../api/endpoints";
-import { activityTypeLabels, contactSourceLabels, formatDate, priorityBadgeClasses, priorityLabels } from "../lib/format";
+import {
+  activityTypeLabels,
+  contactSourceLabels,
+  formatCurrency,
+  formatDate,
+  priorityBadgeClasses,
+  priorityLabels,
+} from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
 import { useToast } from "../components/Toast";
 
@@ -17,6 +24,13 @@ export function ContactDetail() {
     queryKey: ["contact", id],
     queryFn: () => ContactsApi.get(id as string),
     enabled: Boolean(id),
+  });
+
+  const hasPreferences = Boolean(contact?.propertyType || contact?.preferredZone || contact?.budgetMax);
+  const { data: matches } = useQuery({
+    queryKey: ["contact-matches", id],
+    queryFn: () => ContactsApi.matches(id as string),
+    enabled: Boolean(id) && hasPreferences,
   });
 
   const addActivity = useMutation({
@@ -112,6 +126,7 @@ export function ContactDetail() {
                 contactId={contact.id}
                 onSaved={() => {
                   queryClient.invalidateQueries({ queryKey: ["contact", id] });
+                  queryClient.invalidateQueries({ queryKey: ["contact-matches", id] });
                   showToast("Lead cualificado y guardado");
                   setShowQualifier(false);
                 }}
@@ -120,6 +135,28 @@ export function ContactDetail() {
           )}
         </div>
       </div>
+
+      {hasPreferences && (matches ?? []).length > 0 && (
+        <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">
+          <div className="mb-3 flex items-center gap-1.5 text-indigo-700">
+            <Wand2 size={16} />
+            <h2 className="text-sm font-semibold">Propiedades recomendadas para este lead</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {(matches ?? []).map((property) => (
+              <Link
+                key={property.id}
+                to={`/propiedades/${property.id}`}
+                className="rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="font-medium text-slate-800">{property.title}</div>
+                <div className="text-xs text-slate-500">{property.zone || property.city}</div>
+                <div className="mt-1 font-semibold text-indigo-700">{formatCurrency(property.price)}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-medium text-slate-900">Notas</h2>
