@@ -67,13 +67,14 @@ export function Layout() {
         </NavLink>
       </aside>
       <main className="flex-1 px-8 py-6">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={location.pathname}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
+            exit={{ opacity: 0 }}
             transition={{ type: "spring", damping: 1, stiffness: 340, mass: 0.5 }}
+            style={{ position: "relative" }}
           >
             <Outlet />
           </motion.div>
