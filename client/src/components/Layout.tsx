@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Building2,
@@ -7,8 +7,10 @@ import {
   CheckSquare,
   Users,
   HelpCircle,
+  LogOut,
 } from "lucide-react";
 import { AIAssistant } from "./AIAssistant";
+import { useAuth } from "../auth/AuthContext";
 
 const links = [
   { to: "/", label: "Panel", end: true, icon: LayoutDashboard },
@@ -20,7 +22,14 @@ const links = [
 
 export function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
+  const { user, logout } = useAuth();
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login", { replace: true });
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
@@ -54,17 +63,38 @@ export function Layout() {
           </nav>
         </div>
 
-        <NavLink
-          to="/ayuda"
-          className={({ isActive }) =>
-            `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-              isActive ? "bg-indigo-600/10 text-indigo-700" : "text-slate-500 hover:bg-slate-900/5"
-            }`
-          }
-        >
-          <HelpCircle size={17} strokeWidth={2} />
-          Guía rápida
-        </NavLink>
+        <div className="flex flex-col gap-1">
+          <NavLink
+            to="/ayuda"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
+                isActive ? "bg-indigo-600/10 text-indigo-700" : "text-slate-500 hover:bg-slate-900/5"
+              }`
+            }
+          >
+            <HelpCircle size={17} strokeWidth={2} />
+            Guía rápida
+          </NavLink>
+
+          {user && (
+            <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-medium text-slate-700">{user.name}</div>
+                <div className="truncate text-[11px] text-slate-400">{user.role === "ADMIN" ? "Administrador" : "Agente"}</div>
+              </div>
+              <button
+                onClick={handleLogout}
+                title="Cerrar sesión"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-900/5 hover:text-slate-600"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
+          )}
+        </div>
       </aside>
       <main className="flex-1 px-8 py-6">
         <AnimatePresence>

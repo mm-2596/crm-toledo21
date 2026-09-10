@@ -44,6 +44,13 @@ El frontend hace proxy de `/api` hacia `http://localhost:4000` (ver
 
 ## Funcionalidad v1
 
+- **Autenticación**: cada trabajador tiene su propia cuenta (email +
+  contraseña). El registro requiere un código de invitación de equipo
+  (`TEAM_INVITE_CODE` en `.env`) — no es un registro público. El primer
+  usuario que se registra se convierte automáticamente en `ADMIN`; el
+  resto son `AGENT`. Sesión guardada en una cookie httpOnly — ver
+  `server/src/routes/auth.ts`, `server/src/lib/auth.ts` y
+  `client/src/auth/`.
 - **Contactos**: alta, búsqueda, ficha con actividad/tareas.
 - **Propiedades**: alta, búsqueda, ficha de detalle.
 - **Valoración automática**: estima el precio de una propiedad por
@@ -90,8 +97,12 @@ Tailwind — ver `client/src/index.css` y `client/src/components/Layout.tsx`.
   seguimiento. La valoración actual funciona sin IA (método por
   comparables); cuando se elija proveedor, se añade como capa adicional
   sin cambiar el contrato del endpoint `/api/valuations/estimate`.
-- **Autenticación**: de momento no hay login; el modelo `User` ya existe
-  en el esquema para cuando se añada.
+- **Gestión de usuarios**: de momento no hay pantalla para que un admin
+  edite o desactive cuentas de otros empleados (solo el registro con
+  código de invitación). Añadir esa pantalla es sencillo con lo que ya
+  existe en `server/src/routes/users.ts`.
+- **Recuperar contraseña**: no implementado todavía (requeriría un
+  proveedor de email).
 
 ## Notas de despliegue
 

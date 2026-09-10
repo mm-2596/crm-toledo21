@@ -65,7 +65,9 @@ propertiesRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = propertyInput.parse(req.body);
-    const property = await prisma.property.create({ data });
+    const property = await prisma.property.create({
+      data: { ...data, agentId: data.agentId ?? req.user!.userId },
+    });
     res.status(201).json(property);
   }),
 );

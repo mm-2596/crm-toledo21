@@ -8,19 +8,26 @@ import { PropertyDetail } from "./pages/PropertyDetail";
 import { Pipeline } from "./pages/Pipeline";
 import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
+import { Login } from "./pages/Login";
+import { Register } from "./pages/Register";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
 
 export default function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="contactos" element={<Contacts />} />
-        <Route path="contactos/:id" element={<ContactDetail />} />
-        <Route path="propiedades" element={<Properties />} />
-        <Route path="propiedades/:id" element={<PropertyDetail />} />
-        <Route path="pipeline" element={<Pipeline />} />
-        <Route path="tareas" element={<Tasks />} />
-        <Route path="ayuda" element={<Help />} />
+      <Route path="login" element={<Login />} />
+      <Route path="registro" element={<Register />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="contactos" element={<Contacts />} />
+          <Route path="contactos/:id" element={<ContactDetail />} />
+          <Route path="propiedades" element={<Properties />} />
+          <Route path="propiedades/:id" element={<PropertyDetail />} />
+          <Route path="pipeline" element={<Pipeline />} />
+          <Route path="tareas" element={<Tasks />} />
+          <Route path="ayuda" element={<Help />} />
+        </Route>
       </Route>
     </Routes>
   );

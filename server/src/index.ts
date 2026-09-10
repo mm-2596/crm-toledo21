@@ -1,6 +1,8 @@
 import "dotenv/config";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
+import { authRouter } from "./routes/auth.js";
 import { contactsRouter } from "./routes/contacts.js";
 import { propertiesRouter } from "./routes/properties.js";
 import { pipelineRouter } from "./routes/pipeline.js";
@@ -10,14 +12,18 @@ import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
 import { integrationsRouter } from "./routes/integrations.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { requireAuth } from "./lib/auth.js";
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" }));
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.use("/api/auth", authRouter);
 
+app.use(requireAuth);
 app.use("/api/contacts", contactsRouter);
 app.use("/api/properties", propertiesRouter);
 app.use("/api/pipeline", pipelineRouter);

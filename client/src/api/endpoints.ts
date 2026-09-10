@@ -10,6 +10,14 @@ import type {
   Valuation,
 } from "./types";
 
+export const AuthApi = {
+  me: () => api.get<User>("/auth/me").then((r) => r.data),
+  login: (data: { email: string; password: string }) => api.post<User>("/auth/login", data).then((r) => r.data),
+  register: (data: { name: string; email: string; password: string; inviteCode: string }) =>
+    api.post<User>("/auth/register", data).then((r) => r.data),
+  logout: () => api.post("/auth/logout"),
+};
+
 export const ContactsApi = {
   list: (q?: string) => api.get<Contact[]>("/contacts", { params: { q } }).then((r) => r.data),
   get: (id: string) => api.get<Contact>(`/contacts/${id}`).then((r) => r.data),

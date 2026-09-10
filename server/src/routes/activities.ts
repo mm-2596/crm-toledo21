@@ -32,7 +32,7 @@ activitiesRouter.post(
   asyncHandler(async (req, res) => {
     const data = activityInput.parse(req.body);
     const activity = await prisma.activity.create({
-      data: { ...data, dueDate: data.dueDate ? new Date(data.dueDate) : null },
+      data: { ...data, agentId: data.agentId ?? req.user!.userId, dueDate: data.dueDate ? new Date(data.dueDate) : null },
     });
     res.status(201).json(activity);
   }),

@@ -39,6 +39,7 @@ pipelineRouter.post(
     const deal = await prisma.deal.create({
       data: {
         ...data,
+        agentId: data.agentId ?? req.user!.userId,
         expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : null,
       },
     });
