@@ -8,9 +8,11 @@ import { PropertyDetail } from "./pages/PropertyDetail";
 import { Pipeline } from "./pages/Pipeline";
 import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
+import { Team } from "./pages/Team";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { AdminRoute } from "./auth/AdminRoute";
 
 export default function App() {
   return (
@@ -27,6 +29,9 @@ export default function App() {
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="tareas" element={<Tasks />} />
           <Route path="ayuda" element={<Help />} />
+          <Route element={<AdminRoute />}>
+            <Route path="equipo" element={<Team />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

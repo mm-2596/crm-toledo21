@@ -39,3 +39,10 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     res.status(401).json({ error: "Sesión inválida o caducada" });
   }
 }
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.role !== "ADMIN") {
+    return res.status(403).json({ error: "Solo un administrador puede hacer esto" });
+  }
+  next();
+}

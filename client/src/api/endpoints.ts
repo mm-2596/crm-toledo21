@@ -6,6 +6,7 @@ import type {
   Deal,
   PipelineStage,
   Property,
+  TeamMember,
   User,
   Valuation,
 } from "./types";
@@ -60,7 +61,10 @@ export const DashboardApi = {
 };
 
 export const UsersApi = {
-  list: () => api.get<User[]>("/users").then((r) => r.data),
+  list: () => api.get<TeamMember[]>("/users").then((r) => r.data),
+  inviteCode: () => api.get<{ inviteCode: string | null }>("/users/invite-code").then((r) => r.data),
+  update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean }) =>
+    api.patch<TeamMember>(`/users/${id}`, data).then((r) => r.data),
 };
 
 export const ValuationsApi = {

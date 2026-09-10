@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   CheckSquare,
   Users,
+  ShieldCheck,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export function Layout() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { user, logout } = useAuth();
+  const visibleLinks = user?.role === "ADMIN" ? [...links, { to: "/equipo", label: "Equipo", icon: ShieldCheck }] : links;
 
   async function handleLogout() {
     await logout();
@@ -45,7 +47,7 @@ export function Layout() {
             </div>
           </div>
           <nav className="flex flex-col gap-1">
-            {links.map((link) => (
+            {visibleLinks.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}

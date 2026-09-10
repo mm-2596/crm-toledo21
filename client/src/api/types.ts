@@ -24,6 +24,11 @@ export interface User {
   phone?: string | null;
 }
 
+export interface TeamMember extends User {
+  active: boolean;
+  createdAt: string;
+}
+
 export interface PipelineStage {
   id: string;
   name: string;
