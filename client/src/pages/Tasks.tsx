@@ -4,9 +4,11 @@ import { CheckSquare } from "lucide-react";
 import { ActivitiesApi } from "../api/endpoints";
 import { activityTypeLabels, formatDate } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
+import { useToast } from "../components/Toast";
 
 export function Tasks() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ["activities-pending"],
@@ -15,7 +17,10 @@ export function Tasks() {
 
   const completeMutation = useMutation({
     mutationFn: ActivitiesApi.complete,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["activities-pending"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+      showToast("Tarea completada");
+    },
   });
 
   return (

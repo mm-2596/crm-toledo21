@@ -5,12 +5,14 @@ import { Building2, PlusCircle } from "lucide-react";
 import { PropertiesApi } from "../api/endpoints";
 import { formatCurrency, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
+import { useToast } from "../components/Toast";
 import type { Property } from "../api/types";
 
 export function Properties() {
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ["properties", q],
@@ -22,6 +24,7 @@ export function Properties() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
       setShowForm(false);
+      showToast("Propiedad guardada");
     },
   });
 

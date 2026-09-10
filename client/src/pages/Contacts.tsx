@@ -3,14 +3,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { UserPlus, Users } from "lucide-react";
 import { ContactsApi } from "../api/endpoints";
-import { contactSourceLabels } from "../lib/format";
+import { contactSourceLabels, priorityBadgeClasses, priorityLabels } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
+import { useToast } from "../components/Toast";
 import type { Contact } from "../api/types";
 
 export function Contacts() {
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ["contacts", q],
@@ -22,6 +24,7 @@ export function Contacts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       setShowForm(false);
+      showToast("Contacto guardado");
     },
   });
 
@@ -95,6 +98,7 @@ export function Contacts() {
                 <th className="px-4 py-3">Contacto</th>
                 <th className="px-4 py-3">Origen</th>
                 <th className="px-4 py-3">Zona</th>
+                <th className="px-4 py-3">Prioridad</th>
                 <th className="px-4 py-3">Oportunidades</th>
               </tr>
             </thead>
@@ -111,6 +115,15 @@ export function Contacts() {
                   </td>
                   <td className="px-4 py-3 text-slate-600">{contactSourceLabels[contact.source]}</td>
                   <td className="px-4 py-3 text-slate-600">{contact.preferredZone || "-"}</td>
+                  <td className="px-4 py-3">
+                    {contact.priority ? (
+                      <span className={`rounded px-2 py-0.5 text-xs font-medium ${priorityBadgeClasses[contact.priority]}`}>
+                        {priorityLabels[contact.priority]}
+                      </span>
+                    ) : (
+                      <span className="text-slate-300">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{contact.deals?.length ?? 0}</td>
                 </tr>
               ))}

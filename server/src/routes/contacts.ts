@@ -20,6 +20,9 @@ const contactInput = z.object({
     .optional()
     .nullable(),
   listingType: z.enum(["VENTA", "ALQUILER"]).optional().nullable(),
+  bedroomsMin: z.number().int().optional().nullable(),
+  needsFinancing: z.boolean().optional().nullable(),
+  priority: z.enum(["ALTA", "MEDIA", "BAJA"]).optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 

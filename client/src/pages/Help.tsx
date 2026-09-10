@@ -1,4 +1,4 @@
-import { Building2, Kanban, CheckSquare, Users, Sparkles } from "lucide-react";
+import { Building2, Kanban, CheckSquare, Users, Sparkles, Bot, Wand2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 function GuideCard({
@@ -71,18 +71,47 @@ export function Help() {
             "Márcalas como completadas cuando las hayas hecho para no perder el hilo con ningún cliente.",
           ]}
         />
+        <GuideCard
+          icon={Sparkles}
+          title="Calificador de leads (IA)"
+          steps={[
+            "En la ficha de un contacto, pulsa \"Cualificar lead con IA\" para lanzar una mini-entrevista guiada: zona, operación, presupuesto, habitaciones y financiación.",
+            "Al terminar, el CRM calcula automáticamente una prioridad (alta, media o baja) y la guarda en la ficha.",
+            "Úsalo con leads nuevos para decidir a quién llamar primero.",
+          ]}
+        />
+        <GuideCard
+          icon={Wand2}
+          title="Redactor de descripciones (IA)"
+          steps={[
+            "En la ficha de una propiedad, pulsa \"Generar\" para crear una descripción a partir de sus datos (tipo, zona, m², habitaciones…).",
+            "Si ya tienes un texto escrito, pulsa \"Mejorar redacción\" para pulirlo antes de publicarlo.",
+            "Revisa siempre el resultado antes de guardarlo o publicarlo en el portal.",
+          ]}
+        />
+        <GuideCard
+          icon={Bot}
+          title="Asistente IA"
+          steps={[
+            "El botón flotante de abajo a la derecha abre un asistente al que puedes preguntarle en lenguaje natural.",
+            'Prueba: "tareas", "buscar Ana", "propiedades en Toledo" o "resumen".',
+            "Consulta datos reales del CRM al momento, sin cambiar de pantalla.",
+          ]}
+        />
       </div>
 
-      <div className="mt-6 rounded-lg border border-indigo-100 bg-indigo-50 p-5">
+      <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
         <div className="mb-2 flex items-center gap-2 text-indigo-700">
           <Sparkles size={18} />
-          <h2 className="text-sm font-semibold">Sobre la valoración automática</h2>
+          <h2 className="text-sm font-semibold">Sobre las funciones de IA de este CRM</h2>
         </div>
         <p className="text-sm text-indigo-900/80">
-          El precio estimado se calcula comparando el precio por m² de otras propiedades similares
-          (misma ciudad, zona y tipo) ya cargadas en el CRM. Cuantas más propiedades reales tengamos,
-          más preciso será el cálculo. No sustituye la tasación de un profesional, pero da un punto de
-          partida rápido para orientar al cliente.
+          Por ahora, el calificador de leads, el asistente y el redactor de textos funcionan con reglas
+          integradas en el propio CRM (sin conectarse a WhatsApp ni a un proveedor de IA externo), así que
+          ya puedes usarlos hoy mismo. Cuando la agencia lo decida, se pueden conectar a un modelo de IA
+          real y a WhatsApp Business sin cambiar cómo se usan desde aquí. El precio estimado de las
+          propiedades se calcula comparando el €/m² de inmuebles similares ya cargados en el CRM — no
+          sustituye la tasación de un profesional, pero da un punto de partida rápido.
         </p>
       </div>
     </div>

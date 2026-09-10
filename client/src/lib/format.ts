@@ -53,6 +53,18 @@ export const contactSourceLabels: Record<string, string> = {
   OTHER: "Otro",
 };
 
+export const priorityLabels: Record<string, string> = {
+  ALTA: "Alta",
+  MEDIA: "Media",
+  BAJA: "Baja",
+};
+
+export const priorityBadgeClasses: Record<string, string> = {
+  ALTA: "bg-red-50 text-red-600",
+  MEDIA: "bg-amber-50 text-amber-700",
+  BAJA: "bg-slate-100 text-slate-600",
+};
+
 export const activityTypeLabels: Record<string, string> = {
   LLAMADA: "Llamada",
   EMAIL: "Email",

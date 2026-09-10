@@ -62,6 +62,12 @@ enum DealStatus {
   PERDIDO
 }
 
+enum ContactPriority {
+  ALTA
+  MEDIA
+  BAJA
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -82,14 +88,17 @@ model Contact {
   email         String?
   phone         String?
   source        ContactSource @default(MANUAL)
-  budgetMin     Int?
-  budgetMax     Int?
-  preferredZone String?
-  propertyType  PropertyType?
-  listingType   ListingType?
-  notes         String?       @db.Text
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  budgetMin      Int?
+  budgetMax      Int?
+  preferredZone  String?
+  propertyType   PropertyType?
+  listingType    ListingType?
+  bedroomsMin    Int?
+  needsFinancing Boolean?
+  priority       ContactPriority?
+  notes          String?          @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   deals      Deal[]
   activities Activity[]

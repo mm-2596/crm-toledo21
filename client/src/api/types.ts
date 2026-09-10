@@ -14,6 +14,7 @@ export type PropertyStatus = "DISPONIBLE" | "RESERVADO" | "VENDIDO" | "ALQUILADO
 export type ContactSource = "WEB_HOUZEZ" | "MANUAL" | "WHATSAPP" | "EMAIL" | "PHONE" | "REFERRAL" | "OTHER";
 export type ActivityType = "LLAMADA" | "EMAIL" | "WHATSAPP" | "VISITA" | "NOTA" | "TAREA";
 export type DealStatus = "ABIERTO" | "GANADO" | "PERDIDO";
+export type ContactPriority = "ALTA" | "MEDIA" | "BAJA";
 
 export interface User {
   id: string;
@@ -41,6 +42,9 @@ export interface Contact {
   preferredZone?: string | null;
   propertyType?: PropertyType | null;
   listingType?: ListingType | null;
+  bedroomsMin?: number | null;
+  needsFinancing?: boolean | null;
+  priority?: ContactPriority | null;
   notes?: string | null;
   createdAt: string;
   deals?: Deal[];

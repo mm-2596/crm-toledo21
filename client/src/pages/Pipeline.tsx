@@ -3,6 +3,7 @@ import { useState } from "react";
 import { GripVertical, PlusCircle } from "lucide-react";
 import { ContactsApi, PipelineApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency } from "../lib/format";
+import { useToast } from "../components/Toast";
 import type { Deal } from "../api/types";
 
 const stageAccent = ["border-t-slate-400", "border-t-sky-400", "border-t-amber-400", "border-t-violet-400", "border-t-emerald-400"];
@@ -10,6 +11,7 @@ const stageAccent = ["border-t-slate-400", "border-t-sky-400", "border-t-amber-4
 export function Pipeline() {
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data: stages, isLoading } = useQuery({
     queryKey: ["pipeline-stages"],
@@ -30,6 +32,7 @@ export function Pipeline() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline-stages"] });
       setShowForm(false);
+      showToast("Oportunidad creada");
     },
   });
 
