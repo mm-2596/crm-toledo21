@@ -52,12 +52,35 @@ El frontend hace proxy de `/api` hacia `http://localhost:4000` (ver
 - **Pipeline de ventas**: kanban con arrastrar y soltar entre etapas
   (Nuevo lead → Contactado → Visita programada → Negociación → Cerrado).
 - **Tareas**: listado de actividades pendientes con fecha límite.
+- **Calificador de leads (IA)**: mini-entrevista guiada en la ficha del
+  contacto (zona, operación, presupuesto, habitaciones, financiación) que
+  calcula una prioridad y la guarda — ver `client/src/components/LeadQualifier.tsx`.
+- **Asistente IA flotante**: chat con comandos en lenguaje natural
+  ("tareas", "buscar <nombre>", "propiedades en <ciudad>", "resumen") que
+  consulta datos reales del CRM — ver `client/src/components/AIAssistant.tsx`.
+- **Redactor de descripciones (IA)**: genera o mejora la descripción de una
+  propiedad a partir de sus datos — ver `client/src/lib/textGenerator.ts`.
+
+Estas tres últimas funciones están inspiradas en
+[Inmovilla IA Inmobiliaria](https://www.inmovilla.com/ia-inmobiliaria) y, por
+ahora, funcionan con reglas dentro del propio CRM (sin conectarse a WhatsApp
+ni a un proveedor de IA externo), para que ya sean utilizables por el equipo
+hoy mismo.
+
+## Diseño
+
+La interfaz sigue los principios de Apple (materiales translúcidos,
+feedback instantáneo en cada interacción, animaciones tipo "spring"
+interrumpibles, tipografía con tracking ajustado) usando `framer-motion` y
+Tailwind — ver `client/src/index.css` y `client/src/components/Layout.tsx`.
 
 ## Pendiente para siguientes fases
 
-- **Automatización de seguimiento (WhatsApp/Email)**: falta elegir
+- **Automatización de seguimiento (WhatsApp/Email real)**: falta elegir
   proveedor (Meta WhatsApp Cloud API / Twilio, y Resend / SendGrid). Las
-  variables ya están preparadas en `server/.env.example`.
+  variables ya están preparadas en `server/.env.example`. El calificador de
+  leads y el asistente ya están listos para conectarse a WhatsApp cuando se
+  decida el proveedor, sin cambiar cómo los usa el equipo.
 - **Integración con Houzez/WordPress**: sincronización de propiedades y
   leads vía la REST API de WordPress. Endpoint base ya creado en
   `server/src/routes/integrations.ts` (`/api/integrations/houzez/*`),
