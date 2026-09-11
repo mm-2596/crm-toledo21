@@ -52,7 +52,15 @@ El frontend hace proxy de `/api` hacia `http://localhost:4000` (ver
   `server/src/routes/auth.ts`, `server/src/lib/auth.ts` y
   `client/src/auth/`.
 - **Contactos**: alta, búsqueda, ficha con actividad/tareas.
-- **Propiedades**: alta, búsqueda, ficha de detalle.
+- **Propiedades**: alta, búsqueda, ficha de detalle con fotos (subida propia,
+  guardadas en `server/uploads/`), planta, ascensor, certificado energético
+  y coordenadas — los datos que piden los portales y la web para publicar.
+- **Feed de sindicación** (`GET /api/feed/properties.json` y `.xml`,
+  protegido con `?token=` = `FEED_ACCESS_TOKEN`): exporta todas las
+  propiedades no retiradas, con sus fotos en URL absoluta, en un formato
+  propio pensado para alimentar el plugin "Houzez Property Feed" de la web
+  y, más adelante, adaptarse al formato de Idealista/Fotocasa sin rehacer
+  el resto — ver `server/src/routes/feed.ts`.
 - **Valoración automática**: estima el precio de una propiedad por
   comparables (media de €/m² de propiedades similares ya cargadas en el
   CRM). No requiere ninguna API externa — ver `server/src/routes/valuations.ts`.
@@ -100,10 +108,19 @@ Tailwind — ver `client/src/index.css` y `client/src/components/Layout.tsx`.
   variables ya están preparadas en `server/.env.example`. El calificador de
   leads y el asistente ya están listos para conectarse a WhatsApp cuando se
   decida el proveedor, sin cambiar cómo los usa el equipo.
-- **Integración con Houzez/WordPress**: sincronización de propiedades y
-  leads vía la REST API de WordPress. Endpoint base ya creado en
-  `server/src/routes/integrations.ts` (`/api/integrations/houzez/*`),
-  pendiente de implementar cuando se defina el flujo con el sitio real.
+- **Conectar el feed a la web (Houzez)**: instalar el plugin oficial
+  "Houzez Property Feed" en WordPress y apuntarlo a
+  `https://<dominio-del-CRM>/api/feed/properties.xml?token=...` con una
+  frecuencia de importación (p. ej. cada 30 min). Requiere que el CRM esté
+  desplegado en una URL pública (ver "Notas de despliegue").
+- **Idealista/Fotocasa**: Idealista no ofrece una API pública para leer lo
+  que ya está en su panel (no hay sincronización en ambos sentidos), pero
+  sí acepta un feed propio (JSON, antes XML) para publicar automáticamente.
+  Hay que solicitarlo al gestor de cuenta de Idealista; una vez tengamos su
+  formato exacto, se adapta `server/src/routes/feed.ts` sin rehacer el
+  resto (ya expone todos los campos que suelen pedir: precio, superficie,
+  habitaciones, planta, ascensor, certificado energético, coordenadas y
+  fotos).
 - **Proveedor de IA** (Anthropic/OpenAI): para traducir y resumir textos,
   redactar emails, enriquecer la valoración con factores cualitativos, y
   dar respuestas más flexibles en el asistente y el calificador. Todo lo

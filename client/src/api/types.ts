@@ -67,12 +67,28 @@ export interface Property {
   city?: string | null;
   zone?: string | null;
   address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   areaM2?: number | null;
+  floor?: number | null;
+  hasElevator?: boolean | null;
+  energyRating?: EnergyRating | null;
   description?: string | null;
   agentId?: string | null;
   agent?: User | null;
+  images?: PropertyImage[];
+  createdAt: string;
+}
+
+export type EnergyRating = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "EN_TRAMITE" | "EXENTO";
+
+export interface PropertyImage {
+  id: string;
+  propertyId: string;
+  url: string;
+  order: number;
   createdAt: string;
 }
 

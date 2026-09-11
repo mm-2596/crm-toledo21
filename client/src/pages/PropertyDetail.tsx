@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { Sparkles, Wand2 } from "lucide-react";
+import { MapPin, Sparkles, Wand2 } from "lucide-react";
 import { PropertiesApi, ValuationsApi } from "../api/endpoints";
 import {
+  energyRatingLabels,
   formatCurrency,
   formatDate,
   listingTypeLabels,
@@ -13,12 +14,21 @@ import {
 } from "../lib/format";
 import { generateDescription, improveDescription } from "../lib/textGenerator";
 import { useToast } from "../components/Toast";
+import { PropertyGallery } from "../components/PropertyGallery";
+import type { EnergyRating } from "../api/types";
 
 export function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [description, setDescription] = useState("");
+  const [extra, setExtra] = useState({
+    floor: "",
+    hasElevator: "unset" as "unset" | "yes" | "no",
+    energyRating: "" as EnergyRating | "",
+    latitude: "",
+    longitude: "",
+  });
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -28,6 +38,18 @@ export function PropertyDetail() {
 
   useEffect(() => {
     if (property) setDescription(property.description ?? "");
+  }, [property?.id]);
+
+  useEffect(() => {
+    if (property) {
+      setExtra({
+        floor: property.floor != null ? String(property.floor) : "",
+        hasElevator: property.hasElevator == null ? "unset" : property.hasElevator ? "yes" : "no",
+        energyRating: property.energyRating ?? "",
+        latitude: property.latitude != null ? String(property.latitude) : "",
+        longitude: property.longitude != null ? String(property.longitude) : "",
+      });
+    }
   }, [property?.id]);
 
   const { data: valuations } = useQuery({
@@ -56,11 +78,32 @@ export function PropertyDetail() {
     },
   });
 
+  const saveExtra = useMutation({
+    mutationFn: () =>
+      PropertiesApi.update(id as string, {
+        floor: extra.floor ? Number(extra.floor) : null,
+        hasElevator: extra.hasElevator === "unset" ? null : extra.hasElevator === "yes",
+        energyRating: extra.energyRating || null,
+        latitude: extra.latitude ? Number(extra.latitude) : null,
+        longitude: extra.longitude ? Number(extra.longitude) : null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["property", id] });
+      showToast("Datos guardados");
+    },
+  });
+
   if (isLoading) return <p className="text-slate-500">Cargando…</p>;
   if (!property) return <p className="text-red-600">Propiedad no encontrada.</p>;
 
   const canEstimate = Boolean(property.city && property.areaM2);
   const descriptionChanged = description !== (property.description ?? "");
+  const extraChanged =
+    extra.floor !== (property.floor != null ? String(property.floor) : "") ||
+    extra.hasElevator !== (property.hasElevator == null ? "unset" : property.hasElevator ? "yes" : "no") ||
+    extra.energyRating !== (property.energyRating ?? "") ||
+    extra.latitude !== (property.latitude != null ? String(property.latitude) : "") ||
+    extra.longitude !== (property.longitude != null ? String(property.longitude) : "");
 
   return (
     <div>
@@ -96,6 +139,12 @@ export function PropertyDetail() {
             <dd>{property.bedrooms ?? "-"}</dd>
             <dt className="text-slate-500">Baños</dt>
             <dd>{property.bathrooms ?? "-"}</dd>
+            <dt className="text-slate-500">Planta</dt>
+            <dd>{property.floor ?? "-"}</dd>
+            <dt className="text-slate-500">Ascensor</dt>
+            <dd>{property.hasElevator == null ? "-" : property.hasElevator ? "Sí" : "No"}</dd>
+            <dt className="text-slate-500">Certificado energético</dt>
+            <dd>{property.energyRating ? energyRatingLabels[property.energyRating] : "-"}</dd>
           </dl>
         </div>
 
@@ -143,6 +192,90 @@ export function PropertyDetail() {
             {(valuations ?? []).length === 0 && <p className="text-sm text-slate-400">Aún no se ha estimado ningún precio.</p>}
           </ul>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <PropertyGallery propertyId={property.id} images={property.images ?? []} />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-1 flex items-center gap-1.5">
+          <MapPin size={17} className="text-indigo-600" />
+          <h2 className="text-lg font-medium text-slate-900">Datos para publicar en portales</h2>
+        </div>
+        <p className="mb-3 text-xs text-slate-400">
+          Planta, ascensor, certificado energético y coordenadas — necesarios para publicar en Idealista, Fotocasa o vuestra web.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Planta</label>
+            <input
+              type="number"
+              value={extra.floor}
+              onChange={(e) => setExtra({ ...extra, floor: e.target.value })}
+              placeholder="Ej. 3"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Ascensor</label>
+            <select
+              value={extra.hasElevator}
+              onChange={(e) => setExtra({ ...extra, hasElevator: e.target.value as typeof extra.hasElevator })}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            >
+              <option value="unset">Sin especificar</option>
+              <option value="yes">Sí</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Certificado energético</label>
+            <select
+              value={extra.energyRating}
+              onChange={(e) => setExtra({ ...extra, energyRating: e.target.value as EnergyRating | "" })}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            >
+              <option value="">Sin especificar</option>
+              {Object.entries(energyRatingLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Latitud</label>
+            <input
+              type="number"
+              step="any"
+              value={extra.latitude}
+              onChange={(e) => setExtra({ ...extra, latitude: e.target.value })}
+              placeholder="Ej. 39.8628"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Longitud</label>
+            <input
+              type="number"
+              step="any"
+              value={extra.longitude}
+              onChange={(e) => setExtra({ ...extra, longitude: e.target.value })}
+              placeholder="Ej. -4.0273"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            />
+          </div>
+        </div>
+        {extraChanged && (
+          <button
+            onClick={() => saveExtra.mutate()}
+            disabled={saveExtra.isPending}
+            className="mt-3 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {saveExtra.isPending ? "Guardando…" : "Guardar datos"}
+          </button>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

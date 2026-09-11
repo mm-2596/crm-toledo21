@@ -6,6 +6,7 @@ import type {
   Deal,
   PipelineStage,
   Property,
+  PropertyImage,
   TeamMember,
   User,
   Valuation,
@@ -37,6 +38,14 @@ export const PropertiesApi = {
   update: (id: string, data: Partial<Property>) =>
     api.put<Property>(`/properties/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/properties/${id}`),
+  uploadImage: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("image", file);
+    return api
+      .post<PropertyImage>(`/properties/${id}/images`, form, { headers: { "Content-Type": undefined } })
+      .then((r) => r.data);
+  },
+  removeImage: (id: string, imageId: string) => api.delete(`/properties/${id}/images/${imageId}`),
 };
 
 export const PipelineApi = {

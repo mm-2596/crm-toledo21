@@ -119,21 +119,39 @@ model Property {
   city          String?
   zone          String?
   address       String?
+  latitude      Float?
+  longitude     Float?
   bedrooms      Int?
   bathrooms     Int?
   areaM2        Int?
+  floor         Int?
+  hasElevator   Boolean?
+  energyRating  String?
   description   String?        @db.Text
   houzezId      String?        @unique
   agentId       String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  agent      User?       @relation(fields: [agentId], references: [id])
+  agent      User?           @relation(fields: [agentId], references: [id])
   deals      Deal[]
   valuations Valuation[]
+  images     PropertyImage[]
 
   @@index([city])
   @@index([status])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
 }
 
 model PipelineStage {

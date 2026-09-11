@@ -65,6 +65,30 @@ export const priorityBadgeClasses: Record<string, string> = {
   BAJA: "bg-slate-100 text-slate-600",
 };
 
+export const energyRatingLabels: Record<string, string> = {
+  A: "A",
+  B: "B",
+  C: "C",
+  D: "D",
+  E: "E",
+  F: "F",
+  G: "G",
+  EN_TRAMITE: "En trámite",
+  EXENTO: "Exento",
+};
+
+export const energyRatingBadgeClasses: Record<string, string> = {
+  A: "bg-emerald-50 text-emerald-700",
+  B: "bg-emerald-50 text-emerald-700",
+  C: "bg-lime-50 text-lime-700",
+  D: "bg-amber-50 text-amber-700",
+  E: "bg-orange-50 text-orange-700",
+  F: "bg-red-50 text-red-600",
+  G: "bg-red-50 text-red-600",
+  EN_TRAMITE: "bg-slate-100 text-slate-600",
+  EXENTO: "bg-slate-100 text-slate-600",
+};
+
 export const activityTypeLabels: Record<string, string> = {
   LLAMADA: "Llamada",
   EMAIL: "Email",
