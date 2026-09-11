@@ -135,6 +135,32 @@ Tailwind — ver `client/src/index.css` y `client/src/components/Layout.tsx`.
 Este entorno de desarrollo usa una base de datos MySQL gratuita en Clever
 Cloud, que no permite crear una "shadow database", por lo que el esquema
 se sincroniza con `prisma db push` en lugar de `prisma migrate dev`. Antes
-de desplegar a producción con una base de datos que sí tenga permisos
-completos, conviene generar migraciones versionadas con
-`npx prisma migrate dev --name init`.
+de depender de esto en un uso más serio, conviene generar migraciones
+versionadas con `npx prisma migrate dev --name init` (y probablemente subir
+de plan la base de datos: el gratuito limita a 5 conexiones simultáneas).
+
+### Despliegue en Railway (servicio único)
+
+El proyecto está preparado para desplegarse como **un solo servicio**: el
+backend (Express) sirve también el frontend ya compilado
+(`client/dist`), así que no hace falta desplegar dos servicios ni
+preocuparse por CORS.
+
+1. En [railway.com](https://railway.com), crea un proyecto nuevo → "Deploy from GitHub repo" → selecciona `mm-2596/crm-toledo21`.
+2. Railway detecta el `package.json` de la raíz. El comando de build es
+   `npm run build` y el de arranque `npm run start` (ya definidos en
+   `package.json`) — normalmente los detecta solo; si no, configúralos así
+   en Settings → Build/Deploy.
+3. En **Variables**, añade las mismas que hay en `server/.env` (no subir
+   ese archivo nunca a git): `DATABASE_URL`, `JWT_SECRET`,
+   `TEAM_INVITE_CODE`, `FEED_ACCESS_TOKEN`, `PUBLIC_BASE_URL` (pon aquí la
+   URL final, p. ej. `https://crm.toledo21.com`), y `CLIENT_ORIGIN` (la
+   misma URL final).
+4. En **Settings → Volumes**, añade un volumen persistente montado en
+   `/app/server/uploads` — si no, las fotos de las propiedades se
+   perderían en cada despliegue.
+5. En **Settings → Networking → Custom Domain**, añade `crm.toledo21.com`.
+   Railway te dará un valor CNAME; añádelo como registro DNS donde
+   gestionéis el dominio `toledo21.com` (fuera de Railway, en vuestro
+   proveedor de DNS). Railway emite el certificado SSL solo.
+6. Cada `git push` a `main` vuelve a desplegar automáticamente.

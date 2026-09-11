@@ -1,0 +1,9 @@
+{
+  "name": "crm-toledo21",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm install --prefix client && npm run build --prefix client && npm install --prefix server && npm run build --prefix server && npm run db:push --prefix server",
+    "start": "npm run start --prefix server"
+  }
+}

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import cookieParser from "cookie-parser";
@@ -31,16 +32,30 @@ app.use("/api/auth", authRouter);
 app.use("/api/feed", feedRouter);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-app.use(requireAuth);
-app.use("/api/contacts", contactsRouter);
-app.use("/api/properties", propertiesRouter);
-app.use("/api/pipeline", pipelineRouter);
-app.use("/api/activities", activitiesRouter);
-app.use("/api/dashboard", dashboardRouter);
-app.use("/api/users", usersRouter);
-app.use("/api/valuations", valuationsRouter);
+// A partir de aqui, cada router de la API va explicitamente protegido con
+// requireAuth (en vez de un app.use(requireAuth) global) para que no se
+// "arrastre" por error a rutas registradas despues, como el frontend.
+app.use("/api/contacts", requireAuth, contactsRouter);
+app.use("/api/properties", requireAuth, propertiesRouter);
+app.use("/api/pipeline", requireAuth, pipelineRouter);
+app.use("/api/activities", requireAuth, activitiesRouter);
+app.use("/api/dashboard", requireAuth, dashboardRouter);
+app.use("/api/users", requireAuth, usersRouter);
+app.use("/api/valuations", requireAuth, valuationsRouter);
 
-app.use(notFound);
+// Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
+app.use("/api", notFound);
+
+// En produccion, este mismo servicio sirve tambien el frontend ya compilado
+// (client/dist), para desplegar como un unico servicio en Railway.
+const clientDist = path.join(__dirname, "../../client/dist");
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
+
 app.use(errorHandler);
 
 const port = Number(process.env.PORT) || 4000;
