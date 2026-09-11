@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-              transition={{ type: "spring", damping: 1, stiffness: 260, mass: 0.5 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
               className="pointer-events-auto flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md"
             >
               {toast.kind === "success" ? (

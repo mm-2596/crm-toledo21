@@ -64,7 +64,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
     }
   }
 
-  const bubbleTransition = { type: "spring" as const, damping: 1, stiffness: 320, mass: 0.5 };
+  const bubbleTransition = { type: "spring" as const, bounce: 0, duration: 0.3 };
 
   return (
     <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">

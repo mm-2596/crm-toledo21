@@ -110,7 +110,7 @@ export function Layout() {
           key={location.pathname}
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", damping: 1, stiffness: 340, mass: 0.5 }}
+          transition={{ type: "spring", bounce: 0, duration: 0.3 }}
         >
           <Outlet />
         </motion.div>

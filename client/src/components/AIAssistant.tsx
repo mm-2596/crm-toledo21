@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Bot, Send, Sparkles, X } from "lucide-react";
+import { Bot, Search, Send, Sparkles, X } from "lucide-react";
 import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency, formatDate } from "../lib/format";
 import type { QueryClient } from "@tanstack/react-query";
@@ -15,14 +15,19 @@ interface Message {
 let msgId = 1;
 
 const WELCOME =
-  "Hola, soy el asistente del CRM. Puedo consultar y anotar cosas por ti mientras trabajas. Prueba:\n" +
+  "¡Hola! 👋 Soy tu asistente dentro del CRM. Estoy aquí para ahorrarte clics: puedo consultar datos al momento o anotar cosas por ti, sin que cambies de pantalla.\n\n" +
+  "🔎 Puedes preguntarme cosas como:\n" +
   "· \"tareas\" — tus pendientes\n" +
-  "· \"citas de hoy\" / \"citas de mañana\" — tu agenda\n" +
-  "· \"buscar <nombre>\" — localizar un contacto\n" +
-  "· \"crear contacto <nombre> <teléfono>\" — dar de alta un lead\n" +
-  "· \"nueva tarea <texto> para <nombre> mañana\" — agendar un seguimiento\n" +
-  "· \"propiedades en <ciudad>\" — inmuebles disponibles\n" +
-  "· \"resumen\" — cifras del panel";
+  "· \"citas de hoy\" o \"citas de mañana\" — tu agenda\n" +
+  "· \"buscar Ana\" — localizar un contacto\n" +
+  "· \"propiedades en Toledo\" — inmuebles disponibles\n" +
+  "· \"resumen\" — las cifras del panel\n\n" +
+  "✍️ Y también puedo crear cosas por ti:\n" +
+  "· \"crear contacto Laura Díaz 622333444\" — dar de alta un lead\n" +
+  "· \"nueva tarea llamar a Ana mañana\" — agendar un seguimiento\n\n" +
+  "Prueba uno de los botones de abajo, o escríbeme directamente. 🙂";
+
+const SUGGESTIONS = ["Resumen", "Tareas", "Citas de hoy", "Propiedades disponibles"];
 
 function extractEmail(text: string): string | undefined {
   return text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i)?.[0];
@@ -64,7 +69,7 @@ function extractDate(text: string): { date: Date | null; rest: string } {
 async function answer(input: string, queryClient: QueryClient): Promise<string> {
   const q = input.toLowerCase().trim();
 
-  if (/^hola\b|^ayuda\b/.test(q)) return WELCOME;
+  if (/^hola\b|^ayuda\b|^que puedes hacer|^qué puedes hacer/.test(q)) return WELCOME;
 
   if (q.startsWith("crear contacto")) {
     const rest = input.replace(/crear contacto/i, "").trim();
@@ -80,7 +85,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     const contact = await ContactsApi.create({ name, phone: phone ?? null, email: email ?? null, source: "MANUAL" });
     queryClient.invalidateQueries({ queryKey: ["contacts"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-    return `Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
+    return `Hecho ✅ Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
   }
 
   if (q.startsWith("nueva tarea")) {
@@ -122,7 +127,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
     if (contactId) queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
-    return `Tarea creada${contactNote}${date ? ` · ${formatDate(date.toISOString())}` : ""}: "${description}".`;
+    return `Hecho ✅ Tarea creada${contactNote}${date ? ` · ${formatDate(date.toISOString())}` : ""}: "${description}".`;
   }
 
   if (q.includes("agenda") || q.includes("cita")) {
@@ -134,7 +139,8 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
 
     const activities = await ActivitiesApi.list(true);
     const dayActivities = activities.filter((a) => a.dueDate && isSameDay(new Date(a.dueDate), targetDate));
-    if (dayActivities.length === 0) return `No tienes citas ni tareas para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}.`;
+    if (dayActivities.length === 0)
+      return `No tienes citas ni tareas para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}. 🎉`;
     return (
       `Agenda para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}:\n` +
       dayActivities.map((a) => `· ${a.description}${a.contact ? ` (${a.contact.name})` : ""}`).join("\n")
@@ -187,7 +193,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     );
   }
 
-  return 'No entendí eso todavía. Escribe "ayuda" para ver lo que puedo hacer.';
+  return 'Uy, no entendí eso todavía 🤔 Escribe "ayuda" para ver todo lo que puedo hacer.';
 }
 
 export function AIAssistant() {
@@ -199,15 +205,14 @@ export function AIAssistant() {
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text) return;
-    setMessages((prev) => [...prev, { id: msgId++, role: "user", text }]);
+  async function send(text: string) {
+    const clean = text.trim();
+    if (!clean) return;
+    setMessages((prev) => [...prev, { id: msgId++, role: "user", text: clean }]);
     setInput("");
     setThinking(true);
     try {
-      const reply = await answer(text, queryClient);
+      const reply = await answer(clean, queryClient);
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: reply }]);
     } catch {
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: "Algo falló al procesar eso. ¿Puedes reformularlo?" }]);
@@ -217,52 +222,92 @@ export function AIAssistant() {
     }
   }
 
+  function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    send(input);
+  }
+
+  const showSuggestions = messages.length === 1;
+
   return (
     <>
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 12 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: 12, transition: { duration: 0.15 } }}
-            transition={{ type: "spring", damping: 1, stiffness: 300, mass: 0.5 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8, transition: { duration: 0.12 } }}
+            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
             style={{ transformOrigin: "bottom right" }}
-            className="fixed bottom-24 right-5 z-40 flex h-[28rem] w-80 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-2xl backdrop-blur-xl"
+            className="fixed bottom-24 right-5 z-40 flex h-[30rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl"
           >
-            <div className="flex items-center gap-2 border-b border-slate-100 bg-white/70 px-4 py-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white">
-                <Sparkles size={14} />
+            <div className="flex items-center gap-2.5 border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-white px-4 py-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+                <Sparkles size={15} />
               </div>
-              <div className="text-sm font-semibold text-slate-900">Asistente IA</div>
-              <button onClick={() => setOpen(false)} className="ml-auto text-slate-400 hover:text-slate-600">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-slate-900">Asistente IA</div>
+                <div className="truncate text-[11px] text-slate-500">Pregúntame o pídeme que anote algo</div>
+              </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-900/5 hover:text-slate-600"
+                aria-label="Cerrar asistente"
+              >
                 <X size={16} />
               </button>
             </div>
-            <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
+
+            <div ref={listRef} className="flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
               {messages.map((m) => (
                 <div
                   key={m.id}
-                  className={`whitespace-pre-line rounded-xl px-3 py-2 text-xs leading-relaxed ${
+                  className={`whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                     m.role === "assistant"
-                      ? "bg-slate-100 text-slate-700"
-                      : "ml-auto max-w-[85%] bg-indigo-600 text-white"
-                  } ${m.role === "assistant" ? "mr-8" : ""}`}
+                      ? "mr-8 rounded-tl-sm bg-slate-100 text-slate-700"
+                      : "ml-auto max-w-[85%] rounded-tr-sm bg-indigo-600 text-white"
+                  }`}
                 >
                   {m.text}
                 </div>
               ))}
-              {thinking && <div className="mr-8 rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-400">Consultando…</div>}
+              {thinking && (
+                <div className="mr-8 flex w-fit items-center gap-1 rounded-2xl rounded-tl-sm bg-slate-100 px-3.5 py-2.5">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
+                </div>
+              )}
+              {showSuggestions && !thinking && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[11px] font-medium text-indigo-700 hover:bg-indigo-100"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-slate-100 p-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Escribe una pregunta…"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-indigo-400"
-              />
+
+            <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-slate-100 p-2.5">
+              <div className="relative flex-1">
+                <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escribe aquí…"
+                  className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-xs outline-none focus:border-indigo-400"
+                />
+              </div>
               <button
                 type="submit"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                disabled={!input.trim()}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40"
+                aria-label="Enviar"
               >
                 <Send size={14} />
               </button>
@@ -271,13 +316,15 @@ export function AIAssistant() {
         )}
       </AnimatePresence>
 
-      <button
+      <motion.button
         onClick={() => setOpen((v) => !v)}
+        whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.2 }}
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700"
-        aria-label="Abrir asistente IA"
+        aria-label={open ? "Cerrar asistente IA" : "Abrir asistente IA"}
       >
-        <Bot size={22} />
-      </button>
+        {open ? <X size={22} /> : <Bot size={22} />}
+      </motion.button>
     </>
   );
 }

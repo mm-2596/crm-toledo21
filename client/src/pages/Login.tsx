@@ -38,7 +38,7 @@ export function Login() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", damping: 1, stiffness: 300, mass: 0.5 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.35 }}
         className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white/80 p-8 shadow-xl backdrop-blur-xl"
       >
         <div className="mb-6 flex flex-col items-center gap-2">
