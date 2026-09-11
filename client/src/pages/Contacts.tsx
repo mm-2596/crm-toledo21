@@ -44,10 +44,10 @@ export function Contacts() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Contactos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Contactos</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
           <UserPlus size={16} />
           {showForm ? "Cancelar" : "Nuevo contacto"}
@@ -58,16 +58,16 @@ export function Contacts() {
       </p>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <input name="name" required placeholder="Nombre" className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-          <input name="email" type="email" placeholder="Email" className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-          <input name="phone" placeholder="Teléfono" className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-          <input name="preferredZone" placeholder="Zona de interés" className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-          <textarea name="notes" placeholder="Notas" className="col-span-2 rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <input name="name" required placeholder="Nombre" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="email" type="email" placeholder="Email" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="phone" placeholder="Teléfono" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="preferredZone" placeholder="Zona de interés" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <textarea name="notes" placeholder="Notas" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="col-span-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             Guardar contacto
           </button>
@@ -78,7 +78,7 @@ export function Contacts() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Buscar por nombre, email o teléfono…"
-        className="mb-4 w-full max-w-md rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="mb-4 w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
       />
 
       {isLoading ? (
@@ -90,7 +90,7 @@ export function Contacts() {
           description='Pulsa "Nuevo contacto" arriba a la derecha para dar de alta tu primer lead o cliente.'
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
               <tr>

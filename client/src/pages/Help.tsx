@@ -11,7 +11,7 @@ function GuideCard({
   steps: string[];
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2.5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
           <Icon size={18} />
@@ -30,7 +30,7 @@ function GuideCard({
 export function Help() {
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900">Guía rápida para el equipo</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Guía rápida para el equipo</h1>
       <p className="mb-6 text-sm text-slate-500">
         Cómo usar el CRM en el día a día. Si tienes dudas, pregunta al responsable del CRM.
       </p>

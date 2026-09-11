@@ -25,7 +25,7 @@ export function Tasks() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900">Tareas pendientes</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Tareas pendientes</h1>
       <p className="mb-6 text-sm text-slate-500">
         Llamadas, visitas y seguimientos con fecha, de todos los contactos. Se añaden desde la ficha de cada contacto.
       </p>
@@ -39,7 +39,7 @@ export function Tasks() {
           description="¡Buen trabajo! Cuando añadas una tarea con fecha desde la ficha de un contacto, aparecerá aquí."
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
               <tr>

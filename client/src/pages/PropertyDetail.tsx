@@ -120,7 +120,7 @@ export function PropertyDetail() {
             </span>
           </p>
         </div>
-        <p className="text-2xl font-semibold text-indigo-700">{formatCurrency(property.price)}</p>
+        <p className="text-2xl font-semibold tracking-tight text-indigo-700">{formatCurrency(property.price)}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

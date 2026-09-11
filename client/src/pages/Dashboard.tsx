@@ -16,12 +16,12 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${accent}`}>
         <Icon size={18} />
       </div>
       <div className="text-sm text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-slate-900">{value}</div>
+      <div className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value}</div>
     </div>
   );
 }
@@ -39,7 +39,7 @@ export function Dashboard() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-slate-900">Panel general</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Panel general</h1>
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
       {isEmpty && (
@@ -72,7 +72,7 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="mt-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-lg font-medium text-slate-900">Oportunidades por etapa</h2>
         <div className="flex flex-col gap-2">
           {data.dealsByStage.map((stage) => (

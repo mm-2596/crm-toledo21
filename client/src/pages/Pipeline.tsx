@@ -53,10 +53,10 @@ export function Pipeline() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Pipeline de ventas</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Pipeline de ventas</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
           <PlusCircle size={16} />
           {showForm ? "Cancelar" : "Nueva oportunidad"}
@@ -67,8 +67,8 @@ export function Pipeline() {
       </p>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-4 gap-3 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <select name="contactId" required className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-4 gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <select name="contactId" required className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Contacto…</option>
             {(contacts ?? []).map((c) => (
               <option key={c.id} value={c.id}>
@@ -76,7 +76,7 @@ export function Pipeline() {
               </option>
             ))}
           </select>
-          <select name="propertyId" className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+          <select name="propertyId" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Propiedad (opcional)…</option>
             {(properties ?? []).map((p) => (
               <option key={p.id} value={p.id}>
@@ -84,7 +84,7 @@ export function Pipeline() {
               </option>
             ))}
           </select>
-          <select name="stageId" required className="rounded-md border border-slate-300 px-3 py-2 text-sm">
+          <select name="stageId" required className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Etapa…</option>
             {(stages ?? []).map((s) => (
               <option key={s.id} value={s.id}>
@@ -92,11 +92,11 @@ export function Pipeline() {
               </option>
             ))}
           </select>
-          <input name="value" type="number" placeholder="Valor estimado (€)" className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          <input name="value" type="number" placeholder="Valor estimado (€)" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="col-span-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
             Crear oportunidad
           </button>
@@ -124,7 +124,7 @@ export function Pipeline() {
                   key={deal.id}
                   draggable
                   onDragStart={(e) => e.dataTransfer.setData("text/deal-id", deal.id)}
-                  className="group flex cursor-move items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-sm shadow-sm hover:shadow-md"
+                  className="group flex cursor-move items-start gap-2 rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm hover:shadow-md"
                 >
                   <GripVertical size={14} className="mt-0.5 shrink-0 text-slate-300 group-hover:text-slate-400" />
                   <div>
