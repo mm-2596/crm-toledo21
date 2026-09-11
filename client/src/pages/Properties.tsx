@@ -6,11 +6,13 @@ import { PropertiesApi } from "../api/endpoints";
 import { formatCurrency, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
+import { PropertyForm, emptyPropertyForm, toPropertyPayload } from "../components/PropertyForm";
 import type { Property } from "../api/types";
 
 export function Properties() {
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyPropertyForm);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -24,25 +26,15 @@ export function Properties() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
       setShowForm(false);
+      setForm(emptyPropertyForm);
       showToast("Propiedad guardada");
     },
+    onError: () => showToast("No se pudo guardar la propiedad", "error"),
   });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    createMutation.mutate({
-      reference: String(form.get("reference")),
-      title: String(form.get("title")),
-      type: String(form.get("type")) as never,
-      listingType: String(form.get("listingType")) as never,
-      price: Number(form.get("price")),
-      city: String(form.get("city") || "") || null,
-      zone: String(form.get("zone") || "") || null,
-      areaM2: form.get("areaM2") ? Number(form.get("areaM2")) : null,
-      bedrooms: form.get("bedrooms") ? Number(form.get("bedrooms")) : null,
-    });
-    e.currentTarget.reset();
+    createMutation.mutate(toPropertyPayload(form));
   }
 
   return (
@@ -58,35 +50,18 @@ export function Properties() {
         </button>
       </div>
       <p className="mb-6 text-sm text-slate-500">
-        Cuantos más datos añadas (ciudad, zona, m²), más precisa será la valoración automática de precios.
+        Cuantos más datos añadas, mejor funcionará la valoración automática y antes estará lista para publicarse en la web o en portales.
       </p>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-3 gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <input name="reference" required placeholder="Referencia" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <input name="title" required placeholder="Título" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <select name="type" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            {Object.entries(propertyTypeLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select name="listingType" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
-            <option value="VENTA">Venta</option>
-            <option value="ALQUILER">Alquiler</option>
-          </select>
-          <input name="price" type="number" required placeholder="Precio (€)" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <input name="city" placeholder="Ciudad" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <input name="zone" placeholder="Zona/Barrio" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <input name="areaM2" type="number" placeholder="m²" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-          <input name="bedrooms" type="number" placeholder="Habitaciones" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <form onSubmit={handleSubmit} className="mb-6">
+          <PropertyForm value={form} onChange={setForm} />
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            Guardar propiedad
+            {createMutation.isPending ? "Guardando…" : "Guardar propiedad"}
           </button>
         </form>
       )}

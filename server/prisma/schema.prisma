@@ -27,11 +27,28 @@ enum PropertyType {
   CASA
   CHALET
   ATICO
+  DUPLEX
+  ESTUDIO
   LOCAL
   OFICINA
   GARAJE
   TERRENO
+  NAVE_INDUSTRIAL
+  TRASTERO
   OTRO
+}
+
+enum PropertyCondition {
+  NUEVO
+  BUEN_ESTADO
+  A_REFORMAR
+  REFORMADO
+}
+
+enum HeatingType {
+  NINGUNA
+  INDIVIDUAL
+  CENTRAL
 }
 
 enum PropertyStatus {
@@ -124,9 +141,26 @@ model Property {
   bedrooms      Int?
   bathrooms     Int?
   areaM2        Int?
+  usableAreaM2  Int?
   floor         Int?
   hasElevator   Boolean?
   energyRating  String?
+  energyConsumptionValue Float?
+  energyEmissionsRating  String?
+  energyEmissionsValue   Float?
+  condition       PropertyCondition?
+  yearBuilt       Int?
+  parkingSpaces   Int?
+  heating         HeatingType?
+  hasAirConditioning Boolean?
+  hasTerrace      Boolean?
+  hasBalcony      Boolean?
+  hasGarden       Boolean?
+  hasPool         Boolean?
+  hasStorageRoom  Boolean?
+  isFurnished     Boolean?
+  isExterior      Boolean?
+  hoaFees         Int?
   description   String?        @db.Text
   houzezId      String?        @unique
   agentId       String?

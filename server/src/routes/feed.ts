@@ -9,7 +9,10 @@ export const feedRouter = Router();
  * Feed genérico de propiedades para sindicación externa (web propia vía el
  * plugin "Houzez Property Feed", y en el futuro Idealista/Fotocasa una vez
  * tengamos su formato exacto). Un único origen de datos, dos salidas
- * (JSON y XML) para no depender de lo que acepte cada destino.
+ * (JSON y XML) para no depender de lo que acepte cada destino. Incluye ya
+ * los campos que suelen pedir los portales españoles (certificado
+ * energético con letra + valor de consumo y emisiones, estado, año de
+ * construcción, calefacción, superficie útil vs construida, etc.).
  *
  * Protegido con un token simple por query string (?token=...), pensado para
  * que un importador externo (no una persona logueada en el CRM) pueda leerlo.
@@ -38,8 +41,10 @@ async function buildFeedItems(baseUrl: string) {
     type: p.type,
     operation: p.listingType,
     status: p.status,
+    condition: p.condition ?? "",
     price: p.price,
     currency: "EUR",
+    hoaFees: p.hoaFees,
     city: p.city ?? "",
     zone: p.zone ?? "",
     address: p.address ?? "",
@@ -48,9 +53,24 @@ async function buildFeedItems(baseUrl: string) {
     bedrooms: p.bedrooms,
     bathrooms: p.bathrooms,
     areaM2: p.areaM2,
+    usableAreaM2: p.usableAreaM2,
     floor: p.floor,
     hasElevator: p.hasElevator,
-    energyRating: p.energyRating ?? "",
+    yearBuilt: p.yearBuilt,
+    parkingSpaces: p.parkingSpaces,
+    heating: p.heating ?? "",
+    hasAirConditioning: p.hasAirConditioning,
+    hasTerrace: p.hasTerrace,
+    hasBalcony: p.hasBalcony,
+    hasGarden: p.hasGarden,
+    hasPool: p.hasPool,
+    hasStorageRoom: p.hasStorageRoom,
+    isFurnished: p.isFurnished,
+    isExterior: p.isExterior,
+    energyConsumptionRating: p.energyRating ?? "",
+    energyConsumptionValue: p.energyConsumptionValue,
+    energyEmissionsRating: p.energyEmissionsRating ?? "",
+    energyEmissionsValue: p.energyEmissionsValue,
     images: p.images.map((img) => `${baseUrl}${img.url}`),
     agentName: p.agent?.name ?? "",
     agentPhone: p.agent?.phone ?? "",
@@ -92,8 +112,10 @@ feedRouter.get(
     <type>${escapeXml(p.type)}</type>
     <operation>${escapeXml(p.operation)}</operation>
     <status>${escapeXml(p.status)}</status>
+    <condition>${escapeXml(p.condition)}</condition>
     <price>${p.price}</price>
     <currency>${p.currency}</currency>
+    <hoa_fees>${p.hoaFees ?? ""}</hoa_fees>
     <city>${escapeXml(p.city)}</city>
     <zone>${escapeXml(p.zone)}</zone>
     <address>${escapeXml(p.address)}</address>
@@ -102,9 +124,24 @@ feedRouter.get(
     <bedrooms>${p.bedrooms ?? ""}</bedrooms>
     <bathrooms>${p.bathrooms ?? ""}</bathrooms>
     <area_m2>${p.areaM2 ?? ""}</area_m2>
+    <usable_area_m2>${p.usableAreaM2 ?? ""}</usable_area_m2>
     <floor>${p.floor ?? ""}</floor>
     <has_elevator>${p.hasElevator ?? ""}</has_elevator>
-    <energy_rating>${escapeXml(p.energyRating)}</energy_rating>
+    <year_built>${p.yearBuilt ?? ""}</year_built>
+    <parking_spaces>${p.parkingSpaces ?? ""}</parking_spaces>
+    <heating>${escapeXml(p.heating)}</heating>
+    <has_air_conditioning>${p.hasAirConditioning ?? ""}</has_air_conditioning>
+    <has_terrace>${p.hasTerrace ?? ""}</has_terrace>
+    <has_balcony>${p.hasBalcony ?? ""}</has_balcony>
+    <has_garden>${p.hasGarden ?? ""}</has_garden>
+    <has_pool>${p.hasPool ?? ""}</has_pool>
+    <has_storage_room>${p.hasStorageRoom ?? ""}</has_storage_room>
+    <is_furnished>${p.isFurnished ?? ""}</is_furnished>
+    <is_exterior>${p.isExterior ?? ""}</is_exterior>
+    <energy_consumption_rating>${escapeXml(p.energyConsumptionRating)}</energy_consumption_rating>
+    <energy_consumption_value>${p.energyConsumptionValue ?? ""}</energy_consumption_value>
+    <energy_emissions_rating>${escapeXml(p.energyEmissionsRating)}</energy_emissions_rating>
+    <energy_emissions_value>${p.energyEmissionsValue ?? ""}</energy_emissions_value>
     <images>
 ${p.images.map((url) => `      <image>${escapeXml(url)}</image>`).join("\n")}
     </images>

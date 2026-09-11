@@ -15,11 +15,28 @@ export const propertyTypeLabels: Record<string, string> = {
   CASA: "Casa",
   CHALET: "Chalet",
   ATICO: "Ático",
-  LOCAL: "Local",
+  DUPLEX: "Dúplex",
+  ESTUDIO: "Estudio",
+  LOCAL: "Local comercial",
   OFICINA: "Oficina",
   GARAJE: "Garaje",
   TERRENO: "Terreno",
+  NAVE_INDUSTRIAL: "Nave industrial",
+  TRASTERO: "Trastero",
   OTRO: "Otro",
+};
+
+export const propertyConditionLabels: Record<string, string> = {
+  NUEVO: "Nuevo / a estrenar",
+  BUEN_ESTADO: "Buen estado",
+  A_REFORMAR: "A reformar",
+  REFORMADO: "Reformado",
+};
+
+export const heatingLabels: Record<string, string> = {
+  NINGUNA: "Sin calefacción",
+  INDIVIDUAL: "Individual",
+  CENTRAL: "Central",
 };
 
 export const listingTypeLabels: Record<string, string> = {

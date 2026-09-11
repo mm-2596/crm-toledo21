@@ -3,12 +3,18 @@ export type PropertyType =
   | "CASA"
   | "CHALET"
   | "ATICO"
+  | "DUPLEX"
+  | "ESTUDIO"
   | "LOCAL"
   | "OFICINA"
   | "GARAJE"
   | "TERRENO"
+  | "NAVE_INDUSTRIAL"
+  | "TRASTERO"
   | "OTRO";
 
+export type PropertyCondition = "NUEVO" | "BUEN_ESTADO" | "A_REFORMAR" | "REFORMADO";
+export type HeatingType = "NINGUNA" | "INDIVIDUAL" | "CENTRAL";
 export type ListingType = "VENTA" | "ALQUILER";
 export type PropertyStatus = "DISPONIBLE" | "RESERVADO" | "VENDIDO" | "ALQUILADO" | "RETIRADO";
 export type ContactSource = "WEB_HOUZEZ" | "MANUAL" | "WHATSAPP" | "EMAIL" | "PHONE" | "REFERRAL" | "OTHER";
@@ -72,9 +78,26 @@ export interface Property {
   bedrooms?: number | null;
   bathrooms?: number | null;
   areaM2?: number | null;
+  usableAreaM2?: number | null;
   floor?: number | null;
   hasElevator?: boolean | null;
   energyRating?: EnergyRating | null;
+  energyConsumptionValue?: number | null;
+  energyEmissionsRating?: EnergyRating | null;
+  energyEmissionsValue?: number | null;
+  condition?: PropertyCondition | null;
+  yearBuilt?: number | null;
+  parkingSpaces?: number | null;
+  heating?: HeatingType | null;
+  hasAirConditioning?: boolean | null;
+  hasTerrace?: boolean | null;
+  hasBalcony?: boolean | null;
+  hasGarden?: boolean | null;
+  hasPool?: boolean | null;
+  hasStorageRoom?: boolean | null;
+  isFurnished?: boolean | null;
+  isExterior?: boolean | null;
+  hoaFees?: number | null;
   description?: string | null;
   agentId?: string | null;
   agent?: User | null;
