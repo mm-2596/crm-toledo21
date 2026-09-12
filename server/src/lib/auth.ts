@@ -28,8 +28,17 @@ export function signToken(payload: AuthPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
 }
 
+/**
+ * Acepta la sesion por cookie (uso normal desde el propio CRM en el
+ * navegador) o por cabecera "Authorization: Bearer <token>" (uso desde un
+ * servicio externo, como el backend de la web publica, actuando en nombre
+ * de un agente ya logueado ahi).
+ */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const token = req.cookies?.[AUTH_COOKIE];
+  const bearer = req.headers.authorization?.startsWith("Bearer ")
+    ? req.headers.authorization.slice(7)
+    : undefined;
+  const token = req.cookies?.[AUTH_COOKIE] ?? bearer;
   if (!token) return res.status(401).json({ error: "No has iniciado sesión" });
 
   try {

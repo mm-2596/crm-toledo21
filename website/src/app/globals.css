@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --color-ink: #14110f;
+  --color-ink-soft: #4a443d;
+  --color-paper: #faf8f4;
+  --color-paper-dim: #f1ede4;
+  --color-line: #e4ddd0;
+  --color-gold: #a9834f;
+  --color-gold-soft: #ede3d1;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  color-scheme: light;
+}
+
+/* Tracking and leading are size-specific, per Apple's typography guidance:
+   large display text wants tight/negative tracking, body text wants ~0. */
+h1, .text-display-xl {
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+h2, .text-display-lg {
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+h3, .text-display-md {
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+}
+
+p, li {
+  letter-spacing: 0;
+}
+
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-ink);
+}
+
+/* Instant, tactile press feedback (Response principle) on anything actionable */
+button:not(:disabled),
+a {
+  transition: transform 100ms ease-out, opacity 100ms ease-out, background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:not(:disabled):active {
+    transform: none;
+  }
+}

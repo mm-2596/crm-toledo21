@@ -66,7 +66,7 @@ const propertyInput = z.object({
 propertiesRouter.get(
   "/",
   asyncHandler(async (req, res) => {
-    const { q, status, city } = req.query;
+    const { q, status, city, agentId } = req.query;
     const properties = await prisma.property.findMany({
       where: {
         AND: [
@@ -81,6 +81,7 @@ propertiesRouter.get(
             : {},
           status ? { status: String(status) as never } : {},
           city ? { city: String(city) } : {},
+          agentId ? { agentId: String(agentId) } : {},
         ],
       },
       orderBy: { createdAt: "desc" },

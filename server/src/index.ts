@@ -14,6 +14,7 @@ import { dashboardRouter } from "./routes/dashboard.js";
 import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
 import { feedRouter } from "./routes/feed.js";
+import { publicRouter } from "./routes/public.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { requireAuth } from "./lib/auth.js";
 
@@ -30,6 +31,7 @@ app.use("/api/auth", authRouter);
 // Publicos (sin sesion): el feed de sindicacion y las fotos de propiedades,
 // pensados para que un importador externo (plugin de la web, portal) los lea.
 app.use("/api/feed", feedRouter);
+app.use("/api/public", publicRouter);
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // A partir de aqui, cada router de la API va explicitamente protegido con
