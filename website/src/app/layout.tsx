@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompareProvider } from "@/components/CompareContext";
 import "./globals.css";
 
-const displayFont = Plus_Jakarta_Sans({
+const displayFont = Geist({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: "variable",
 });
 
-const inter = Inter({
+const bodyFont = Geist({
   variable: "--font-body",
   subsets: ["latin"],
+  weight: "variable",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${displayFont.variable} ${inter.variable}`}>
+    <html lang="es" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body className="flex min-h-screen flex-col bg-paper font-body text-ink antialiased">
         <CompareProvider>
           <Navbar />

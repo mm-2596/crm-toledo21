@@ -53,7 +53,12 @@ export function PropertyGallery({ images, title }: { images: PublicImage[]; titl
 
   return (
     <div>
-      <div ref={containerRef} className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-paper-dim">
+      <motion.div
+        ref={containerRef}
+        initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.6 }}
+        className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-paper-dim">
         {reduceMotion ? (
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={active} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }} className="absolute inset-0">
@@ -111,20 +116,23 @@ export function PropertyGallery({ images, title }: { images: PublicImage[]; titl
             </div>
           </>
         )}
-      </div>
+      </motion.div>
 
       {images.length > 1 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img, i) => (
-            <button
+            <motion.button
               key={img.id}
+              initial={{ opacity: 0, y: reduceMotion ? 0 : 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
               onClick={() => goTo(i)}
               className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg ring-2 transition-all ${
                 i === active ? "ring-gold" : "ring-transparent opacity-70 hover:opacity-100"
               }`}
             >
               <Image src={img.url} alt="" fill sizes="96px" className="object-cover" />
-            </button>
+            </motion.button>
           ))}
         </div>
       )}
