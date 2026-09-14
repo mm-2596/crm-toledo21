@@ -24,16 +24,23 @@ body {
 h1, .text-display-xl {
   letter-spacing: -0.025em;
   line-height: 1.05;
+  font-weight: 700;
 }
 
 h2, .text-display-lg {
   letter-spacing: -0.02em;
   line-height: 1.1;
+  font-weight: 700;
 }
 
 h3, .text-display-md {
   letter-spacing: -0.012em;
   line-height: 1.2;
+  font-weight: 600;
+}
+
+.font-display {
+  font-weight: 600;
 }
 
 p, li {

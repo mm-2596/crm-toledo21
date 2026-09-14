@@ -3,7 +3,7 @@ import { KeyRound } from "lucide-react";
 import { getProperties } from "@/lib/api";
 import { Hero } from "@/components/Hero";
 import { InfiniteMarquee } from "@/components/InfiniteMarquee";
-import { ServicesAccordion } from "@/components/ServicesAccordion";
+import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
 
 export default async function Home() {
@@ -26,17 +26,15 @@ export default async function Home() {
 
       <FeaturedPropertiesSection sale={destacados} rent={alquiler} />
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <section className="mx-auto max-w-7xl px-6 pt-20">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-wider text-gold">¿Qué ofrecemos?</p>
           <h2 className="mx-auto mt-3 max-w-xl font-display text-3xl text-ink sm:text-4xl">
             Comprar o vender puede ser abrumador — lo hacemos sencillo.
           </h2>
         </div>
-        <div className="mt-12">
-          <ServicesAccordion />
-        </div>
       </section>
+      <ProcessShowcase />
 
       <section className="mx-auto max-w-7xl px-6 pb-20">
         <div className="flex flex-col items-center gap-6 rounded-3xl bg-ink px-8 py-14 text-center sm:px-16">

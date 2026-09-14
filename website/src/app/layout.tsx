@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompareProvider } from "@/components/CompareContext";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const displayFont = Plus_Jakarta_Sans({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  weight: ["500", "600", "700", "800"],
 });
 
 const inter = Inter({
@@ -44,7 +43,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="es" className={`${displayFont.variable} ${inter.variable}`}>
       <body className="flex min-h-screen flex-col bg-paper font-body text-ink antialiased">
         <CompareProvider>
           <Navbar />

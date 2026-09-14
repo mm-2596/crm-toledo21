@@ -22,7 +22,7 @@ export function RotatingWord() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -28, opacity: 0 }}
           transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-          className="inline-block whitespace-nowrap italic text-gold"
+          className="inline-block whitespace-nowrap text-gold"
         >
           {PHRASES[index]}
         </motion.span>
