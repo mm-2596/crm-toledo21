@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { signToken } from "../lib/auth.js";
+import { sendLeadConfirmationEmail } from "../lib/email.js";
 
 export const publicRouter = Router();
 
@@ -184,6 +185,12 @@ publicRouter.post(
           },
         });
       }
+    }
+
+    if (data.email) {
+      // No bloquea la respuesta: si el correo falla, el lead ya está
+      // guardado en el CRM de todas formas.
+      sendLeadConfirmationEmail(data.email, data.name).catch(() => {});
     }
 
     res.status(201).json({ ok: true });
