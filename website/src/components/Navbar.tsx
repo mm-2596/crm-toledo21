@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -71,11 +72,15 @@ export function Navbar() {
           }`}
           style={{ paddingTop: onDark ? 12 : 8, paddingBottom: onDark ? 12 : 8 }}
         >
-          <Link
-            href="/"
-            className={`shrink-0 font-display text-lg tracking-tight sm:text-xl ${onDark ? "text-paper" : "text-ink"}`}
-          >
-            Toledo<span className="text-gold">21</span>
+          <Link href="/" className="relative h-6 w-[125px] shrink-0 sm:h-7 sm:w-[146px]" aria-label="Toledo21">
+            <Image
+              src={onDark ? "/logo/toledo21-logo-dark-mark.png" : "/logo/toledo21-logo-mark.png"}
+              alt="Toledo21"
+              fill
+              sizes="150px"
+              className="object-contain object-left"
+              priority
+            />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">

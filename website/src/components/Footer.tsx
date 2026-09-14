@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -6,9 +7,13 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
           <div>
-            <div className="font-display text-lg text-ink">
-              Toledo<span className="text-gold">21</span>
-            </div>
+            <Image
+              src="/logo/toledo21-logo.png"
+              alt="Toledo21 — somos tu inmobiliaria.es"
+              width={1237}
+              height={435}
+              className="h-14 w-auto object-contain object-left"
+            />
             <p className="mt-3 max-w-xs text-sm text-ink-soft">
               Inmuebles seleccionados en Toledo, con datos completos y un equipo de agentes dedicado a
               acompañarte en cada paso.

@@ -1,7 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useMotionValue,
+  animate,
+  type PanInfo,
+} from "framer-motion";
 import { Search, Calculator, Handshake, TrendingUp, type LucideIcon } from "lucide-react";
 
 const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
@@ -117,36 +126,96 @@ function ProcessShowcaseDesktop() {
   );
 }
 
-// En móvil/tablet: lista simple apilada, sin scroll anclado (evita el
-// riesgo de desbordamiento del patrón "sticky" en columna única).
+// En móvil/tablet: carrusel deslizable con el dedo (en vez del scroll
+// anclado de escritorio, que no cabe en una sola columna). Mismo patrón
+// de arrastre que la galería de fotos, para que se sienta nativo y con
+// movimiento real, sin el riesgo de desbordamiento del "sticky".
 function ProcessShowcaseMobile() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const [active, setActive] = useState(0);
+  const x = useMotionValue(0);
+  const reduceMotion = useReducedMotion();
+  const CARD_GAP = 16;
+
+  useEffect(() => {
+    function measure() {
+      if (containerRef.current) setWidth(containerRef.current.offsetWidth);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const cardWidth = width * 0.86;
+  const step = cardWidth + CARD_GAP;
+
+  useEffect(() => {
+    if (!width) return;
+    const controls = animate(x, -active * step, { type: "spring", bounce: 0, duration: 0.4 });
+    return controls.stop;
+  }, [active, step, width, x]);
+
+  function goTo(i: number) {
+    setActive(Math.max(0, Math.min(STEPS.length - 1, i)));
+  }
+
+  function handleDragEnd(_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) {
+    const threshold = step * 0.2;
+    if (info.offset.x < -threshold || info.velocity.x < -400) goTo(active + 1);
+    else if (info.offset.x > threshold || info.velocity.x > 400) goTo(active - 1);
+    else animate(x, -active * step, { type: "spring", bounce: 0, duration: 0.35 });
+  }
+
   return (
-    <div className="mx-auto max-w-xl px-6 lg:hidden">
-      <div className="flex flex-col divide-y divide-line border-y border-line">
-        {STEPS.map((step, i) => {
-          const Icon = step.icon;
-          return (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="flex gap-4 py-6"
-            >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-paper-dim text-gold">
-                <Icon size={22} strokeWidth={1.4} />
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-gold">
-                  {String(i + 1).padStart(2, "0")}
-                </p>
-                <h3 className="mt-1 font-display text-lg text-ink">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.text}</p>
-              </div>
-            </motion.div>
-          );
-        })}
+    <div className="lg:hidden">
+      <div ref={containerRef} className="overflow-hidden pl-6">
+        {width > 0 && (
+          <motion.div
+            className="flex cursor-grab touch-pan-y active:cursor-grabbing"
+            style={{ x, gap: CARD_GAP }}
+            drag={!reduceMotion && "x"}
+            dragConstraints={{ left: -(STEPS.length - 1) * step, right: 0 }}
+            dragElastic={0.15}
+            dragMomentum={false}
+            onDragEnd={handleDragEnd}
+          >
+            {STEPS.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <div
+                  key={s.title}
+                  style={{ width: cardWidth }}
+                  className="shrink-0 rounded-3xl border border-line bg-paper p-6"
+                >
+                  <motion.div
+                    animate={{ y: reduceMotion ? 0 : [0, -6, 0] }}
+                    transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-paper-dim text-gold"
+                  >
+                    <Icon size={22} strokeWidth={1.4} />
+                  </motion.div>
+                  <p className="mt-5 text-xs font-medium uppercase tracking-wider text-gold">
+                    {String(i + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-1 font-display text-lg text-ink">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{s.text}</p>
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-1.5">
+        {STEPS.map((s, i) => (
+          <button
+            key={s.title}
+            onClick={() => goTo(i)}
+            aria-label={`Ir a "${s.title}"`}
+            className={`h-1.5 rounded-full transition-all ${i === active ? "w-6 bg-gold" : "w-1.5 bg-line"}`}
+          />
+        ))}
       </div>
     </div>
   );
