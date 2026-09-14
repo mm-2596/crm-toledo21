@@ -28,6 +28,19 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
 ];
 
 export function ProcessShowcase() {
+  return (
+    <>
+      <ProcessShowcaseDesktop />
+      <ProcessShowcaseMobile />
+    </>
+  );
+}
+
+// En pantallas anchas: barra de pestañas anclada + progreso de scroll.
+// Confinado a lg+ porque en columna única (móvil) el texto y el panel
+// visual apilados necesitan más alto de lo que cabe en el contenedor
+// "sticky", y el sobrante se desbordaba encima de la siguiente sección.
+function ProcessShowcaseDesktop() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -49,7 +62,7 @@ export function ProcessShowcase() {
   const Icon = STEPS[active].icon;
 
   return (
-    <div ref={containerRef} style={{ height: `${STEPS.length * 85}vh` }} className="relative">
+    <div ref={containerRef} style={{ height: `${STEPS.length * 85}vh` }} className="relative hidden lg:block">
       <div className="sticky top-28 mx-auto flex max-w-5xl flex-col px-6" style={{ height: "min(560px, 78vh)" }}>
         <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-line pb-4">
           {STEPS.map((step, i) => (
@@ -66,13 +79,10 @@ export function ProcessShowcase() {
         </div>
 
         <div className="h-0.5 w-full bg-line">
-          <motion.div
-            className="h-full origin-left bg-gold"
-            style={{ scaleX: scrollYProgress }}
-          />
+          <motion.div className="h-full origin-left bg-gold" style={{ scaleX: scrollYProgress }} />
         </div>
 
-        <div className="mt-10 grid flex-1 grid-cols-1 items-center gap-10 lg:grid-cols-2">
+        <div className="mt-10 grid flex-1 grid-cols-2 items-center gap-10 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -96,12 +106,47 @@ export function ProcessShowcase() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-paper-dim"
+              className="flex aspect-[4/3] max-h-full items-center justify-center rounded-3xl bg-paper-dim"
             >
               <Icon size={64} className="text-gold" strokeWidth={1.2} />
             </motion.div>
           </AnimatePresence>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// En móvil/tablet: lista simple apilada, sin scroll anclado (evita el
+// riesgo de desbordamiento del patrón "sticky" en columna única).
+function ProcessShowcaseMobile() {
+  return (
+    <div className="mx-auto max-w-xl px-6 lg:hidden">
+      <div className="flex flex-col divide-y divide-line border-y border-line">
+        {STEPS.map((step, i) => {
+          const Icon = step.icon;
+          return (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="flex gap-4 py-6"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-paper-dim text-gold">
+                <Icon size={22} strokeWidth={1.4} />
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-gold">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-1 font-display text-lg text-ink">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.text}</p>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
