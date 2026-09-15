@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 import { HeroBackground } from "./HeroBackground";
 import { AnimatedCounter } from "./AnimatedCounter";
 import { RotatingWord } from "./RotatingWord";
@@ -18,8 +18,6 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
   const [city, setCity] = useState("");
   const [active, setActive] = useState(0);
 
-  const images = properties.map((p) => p.images[0]?.url).filter((u): u is string => !!u);
-
   const sectionRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
@@ -28,14 +26,10 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, reduceMotion ? 1 : 0]);
 
   useEffect(() => {
-    if (images.length < 2 || reduceMotion) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % images.length), SLIDE_DURATION);
+    if (properties.length < 2 || reduceMotion) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % properties.length), SLIDE_DURATION);
     return () => clearInterval(id);
-  }, [images.length, reduceMotion]);
-
-  function goTo(index: number) {
-    setActive(((index % images.length) + images.length) % images.length);
-  }
+  }, [properties.length, reduceMotion]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -47,37 +41,8 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
   return (
     <section id="hero" ref={sectionRef} className="relative flex min-h-[92vh] items-center overflow-hidden bg-ink">
       <motion.div style={{ y: bgY }} className="absolute inset-0 scale-[1.25]">
-        <HeroBackground images={images} active={active} />
+        <HeroBackground />
       </motion.div>
-
-      {images.length > 1 && (
-        <>
-          <button
-            onClick={() => goTo(active - 1)}
-            aria-label="Foto anterior"
-            className="absolute left-4 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-paper/20 bg-ink/40 text-paper backdrop-blur-md hover:bg-ink/60 sm:flex"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => goTo(active + 1)}
-            aria-label="Foto siguiente"
-            className="absolute right-4 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-paper/20 bg-ink/40 text-paper backdrop-blur-md hover:bg-ink/60 sm:flex"
-          >
-            <ChevronRight size={18} />
-          </button>
-          <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 sm:hidden">
-            {images.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                aria-label={`Ir a la foto ${i + 1}`}
-                className={`h-1.5 rounded-full transition-all ${i === active ? "w-5 bg-gold" : "w-1.5 bg-paper/40"}`}
-              />
-            ))}
-          </div>
-        </>
-      )}
 
       {properties[active] && <FeaturedSpotlight property={properties[active]} />}
 

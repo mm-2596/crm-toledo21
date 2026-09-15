@@ -14,9 +14,7 @@ export default async function Home() {
 
   const destacados = featured.properties.slice(0, 3);
   const alquiler = forRent.properties.slice(0, 3);
-  const heroProperties = [...featured.properties, ...forRent.properties]
-    .filter((p) => p.images.length > 0)
-    .slice(0, 5);
+  const heroProperties = [...featured.properties, ...forRent.properties].slice(0, 5);
 
   return (
     <div>
