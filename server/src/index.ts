@@ -17,6 +17,7 @@ import { feedRouter } from "./routes/feed.js";
 import { publicRouter } from "./routes/public.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { requireAuth } from "./lib/auth.js";
+import { UPLOADS_ROOT } from "./lib/upload.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -63,4 +64,8 @@ app.use(errorHandler);
 const port = Number(process.env.PORT) || 4000;
 app.listen(port, () => {
   console.log(`CRM Toledo21 API escuchando en http://localhost:${port}`);
+  // Sin un volumen persistente montado exactamente en esta ruta, las fotos
+  // subidas se pierden en el proximo despliegue (el disco del contenedor
+  // se recrea desde cero). Comprobar en los logs de arranque de Railway.
+  console.log(`Carpeta de subidas (fotos): ${UPLOADS_ROOT}`);
 });
