@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, ShieldCheck, UserX, UserCheck, Star, X } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
+import { getErrorMessage } from "../api/client";
 import { formatDate } from "../lib/format";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
@@ -65,7 +66,7 @@ function ReviewModerationCard() {
       queryClient.invalidateQueries({ queryKey: ["pending-reviews"] });
       showToast("Reseña actualizada");
     },
-    onError: () => showToast("No se pudo actualizar la reseña", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo actualizar la reseña"), "error"),
   });
 
   const removeMutation = useMutation({
@@ -74,7 +75,7 @@ function ReviewModerationCard() {
       queryClient.invalidateQueries({ queryKey: ["pending-reviews"] });
       showToast("Reseña eliminada");
     },
-    onError: () => showToast("No se pudo eliminar la reseña", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo eliminar la reseña"), "error"),
   });
 
   if (isLoading) return null;
@@ -148,7 +149,7 @@ export function Team() {
       queryClient.invalidateQueries({ queryKey: ["team"] });
       showToast("Cambios guardados");
     },
-    onError: () => showToast("No se pudo guardar el cambio", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo guardar el cambio"), "error"),
   });
 
   return (

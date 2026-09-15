@@ -6,6 +6,17 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+export function getErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { error?: string; details?: { message?: string }[] } | undefined;
+    if (data?.details?.length) {
+      return data.details.map((d) => d.message).filter(Boolean).join(". ") || fallback;
+    }
+    if (data?.error) return data.error;
+  }
+  return fallback;
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {

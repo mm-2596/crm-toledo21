@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { Download, MapPin, Sparkles, Wand2 } from "lucide-react";
 import { PropertiesApi, ValuationsApi } from "../api/endpoints";
+import { getErrorMessage } from "../api/client";
 import { formatCurrency, formatDate, listingTypeLabels, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
 import { generateDescription, improveDescription } from "../lib/textGenerator";
 import { useToast } from "../components/Toast";
@@ -57,7 +58,7 @@ export function PropertyDetail() {
       queryClient.invalidateQueries({ queryKey: ["property", id] });
       showToast("Propiedad actualizada");
     },
-    onError: () => showToast("No se pudo guardar", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo guardar"), "error"),
   });
 
   const saveCoords = useMutation({

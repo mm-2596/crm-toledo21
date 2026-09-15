@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Building2, PlusCircle } from "lucide-react";
 import { PropertiesApi } from "../api/endpoints";
+import { getErrorMessage } from "../api/client";
 import { formatCurrency, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
@@ -29,7 +30,7 @@ export function Properties() {
       setForm(emptyPropertyForm);
       showToast("Propiedad guardada");
     },
-    onError: () => showToast("No se pudo guardar la propiedad", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo guardar la propiedad"), "error"),
   });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

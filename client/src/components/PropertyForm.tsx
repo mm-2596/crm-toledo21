@@ -99,31 +99,62 @@ export const emptyPropertyForm: PropertyFormValues = {
   description: "",
 };
 
+// Los campos numéricos aceptan formato español ("185.000" o "185,000" como
+// miles, "120,5" como decimal): sin esto, un <input type="number"> nativo
+// interpreta el punto como separador decimal y rechaza la coma directamente,
+// así que "185.000 €" se guardaba como 185 € o fallaba al no ser un entero.
+function parseSpanishInt(s: string): number | null {
+  const cleaned = s.trim().replace(/[.,\s]/g, "");
+  if (!cleaned) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseSpanishFloat(s: string): number | null {
+  const trimmed = s.trim();
+  if (!trimmed) return null;
+
+  let cleaned: string;
+  if (trimmed.includes(",")) {
+    // La coma es inequívocamente el separador decimal; cualquier punto es de miles.
+    cleaned = trimmed.replace(/\./g, "").replace(",", ".");
+  } else {
+    // Sin coma, un único punto seguido de 1-2 dígitos es casi seguro decimal
+    // ("120.5"); con 3 dígitos o varios puntos, es separador de miles.
+    const dotCount = (trimmed.match(/\./g) || []).length;
+    const digitsAfterLastDot = trimmed.length - trimmed.lastIndexOf(".") - 1;
+    const isDecimalDot = dotCount === 1 && digitsAfterLastDot > 0 && digitsAfterLastDot <= 2;
+    cleaned = isDecimalDot ? trimmed : trimmed.replace(/\./g, "");
+  }
+
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function toPropertyPayload(v: PropertyFormValues): Partial<Property> {
-  const num = (s: string) => (s.trim() ? Number(s) : null);
   return {
     reference: v.reference.trim(),
     title: v.title.trim(),
     type: v.type as Property["type"],
     listingType: v.listingType as Property["listingType"],
-    price: Number(v.price) || 0,
+    price: parseSpanishInt(v.price) ?? 0,
     city: v.city.trim() || null,
     zone: v.zone.trim() || null,
     address: v.address.trim() || null,
-    bedrooms: num(v.bedrooms),
-    bathrooms: num(v.bathrooms),
-    areaM2: num(v.areaM2),
-    usableAreaM2: num(v.usableAreaM2),
-    floor: num(v.floor),
-    yearBuilt: num(v.yearBuilt),
+    bedrooms: parseSpanishInt(v.bedrooms),
+    bathrooms: parseSpanishInt(v.bathrooms),
+    areaM2: parseSpanishInt(v.areaM2),
+    usableAreaM2: parseSpanishInt(v.usableAreaM2),
+    floor: parseSpanishInt(v.floor),
+    yearBuilt: parseSpanishInt(v.yearBuilt),
     condition: (v.condition || null) as Property["condition"],
-    parkingSpaces: num(v.parkingSpaces),
+    parkingSpaces: parseSpanishInt(v.parkingSpaces),
     heating: (v.heating || null) as Property["heating"],
-    hoaFees: num(v.hoaFees),
+    hoaFees: parseSpanishInt(v.hoaFees),
     energyRating: (v.energyRating || null) as Property["energyRating"],
-    energyConsumptionValue: v.energyConsumptionValue.trim() ? Number(v.energyConsumptionValue) : null,
+    energyConsumptionValue: parseSpanishFloat(v.energyConsumptionValue),
     energyEmissionsRating: (v.energyEmissionsRating || null) as Property["energyEmissionsRating"],
-    energyEmissionsValue: v.energyEmissionsValue.trim() ? Number(v.energyEmissionsValue) : null,
+    energyEmissionsValue: parseSpanishFloat(v.energyEmissionsValue),
     hasElevator: v.hasElevator,
     hasAirConditioning: v.hasAirConditioning,
     hasTerrace: v.hasTerrace,
@@ -247,7 +278,9 @@ export function PropertyForm({
             <label className={labelClass}>Precio (€) *</label>
             <input
               required
-              type="number"
+              type="text"
+              inputMode="numeric"
+              placeholder="Ej. 185.000"
               value={value.price}
               onChange={(e) => set("price", e.target.value)}
               className={inputClass}
@@ -280,12 +313,13 @@ export function PropertyForm({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div>
             <label className={labelClass}>Superficie construida (m²)</label>
-            <input type="number" value={value.areaM2} onChange={(e) => set("areaM2", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.areaM2} onChange={(e) => set("areaM2", e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Superficie útil (m²)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={value.usableAreaM2}
               onChange={(e) => set("usableAreaM2", e.target.value)}
               className={inputClass}
@@ -293,24 +327,25 @@ export function PropertyForm({
           </div>
           <div>
             <label className={labelClass}>Habitaciones</label>
-            <input type="number" value={value.bedrooms} onChange={(e) => set("bedrooms", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.bedrooms} onChange={(e) => set("bedrooms", e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Baños</label>
-            <input type="number" value={value.bathrooms} onChange={(e) => set("bathrooms", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.bathrooms} onChange={(e) => set("bathrooms", e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Planta</label>
-            <input type="number" value={value.floor} onChange={(e) => set("floor", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.floor} onChange={(e) => set("floor", e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Año de construcción</label>
-            <input type="number" value={value.yearBuilt} onChange={(e) => set("yearBuilt", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.yearBuilt} onChange={(e) => set("yearBuilt", e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Plazas de garaje</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={value.parkingSpaces}
               onChange={(e) => set("parkingSpaces", e.target.value)}
               className={inputClass}
@@ -318,7 +353,7 @@ export function PropertyForm({
           </div>
           <div>
             <label className={labelClass}>Gastos de comunidad (€/mes)</label>
-            <input type="number" value={value.hoaFees} onChange={(e) => set("hoaFees", e.target.value)} className={inputClass} />
+            <input type="text" inputMode="numeric" value={value.hoaFees} onChange={(e) => set("hoaFees", e.target.value)} className={inputClass} />
           </div>
         </div>
       </Section>
@@ -369,7 +404,8 @@ export function PropertyForm({
           <div>
             <label className={labelClass}>Consumo (kWh/m² año)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={value.energyConsumptionValue}
               onChange={(e) => set("energyConsumptionValue", e.target.value)}
               className={inputClass}
@@ -393,7 +429,8 @@ export function PropertyForm({
           <div>
             <label className={labelClass}>Emisiones (kg CO₂/m² año)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={value.energyEmissionsValue}
               onChange={(e) => set("energyEmissionsValue", e.target.value)}
               className={inputClass}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, ExternalLink } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
+import { getErrorMessage } from "../api/client";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
 import { WEBSITE_URL } from "../lib/config";
@@ -36,7 +37,7 @@ export function Profile() {
       queryClient.invalidateQueries({ queryKey: ["user", user?.id] });
       showToast("Perfil guardado");
     },
-    onError: () => showToast("No se pudo guardar el perfil", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo guardar el perfil"), "error"),
   });
 
   const photoMutation = useMutation({
@@ -45,7 +46,7 @@ export function Profile() {
       queryClient.invalidateQueries({ queryKey: ["user", user?.id] });
       showToast("Foto actualizada");
     },
-    onError: () => showToast("No se pudo subir la foto", "error"),
+    onError: (error) => showToast(getErrorMessage(error, "No se pudo subir la foto"), "error"),
   });
 
   if (!user || isLoading) return <p className="text-slate-500">Cargando…</p>;
