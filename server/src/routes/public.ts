@@ -197,6 +197,98 @@ publicRouter.post(
   }),
 );
 
+const publicAgentSelect = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  photoUrl: true,
+  jobTitle: true,
+  bio: true,
+  createdAt: true,
+} as const;
+
+function withAbsolutePhoto<T extends { photoUrl: string | null }>(agent: T, baseUrl: string): T {
+  return { ...agent, photoUrl: agent.photoUrl ? `${baseUrl}${agent.photoUrl}` : null };
+}
+
+publicRouter.get(
+  "/agents",
+  asyncHandler(async (req, res) => {
+    const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
+    const agents = await prisma.user.findMany({
+      where: { active: true },
+      select: {
+        ...publicAgentSelect,
+        _count: { select: { properties: { where: { status: { not: "RETIRADO" } } } } },
+        reviews: { where: { approved: true }, select: { rating: true } },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    res.json(
+      agents.map(({ _count, reviews, ...agent }) => ({
+        ...withAbsolutePhoto(agent, baseUrl),
+        propertiesCount: _count.properties,
+        reviewsCount: reviews.length,
+        averageRating: reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null,
+      })),
+    );
+  }),
+);
+
+publicRouter.get(
+  "/agents/:id",
+  asyncHandler(async (req, res) => {
+    const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
+    const agent = await prisma.user.findFirst({
+      where: { id: String(req.params.id), active: true },
+      select: publicAgentSelect,
+    });
+    if (!agent) return res.status(404).json({ error: "Agente no encontrado" });
+
+    const [properties, reviews] = await Promise.all([
+      prisma.property.findMany({
+        where: { agentId: agent.id, status: { not: "RETIRADO" } },
+        select: publicPropertySelect,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.agentReview.findMany({
+        where: { agentId: agent.id, approved: true },
+        select: { id: true, authorName: true, rating: true, comment: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    res.json({
+      ...withAbsolutePhoto(agent, baseUrl),
+      properties: properties.map((p) => ({ ...p, images: p.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` })) })),
+      reviews,
+      averageRating: reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null,
+    });
+  }),
+);
+
+const agentReviewInput = z.object({
+  authorName: z.string().min(1).max(120),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().min(1).max(2000),
+});
+
+publicRouter.post(
+  "/agents/:id/reviews",
+  asyncHandler(async (req, res) => {
+    const agent = await prisma.user.findFirst({ where: { id: String(req.params.id), active: true } });
+    if (!agent) return res.status(404).json({ error: "Agente no encontrado" });
+
+    const data = agentReviewInput.parse(req.body);
+    await prisma.agentReview.create({
+      data: { agentId: agent.id, ...data, approved: false },
+    });
+    res.status(201).json({ ok: true });
+  }),
+);
+
 const agentLoginInput = z.object({
   email: z.string().email(),
   password: z.string().min(1),

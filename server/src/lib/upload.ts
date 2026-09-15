@@ -33,3 +33,29 @@ export const uploadPropertyImage = multer({
     cb(null, true);
   },
 });
+
+const agentPhotoStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const dir = path.join(UPLOADS_ROOT, "agents", String(req.params.id));
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+
+export const uploadAgentPhoto = multer({
+  storage: agentPhotoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!allowedTypes.has(file.mimetype)) {
+      const err = new Error("Formato de imagen no soportado (usa JPG, PNG o WEBP)") as Error & { status: number };
+      err.status = 400;
+      cb(err);
+      return;
+    }
+    cb(null, true);
+  },
+});

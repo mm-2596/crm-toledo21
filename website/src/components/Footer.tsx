@@ -23,6 +23,7 @@ export function Footer() {
             <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Explorar</div>
             <ul className="flex flex-col gap-2 text-sm">
               <li><Link href="/propiedades" className="text-ink-soft hover:text-ink">Propiedades</Link></li>
+              <li><Link href="/equipo" className="text-ink-soft hover:text-ink">Equipo</Link></li>
               <li><Link href="/comparar" className="text-ink-soft hover:text-ink">Comparar</Link></li>
               <li><Link href="/favoritos" className="text-ink-soft hover:text-ink">Favoritos</Link></li>
               <li><Link href="/calculadora" className="text-ink-soft hover:text-ink">Calculadora de hipoteca</Link></li>

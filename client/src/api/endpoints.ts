@@ -1,6 +1,7 @@
 import { api } from "./client";
 import type {
   Activity,
+  AgentReview,
   Contact,
   DashboardSummary,
   Deal,
@@ -72,9 +73,25 @@ export const DashboardApi = {
 
 export const UsersApi = {
   list: () => api.get<TeamMember[]>("/users").then((r) => r.data),
+  get: (id: string) => api.get<TeamMember>(`/users/${id}`).then((r) => r.data),
   inviteCode: () => api.get<{ inviteCode: string | null }>("/users/invite-code").then((r) => r.data),
   update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean }) =>
     api.patch<TeamMember>(`/users/${id}`, data).then((r) => r.data),
+  updateProfile: (id: string, data: { jobTitle?: string | null; bio?: string | null; phone?: string | null }) =>
+    api.patch<TeamMember>(`/users/${id}/profile`, data).then((r) => r.data),
+  uploadPhoto: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("photo", file);
+    return api
+      .post<TeamMember>(`/users/${id}/photo`, form, { headers: { "Content-Type": undefined } })
+      .then((r) => r.data);
+  },
+  reviews: (id: string) => api.get<AgentReview[]>(`/users/${id}/reviews`).then((r) => r.data),
+  pendingReviews: () =>
+    api.get<(AgentReview & { agent: { id: string; name: string } })[]>(`/users/reviews/pending`).then((r) => r.data),
+  approveReview: (reviewId: string, approved: boolean) =>
+    api.patch<AgentReview>(`/users/reviews/${reviewId}`, { approved }).then((r) => r.data),
+  removeReview: (reviewId: string) => api.delete(`/users/reviews/${reviewId}`),
 };
 
 export const ValuationsApi = {

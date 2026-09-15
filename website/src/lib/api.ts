@@ -1,5 +1,11 @@
 import "server-only";
-import type { PropertyDetailResponse, PropertyFilters, PropertyListResponse } from "./types";
+import type {
+  PropertyDetailResponse,
+  PropertyFilters,
+  PropertyListResponse,
+  PublicAgentProfile,
+  PublicAgentSummary,
+} from "./types";
 
 const API_URL = process.env.CRM_API_URL || "http://localhost:4000";
 
@@ -46,5 +52,23 @@ export function agentLogin(email: string, password: string) {
 export function getAgentProperties(token: string, agentId: string) {
   return apiFetch<import("./types").PublicProperty[]>(`/api/properties?agentId=${agentId}`, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getAgents(): Promise<PublicAgentSummary[]> {
+  return apiFetch<PublicAgentSummary[]>(`/api/public/agents`);
+}
+
+export function getAgent(id: string): Promise<PublicAgentProfile> {
+  return apiFetch<PublicAgentProfile>(`/api/public/agents/${id}`);
+}
+
+export function submitAgentReview(
+  agentId: string,
+  data: { authorName: string; rating: number; comment: string },
+) {
+  return apiFetch<{ ok: true }>(`/api/public/agents/${agentId}/reviews`, {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 }

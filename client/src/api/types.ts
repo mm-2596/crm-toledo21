@@ -28,10 +28,23 @@ export interface User {
   email: string;
   role: "ADMIN" | "AGENT";
   phone?: string | null;
+  photoUrl?: string | null;
+  jobTitle?: string | null;
+  bio?: string | null;
 }
 
 export interface TeamMember extends User {
   active: boolean;
+  createdAt: string;
+}
+
+export interface AgentReview {
+  id: string;
+  agentId: string;
+  authorName: string;
+  rating: number;
+  comment: string;
+  approved: boolean;
   createdAt: string;
 }
 

@@ -11,10 +11,10 @@ import { useFavorites } from "./FavoritesContext";
 
 const links = [
   { href: "/propiedades", label: "Propiedades" },
+  { href: "/equipo", label: "Equipo" },
   { href: "/comparar", label: "Comparar" },
   { href: "/favoritos", label: "Favoritos" },
   { href: "/calculadora", label: "Calculadora" },
-  { href: "/agentes", label: "Agentes" },
 ];
 
 export function Navbar() {

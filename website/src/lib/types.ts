@@ -86,6 +86,42 @@ export interface PropertyListResponse {
   properties: PublicProperty[];
 }
 
+export interface PublicAgentSummary {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  photoUrl?: string | null;
+  jobTitle?: string | null;
+  bio?: string | null;
+  createdAt: string;
+  propertiesCount: number;
+  reviewsCount: number;
+  averageRating: number | null;
+}
+
+export interface PublicAgentReview {
+  id: string;
+  authorName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface PublicAgentProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  photoUrl?: string | null;
+  jobTitle?: string | null;
+  bio?: string | null;
+  createdAt: string;
+  properties: PublicProperty[];
+  reviews: PublicAgentReview[];
+  averageRating: number | null;
+}
+
 export interface PropertyFilters {
   type?: string;
   listingType?: string;

@@ -3,6 +3,12 @@ export function formatCurrency(value?: number | null) {
   return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 }
 
+export function formatDate(value: string | Date) {
+  return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(
+    typeof value === "string" ? new Date(value) : value,
+  );
+}
+
 export const propertyTypeLabels: Record<string, string> = {
   PISO: "Piso",
   CASA: "Casa",

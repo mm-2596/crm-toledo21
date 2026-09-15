@@ -79,14 +79,28 @@ export function Layout() {
           </NavLink>
 
           {user && (
-            <div className="mt-2 flex items-center gap-2 rounded-lg px-3 py-2">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-medium text-slate-700">{user.name}</div>
-                <div className="truncate text-[11px] text-slate-400">{user.role === "ADMIN" ? "Administrador" : "Agente"}</div>
-              </div>
+            <div className="mt-2 flex items-center gap-2 rounded-lg px-1">
+              <NavLink
+                to="/perfil"
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 hover:bg-slate-900/5"
+                title="Editar mi perfil público"
+              >
+                {user.photoUrl ? (
+                  <img
+                    src={user.photoUrl}
+                    alt={user.name}
+                    className="h-7 w-7 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-600">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-medium text-slate-700">{user.name}</div>
+                  <div className="truncate text-[11px] text-slate-400">{user.role === "ADMIN" ? "Administrador" : "Agente"}</div>
+                </div>
+              </NavLink>
               <button
                 onClick={handleLogout}
                 title="Cerrar sesión"

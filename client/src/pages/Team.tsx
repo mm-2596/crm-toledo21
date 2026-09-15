@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ShieldCheck, UserX, UserCheck } from "lucide-react";
+import { Check, Copy, ShieldCheck, UserX, UserCheck, Star, X } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
 import { formatDate } from "../lib/format";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
-import type { TeamMember } from "../api/types";
+import type { AgentReview, TeamMember } from "../api/types";
 
 function RoleBadge({ role }: { role: TeamMember["role"] }) {
   return (
@@ -54,6 +54,86 @@ function InviteCodeCard() {
   );
 }
 
+function ReviewModerationCard() {
+  const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const { data, isLoading } = useQuery({ queryKey: ["pending-reviews"], queryFn: UsersApi.pendingReviews });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id, approved }: { id: string; approved: boolean }) => UsersApi.approveReview(id, approved),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-reviews"] });
+      showToast("Reseña actualizada");
+    },
+    onError: () => showToast("No se pudo actualizar la reseña", "error"),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => UsersApi.removeReview(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-reviews"] });
+      showToast("Reseña eliminada");
+    },
+    onError: () => showToast("No se pudo eliminar la reseña", "error"),
+  });
+
+  if (isLoading) return null;
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="mb-6 rounded-2xl border border-amber-100 bg-amber-50/60 p-5">
+      <h2 className="mb-1 text-sm font-semibold text-amber-900">
+        Reseñas pendientes de aprobar ({data.length})
+      </h2>
+      <p className="mb-3 text-sm text-amber-900/70">
+        Solo se muestran públicamente en la web una vez las apruebes aquí.
+      </p>
+      <div className="flex flex-col gap-3">
+        {data.map((review: AgentReview & { agent: { id: string; name: string } }) => (
+          <div key={review.id} className="rounded-xl border border-amber-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium text-slate-800">
+                  {review.authorName} → <span className="text-slate-500">{review.agent.name}</span>
+                </p>
+                <div className="mt-0.5 flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={13}
+                      className={n <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => approveMutation.mutate({ id: review.id, approved: true })}
+                  disabled={approveMutation.isPending}
+                  title="Aprobar y publicar"
+                  className="rounded-lg border border-emerald-200 p-1.5 text-emerald-600 hover:bg-emerald-50 disabled:opacity-40"
+                >
+                  <Check size={15} />
+                </button>
+                <button
+                  onClick={() => removeMutation.mutate(review.id)}
+                  disabled={removeMutation.isPending}
+                  title="Rechazar y eliminar"
+                  className="rounded-lg border border-red-200 p-1.5 text-red-600 hover:bg-red-50 disabled:opacity-40"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-slate-600">{review.comment}</p>
+            <p className="mt-1 text-xs text-slate-400">{formatDate(review.createdAt)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Team() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -78,6 +158,7 @@ export function Team() {
         Gestiona quién tiene acceso al CRM y con qué permisos. Solo los administradores ven esta pantalla.
       </p>
 
+      <ReviewModerationCard />
       <InviteCodeCard />
 
       {isLoading ? (

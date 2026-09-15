@@ -92,12 +92,31 @@ model User {
   passwordHash String
   role         Role     @default(AGENT)
   phone        String?
+  photoUrl     String?
+  jobTitle     String?
+  bio          String?  @db.Text
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 
   deals      Deal[]
   activities Activity[]
   properties Property[]
+  reviews    AgentReview[]
+}
+
+model AgentReview {
+  id         String   @id @default(cuid())
+  agentId    String
+  authorName String
+  rating     Int
+  comment    String   @db.Text
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  agent User @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
+  @@index([approved])
 }
 
 model Contact {
