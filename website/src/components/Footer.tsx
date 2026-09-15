@@ -39,8 +39,13 @@ export function Footer() {
             <p className="mt-1 text-sm text-ink-soft">info@somostuinmobiliaria.es</p>
           </div>
         </div>
-        <div className="mt-12 border-t border-line pt-6 text-xs text-ink-soft">
-          © {new Date().getFullYear()} Toledo21. Todos los derechos reservados.
+        <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Toledo21. Todos los derechos reservados.</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link href="/aviso-legal" className="hover:text-ink">Aviso legal</Link>
+            <Link href="/privacidad" className="hover:text-ink">Privacidad</Link>
+            <Link href="/cookies" className="hover:text-ink">Cookies</Link>
+          </div>
         </div>
       </div>
     </footer>
