@@ -1,13 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type MotionValue } from "framer-motion";
 
-export function HeroBackground() {
+// El hero se queda fijo en pantalla mientras se hace scroll (ver Hero.tsx),
+// y ese mismo scroll controla un zoom lento sobre este fondo — por eso
+// AuroraMesh y CitySkyline van dentro de un contenedor con la `scale` que
+// llega por prop, mientras las partículas y el degradado quedan fuera para
+// no acercarse con el zoom.
+export function HeroBackground({ scale }: { scale: MotionValue<number> }) {
   return (
     <div className="absolute inset-0 overflow-hidden bg-ink">
-      <AuroraMesh />
-      <CitySkyline />
+      <motion.div style={{ scale }} className="absolute inset-0">
+        <AuroraMesh />
+        <CitySkyline />
+      </motion.div>
       <FloatingParticles />
       <LightSweep />
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/30" />

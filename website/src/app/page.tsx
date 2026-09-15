@@ -1,5 +1,6 @@
 import { getProperties } from "@/lib/api";
 import { Hero } from "@/components/Hero";
+import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { InfiniteMarquee } from "@/components/InfiniteMarquee";
 import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
@@ -19,6 +20,7 @@ export default async function Home() {
   return (
     <div>
       <Hero properties={heroProperties} />
+      <HeroSearchPanel />
 
       <InfiniteMarquee />
 
