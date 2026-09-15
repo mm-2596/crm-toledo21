@@ -16,6 +16,7 @@ import {
   Sun,
   Mail,
   Phone,
+  Download,
 } from "lucide-react";
 import { getProperty } from "@/lib/api";
 import { PropertyGallery } from "@/components/PropertyGallery";
@@ -87,6 +88,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             {[property.address, property.zone, property.city].filter(Boolean).join(", ") || "Toledo"} · Ref.{" "}
             {property.reference}
           </p>
+          <a
+            href={`/api/properties/${property.id}/pdf`}
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2 text-xs font-medium text-ink transition-transform hover:scale-[1.03]"
+          >
+            <Download size={14} /> Descargar ficha en PDF
+          </a>
         </div>
         <p className="font-display text-3xl text-ink sm:text-4xl">{formatCurrency(property.price)}</p>
       </div>

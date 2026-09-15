@@ -4,8 +4,7 @@ import { Camera, ExternalLink } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
-
-const WEBSITE_URL = import.meta.env.VITE_WEBSITE_URL || "https://crm-toledo21.vercel.app";
+import { WEBSITE_URL } from "../lib/config";
 
 export function Profile() {
   const { user } = useAuth();

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { MapPin, Sparkles, Wand2 } from "lucide-react";
+import { Download, MapPin, Sparkles, Wand2 } from "lucide-react";
 import { PropertiesApi, ValuationsApi } from "../api/endpoints";
 import { formatCurrency, formatDate, listingTypeLabels, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
 import { generateDescription, improveDescription } from "../lib/textGenerator";
 import { useToast } from "../components/Toast";
 import { PropertyGallery } from "../components/PropertyGallery";
 import { PropertyForm, emptyPropertyForm, fromProperty, toPropertyPayload } from "../components/PropertyForm";
+import { WEBSITE_URL } from "../lib/config";
 
 export function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +95,14 @@ export function PropertyDetail() {
               {propertyStatusLabels[property.status]}
             </span>
           </p>
+          <a
+            href={`${WEBSITE_URL}/api/properties/${property.id}/pdf`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+          >
+            <Download size={13} /> Descargar ficha en PDF
+          </a>
         </div>
         <p className="text-2xl font-semibold tracking-tight text-indigo-700">{formatCurrency(property.price)}</p>
       </div>
