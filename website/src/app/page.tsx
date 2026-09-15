@@ -3,6 +3,7 @@ import { Hero } from "@/components/Hero";
 import { InfiniteMarquee } from "@/components/InfiniteMarquee";
 import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
+import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { HomeContactForm } from "@/components/HomeContactForm";
 
 export default async function Home() {
@@ -34,6 +35,8 @@ export default async function Home() {
         </div>
       </section>
       <ProcessShowcase />
+
+      <WhyChooseUs />
 
       <HomeContactForm />
     </div>
