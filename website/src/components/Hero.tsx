@@ -94,7 +94,7 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold/20 text-gold">
             <ShieldCheck size={13} />
           </span>
-          Agencia verificada en Toledo
+          Agencia verificada en Getafe
         </motion.div>
 
         <motion.h1
@@ -112,8 +112,8 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
           transition={{ type: "spring", bounce: 0, duration: 0.55, delay: 0.1 }}
           className="mt-6 max-w-xl text-base leading-relaxed text-paper/70 sm:text-lg"
         >
-          Pisos, casas y chalets en Toledo con fichas completas, comparador y agentes reales listos para ayudarte en
-          cada paso.
+          Pisos, casas y chalets en Getafe y Madrid sur con fichas completas, comparador y agentes reales listos
+          para ayudarte en cada paso.
         </motion.p>
 
         <motion.form

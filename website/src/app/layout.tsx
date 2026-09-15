@@ -21,12 +21,12 @@ const bodyFont = Geist({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const siteDescription =
-  "Propiedades seleccionadas en Toledo y alrededores: pisos, casas y chalets con fotografía cuidada, datos completos y un equipo de agentes dedicado.";
+  "Propiedades seleccionadas en Getafe y Madrid sur: pisos, casas y chalets con fotografía cuidada, datos completos y un equipo de agentes dedicado.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Toledo21 | Inmuebles seleccionados en Toledo",
+    default: "Toledo21 | Inmuebles seleccionados en Getafe",
     template: "%s | Toledo21",
   },
   description: siteDescription,
@@ -34,12 +34,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_ES",
     siteName: "Toledo21",
-    title: "Toledo21 | Inmuebles seleccionados en Toledo",
+    title: "Toledo21 | Inmuebles seleccionados en Getafe",
     description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Toledo21 | Inmuebles seleccionados en Toledo",
+    title: "Toledo21 | Inmuebles seleccionados en Getafe",
     description: siteDescription,
   },
 };

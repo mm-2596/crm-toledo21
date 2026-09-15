@@ -28,7 +28,7 @@ export function HeroBackground({ images, active = 0 }: { images: string[]; activ
       ) : (
         <>
           <AuroraMesh />
-          <ToledoSkyline />
+          <CitySkyline />
         </>
       )}
 
@@ -81,7 +81,7 @@ const SKYLINE_TOP: [number, number][] = [
   [900, 170], [900, 240], [980, 240], [980, 200], [1030, 200], [1030, 260], [1440, 260],
 ];
 
-function ToledoSkyline() {
+function CitySkyline() {
   const outlineD = useMemo(
     () => `M0,230 ${SKYLINE_TOP.slice(1).map(([x, y]) => `L${x},${y}`).join(" ")}`,
     [],

@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const property = await getProperty(id).catch(() => null);
   if (!property) return { title: "Propiedad no encontrada" };
 
-  const location = [property.zone, property.city].filter(Boolean).join(", ") || "Toledo";
+  const location = [property.zone, property.city].filter(Boolean).join(", ") || "Getafe";
   const details = [
     formatCurrency(property.price),
     property.areaM2 != null ? `${property.areaM2} m²` : null,
@@ -85,7 +85,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           </p>
           <h1 className="mt-2 font-display text-3xl text-ink sm:text-4xl">{property.title}</h1>
           <p className="mt-2 text-sm text-ink-soft">
-            {[property.address, property.zone, property.city].filter(Boolean).join(", ") || "Toledo"} · Ref.{" "}
+            {[property.address, property.zone, property.city].filter(Boolean).join(", ") || "Getafe"} · Ref.{" "}
             {property.reference}
           </p>
           <a

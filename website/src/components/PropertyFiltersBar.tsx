@@ -65,7 +65,7 @@ export function PropertyFiltersBar({ filters }: { filters: PropertyFilters }) {
         <input
           value={form.city}
           onChange={(e) => update("city", e.target.value)}
-          placeholder="Toledo…"
+          placeholder="Getafe…"
           className="w-36 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
         />
       </Field>

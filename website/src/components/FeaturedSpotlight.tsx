@@ -23,7 +23,7 @@ export function FeaturedSpotlight({ property }: { property: PublicProperty }) {
             Destacado · {listingTypeLabels[property.listingType]}
           </div>
           <h3 className="mt-2 font-display text-lg leading-tight text-paper">{property.title}</h3>
-          <p className="mt-1 text-xs text-paper/60">{property.zone || property.city || "Toledo"}</p>
+          <p className="mt-1 text-xs text-paper/60">{property.zone || property.city || "Getafe"}</p>
 
           <div className="mt-3 flex items-center gap-3 text-xs text-paper/70">
             {property.bedrooms != null && (

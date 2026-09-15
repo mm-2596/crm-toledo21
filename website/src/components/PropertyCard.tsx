@@ -47,7 +47,7 @@ export function PropertyCard({ property, index = 0 }: { property: PublicProperty
           <div>
             <h3 className="font-display text-lg text-ink">{property.title}</h3>
             <p className="text-sm text-ink-soft">
-              {propertyTypeLabels[property.type]} · {property.zone || property.city || "Toledo"}
+              {propertyTypeLabels[property.type]} · {property.zone || property.city || "Getafe"}
             </p>
           </div>
         </div>

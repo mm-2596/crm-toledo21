@@ -22,7 +22,7 @@ const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: Calculator,
     title: "Tasación de tu vivienda",
-    text: "Valoración gratuita y sin compromiso, basada en datos reales del mercado en Toledo y alrededores, no en estimaciones genéricas.",
+    text: "Valoración gratuita y sin compromiso, basada en datos reales del mercado en Getafe y Madrid sur, no en estimaciones genéricas.",
   },
   {
     icon: Handshake,

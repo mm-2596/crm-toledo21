@@ -129,7 +129,7 @@ export function PropertySheetDocument({
   logoUrl: string;
   websiteUrl: string;
 }) {
-  const location = [property.address, property.zone, property.city].filter(Boolean).join(", ") || "Toledo";
+  const location = [property.address, property.zone, property.city].filter(Boolean).join(", ") || "Getafe";
   const cover = property.images[0]?.url;
 
   const features = [

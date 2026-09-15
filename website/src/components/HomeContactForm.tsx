@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Send } from "lucide-react";
+import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { sendLead } from "@/app/propiedades/[id]/actions";
 
 export function HomeContactForm() {
@@ -28,18 +28,32 @@ export function HomeContactForm() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3">
-            <a href="mailto:hola@toledo21.com" className="flex items-center gap-3 text-sm text-paper/80 hover:text-paper">
+            <a
+              href="mailto:info@somostuinmobiliaria.es"
+              className="flex items-center gap-3 text-sm text-paper/80 hover:text-paper"
+            >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/10 text-gold">
                 <Mail size={15} />
               </span>
-              hola@toledo21.com
+              info@somostuinmobiliaria.es
             </a>
-            <div className="flex items-center gap-3 text-sm text-paper/80">
+            <a href="tel:+34673490094" className="flex items-center gap-3 text-sm text-paper/80 hover:text-paper">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/10 text-gold">
+                <Phone size={15} />
+              </span>
+              673 49 00 94
+            </a>
+            <a
+              href="https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Getafe,+C.+Toledo,+21,+28901+Getafe,+Madrid/@40.3034017,-3.7327946,15z"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 text-sm text-paper/80 hover:text-paper"
+            >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-paper/10 text-gold">
                 <MapPin size={15} />
               </span>
-              Toledo, España
-            </div>
+              C. Toledo, 21, Getafe, Madrid
+            </a>
           </div>
         </div>
 

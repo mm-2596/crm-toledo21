@@ -5,9 +5,9 @@ import { motion, useReducedMotion } from "framer-motion";
 const ITEMS = [
   "Comprar",
   "Alquilar",
-  "Casco Histórico",
-  "Santa Bárbara",
-  "Estación",
+  "Centro",
+  "Las Margaritas",
+  "Sector III",
   "Pisos",
   "Casas",
   "Chalets",

@@ -11,10 +11,17 @@ import { useFavorites } from "./FavoritesContext";
 
 const links = [
   { href: "/propiedades", label: "Propiedades" },
+  { href: "/gestoria", label: "Gestoría" },
   { href: "/equipo", label: "Equipo" },
+  { href: "/oficinas", label: "Oficinas" },
+  { href: "/calculadora", label: "Calculadora" },
+];
+
+// Comparar y Favoritos ya tienen su propio icono con contador en el navbar
+// de escritorio; en el menú móvil, sin esos iconos, se listan aquí también.
+const mobileOnlyLinks = [
   { href: "/comparar", label: "Comparar" },
   { href: "/favoritos", label: "Favoritos" },
-  { href: "/calculadora", label: "Calculadora" },
 ];
 
 export function Navbar() {
@@ -96,16 +103,6 @@ export function Navbar() {
                 }`}
               >
                 {link.label}
-                {link.href === "/comparar" && ids.length > 0 && (
-                  <span className="absolute -right-3.5 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[10px] font-medium text-ink">
-                    {ids.length}
-                  </span>
-                )}
-                {link.href === "/favoritos" && favoriteIds.length > 0 && (
-                  <span className="absolute -right-3.5 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[10px] font-medium text-ink">
-                    {favoriteIds.length}
-                  </span>
-                )}
               </Link>
             ))}
           </nav>
@@ -213,7 +210,7 @@ export function Navbar() {
               className="mt-2 overflow-hidden rounded-3xl border border-line/60 bg-paper/95 shadow-lg shadow-black/[0.06] backdrop-blur-xl md:hidden"
             >
               <div className="flex flex-col gap-1 px-6 py-4">
-                {links.map((link) => (
+                {[...links, ...mobileOnlyLinks].map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}

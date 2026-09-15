@@ -75,7 +75,7 @@ export function DarkPropertyCard({ property, index = 0 }: { property: PublicProp
         <h3 className="mt-1.5 font-display text-lg leading-snug text-paper">{property.title}</h3>
         <p className="mt-1 flex items-center gap-1 text-xs text-paper/50">
           <MapPin size={12} />
-          {property.zone || property.city || "Toledo"}
+          {property.zone || property.city || "Getafe"}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">

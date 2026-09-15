@@ -15,7 +15,7 @@ export function Footer() {
               className="h-14 w-auto object-contain object-left"
             />
             <p className="mt-3 max-w-xs text-sm text-ink-soft">
-              Inmuebles seleccionados en Toledo, con datos completos y un equipo de agentes dedicado a
+              Inmuebles seleccionados en Getafe y Madrid sur, con datos completos y un equipo de agentes dedicado a
               acompañarte en cada paso.
             </p>
           </div>
@@ -27,13 +27,16 @@ export function Footer() {
               <li><Link href="/comparar" className="text-ink-soft hover:text-ink">Comparar</Link></li>
               <li><Link href="/favoritos" className="text-ink-soft hover:text-ink">Favoritos</Link></li>
               <li><Link href="/calculadora" className="text-ink-soft hover:text-ink">Calculadora de hipoteca</Link></li>
+              <li><Link href="/gestoria" className="text-ink-soft hover:text-ink">Servicios de gestoría</Link></li>
+              <li><Link href="/oficinas" className="text-ink-soft hover:text-ink">Nuestras oficinas</Link></li>
               <li><Link href="/agentes" className="text-ink-soft hover:text-ink">Zona de agentes</Link></li>
             </ul>
           </div>
           <div>
             <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Contacto</div>
-            <p className="text-sm text-ink-soft">Toledo, España</p>
-            <p className="mt-1 text-sm text-ink-soft">hola@toledo21.com</p>
+            <p className="text-sm text-ink-soft">C. Toledo, 21, 28901 Getafe, Madrid</p>
+            <p className="mt-1 text-sm text-ink-soft">673 49 00 94</p>
+            <p className="mt-1 text-sm text-ink-soft">info@somostuinmobiliaria.es</p>
           </div>
         </div>
         <div className="mt-12 border-t border-line pt-6 text-xs text-ink-soft">
