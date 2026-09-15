@@ -16,7 +16,11 @@ export const publicRouter = Router();
  */
 
 function publicBaseUrl(protocol: string, host: string): string {
-  return process.env.PUBLIC_BASE_URL || `${protocol}://${host}`;
+  const base = process.env.PUBLIC_BASE_URL || `${protocol}://${host}`;
+  // Sin esto, una PUBLIC_BASE_URL con barra final produce URLs de imagen con
+  // doble barra ("https://dominio.com//uploads/...") que el optimizador de
+  // imagenes de Next/Vercel rechaza con un 400, aunque la URL en si cargue bien.
+  return base.replace(/\/+$/, "");
 }
 
 const publicPropertySelect = {
