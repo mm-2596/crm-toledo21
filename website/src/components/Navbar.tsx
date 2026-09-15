@@ -5,12 +5,14 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Scale, Search, X } from "lucide-react";
+import { Heart, Menu, Scale, Search, X } from "lucide-react";
 import { useCompare } from "./CompareContext";
+import { useFavorites } from "./FavoritesContext";
 
 const links = [
   { href: "/propiedades", label: "Propiedades" },
   { href: "/comparar", label: "Comparar" },
+  { href: "/favoritos", label: "Favoritos" },
   { href: "/calculadora", label: "Calculadora" },
   { href: "/agentes", label: "Agentes" },
 ];
@@ -27,6 +29,7 @@ export function Navbar() {
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLDivElement>(null);
   const { ids } = useCompare();
+  const { ids: favoriteIds } = useFavorites();
 
   const onDark = isHome && heroVisible;
 
@@ -98,6 +101,11 @@ export function Navbar() {
                     {ids.length}
                   </span>
                 )}
+                {link.href === "/favoritos" && favoriteIds.length > 0 && (
+                  <span className="absolute -right-3.5 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[10px] font-medium text-ink">
+                    {favoriteIds.length}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -145,6 +153,21 @@ export function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+
+            <Link
+              href="/favoritos"
+              className={`relative hidden h-8 w-8 items-center justify-center rounded-full md:flex ${
+                onDark ? "text-paper/75 hover:bg-paper/10 hover:text-paper" : "text-ink-soft hover:bg-paper-dim hover:text-ink"
+              }`}
+              aria-label="Ver favoritos"
+            >
+              <Heart size={17} />
+              {favoriteIds.length > 0 && (
+                <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gold text-[9px] font-medium text-ink">
+                  {favoriteIds.length}
+                </span>
+              )}
+            </Link>
 
             <Link
               href="/comparar"

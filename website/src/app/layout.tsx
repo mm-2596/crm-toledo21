@@ -3,6 +3,8 @@ import { Geist } from "next/font/google";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompareProvider } from "@/components/CompareContext";
+import { FavoritesProvider } from "@/components/FavoritesContext";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import "./globals.css";
 
 const displayFont = Geist({
@@ -47,9 +49,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body className="flex min-h-screen flex-col bg-paper font-body text-ink antialiased">
         <CompareProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <FavoritesProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <WhatsAppButton />
+          </FavoritesProvider>
         </CompareProvider>
       </body>
     </html>

@@ -3,14 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { BedDouble, Bath, Scale, Maximize } from "lucide-react";
+import { BedDouble, Bath, Scale, Maximize, Heart } from "lucide-react";
 import { formatCurrency, listingTypeLabels, propertyTypeLabels } from "@/lib/format";
 import { useCompare } from "./CompareContext";
+import { useFavorites } from "./FavoritesContext";
 import type { PublicProperty } from "@/lib/types";
 
 export function PropertyCard({ property, index = 0 }: { property: PublicProperty; index?: number }) {
   const { toggle, isComparing, atLimit } = useCompare();
+  const { toggle: toggleFavorite, isFavorite } = useFavorites();
   const comparing = isComparing(property.id);
+  const favorite = isFavorite(property.id);
   const cover = property.images[0]?.url;
 
   return (
@@ -70,19 +73,33 @@ export function PropertyCard({ property, index = 0 }: { property: PublicProperty
         <p className="mt-3 font-display text-xl text-ink">{formatCurrency(property.price)}</p>
       </Link>
 
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          toggle(property.id);
-        }}
-        disabled={!comparing && atLimit}
-        title={comparing ? "Quitar del comparador" : "Añadir al comparador"}
-        className={`absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors ${
-          comparing ? "bg-gold text-paper" : "bg-paper/90 text-ink hover:bg-paper"
-        } disabled:opacity-40`}
-      >
-        <Scale size={14} />
-      </button>
+      <div className="absolute right-3 top-3 flex gap-2">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            toggleFavorite(property.id);
+          }}
+          title={favorite ? "Quitar de favoritos" : "Guardar en favoritos"}
+          className={`flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors ${
+            favorite ? "bg-gold text-paper" : "bg-paper/90 text-ink hover:bg-paper"
+          }`}
+        >
+          <Heart size={14} fill={favorite ? "currentColor" : "none"} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            toggle(property.id);
+          }}
+          disabled={!comparing && atLimit}
+          title={comparing ? "Quitar del comparador" : "Añadir al comparador"}
+          className={`flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors ${
+            comparing ? "bg-gold text-paper" : "bg-paper/90 text-ink hover:bg-paper"
+          } disabled:opacity-40`}
+        >
+          <Scale size={14} />
+        </button>
+      </div>
     </motion.div>
   );
 }

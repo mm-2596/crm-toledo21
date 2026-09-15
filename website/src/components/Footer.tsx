@@ -24,6 +24,7 @@ export function Footer() {
             <ul className="flex flex-col gap-2 text-sm">
               <li><Link href="/propiedades" className="text-ink-soft hover:text-ink">Propiedades</Link></li>
               <li><Link href="/comparar" className="text-ink-soft hover:text-ink">Comparar</Link></li>
+              <li><Link href="/favoritos" className="text-ink-soft hover:text-ink">Favoritos</Link></li>
               <li><Link href="/calculadora" className="text-ink-soft hover:text-ink">Calculadora de hipoteca</Link></li>
               <li><Link href="/agentes" className="text-ink-soft hover:text-ink">Zona de agentes</Link></li>
             </ul>
