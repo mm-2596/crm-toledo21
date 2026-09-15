@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push --skip-generate",
+    "import:properties": "node scripts/import-properties.mjs",
     "postinstall": "prisma generate"
   },
   "keywords": [],
@@ -37,6 +38,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^22.20.2",
+    "csv-parse": "^7.0.2",
     "prisma": "^6.19.3",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3"
