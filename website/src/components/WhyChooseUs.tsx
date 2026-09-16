@@ -57,17 +57,6 @@ export function WhyChooseUs() {
           </div>
         ))}
       </div>
-
-      <div className="mt-6 flex flex-col items-center gap-3 rounded-3xl bg-ink px-8 py-10 text-center sm:px-12">
-        <p className="text-xs font-medium uppercase tracking-wider text-gold">Nuestro compromiso</p>
-        <p className="max-w-2xl font-display text-2xl leading-snug text-paper sm:text-3xl">
-          Si no vendemos tu casa en <span className="text-gold">12 semanas</span>, rescindimos el contrato.
-        </p>
-        <p className="max-w-xl text-sm text-paper/70">
-          Te informamos constantemente de la evolución: visitas, objeciones, y revisión de estrategia en reuniones
-          periódicas. Nuestra implicación con tu inmueble es máxima.
-        </p>
-      </div>
     </section>
   );
 }
