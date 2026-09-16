@@ -4,7 +4,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
-import { UPLOADS_ROOT, uploadPropertyImage } from "../lib/upload.js";
+import { UPLOADS_ROOT, uploadPropertyImage, uploadPropertyVideo } from "../lib/upload.js";
 
 export const propertiesRouter = Router();
 
@@ -85,7 +85,11 @@ propertiesRouter.get(
         ],
       },
       orderBy: { createdAt: "desc" },
-      include: { agent: true, images: { orderBy: { order: "asc" } } },
+      include: {
+        agent: true,
+        images: { orderBy: { order: "asc" } },
+        videos: { orderBy: { order: "asc" } },
+      },
     });
     res.json(properties);
   }),
@@ -101,6 +105,7 @@ propertiesRouter.get(
         deals: { include: { contact: true, stage: true } },
         valuations: true,
         images: { orderBy: { order: "asc" } },
+        videos: { orderBy: { order: "asc" } },
       },
     });
     if (!property) return res.status(404).json({ error: "Propiedad no encontrada" });
@@ -173,6 +178,40 @@ propertiesRouter.delete(
     }
     await prisma.propertyImage.delete({ where: { id: image.id } });
     fs.rm(path.join(UPLOADS_ROOT, image.url.replace("/uploads/", "")), () => {});
+    res.status(204).send();
+  }),
+);
+
+propertiesRouter.post(
+  "/:id/videos",
+  uploadPropertyVideo.single("video"),
+  asyncHandler(async (req, res) => {
+    const propertyId = String(req.params.id);
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) return res.status(404).json({ error: "Propiedad no encontrada" });
+    if (!req.file) return res.status(400).json({ error: "No se recibió ningún vídeo" });
+
+    const count = await prisma.propertyVideo.count({ where: { propertyId } });
+    const video = await prisma.propertyVideo.create({
+      data: {
+        propertyId,
+        url: `/uploads/properties/${propertyId}/videos/${req.file.filename}`,
+        order: count,
+      },
+    });
+    res.status(201).json(video);
+  }),
+);
+
+propertiesRouter.delete(
+  "/:id/videos/:videoId",
+  asyncHandler(async (req, res) => {
+    const video = await prisma.propertyVideo.findUnique({ where: { id: String(req.params.videoId) } });
+    if (!video || video.propertyId !== req.params.id) {
+      return res.status(404).json({ error: "Vídeo no encontrado" });
+    }
+    await prisma.propertyVideo.delete({ where: { id: video.id } });
+    fs.rm(path.join(UPLOADS_ROOT, video.url.replace("/uploads/", "")), () => {});
     res.status(204).send();
   }),
 );

@@ -8,6 +8,7 @@ import type {
   PipelineStage,
   Property,
   PropertyImage,
+  PropertyVideo,
   TeamMember,
   User,
   Valuation,
@@ -47,6 +48,14 @@ export const PropertiesApi = {
       .then((r) => r.data);
   },
   removeImage: (id: string, imageId: string) => api.delete(`/properties/${id}/images/${imageId}`),
+  uploadVideo: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("video", file);
+    return api
+      .post<PropertyVideo>(`/properties/${id}/videos`, form, { headers: { "Content-Type": undefined } })
+      .then((r) => r.data);
+  },
+  removeVideo: (id: string, videoId: string) => api.delete(`/properties/${id}/videos/${videoId}`),
 };
 
 export const PipelineApi = {

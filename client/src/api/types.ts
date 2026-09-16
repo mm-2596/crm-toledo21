@@ -115,12 +115,21 @@ export interface Property {
   agentId?: string | null;
   agent?: User | null;
   images?: PropertyImage[];
+  videos?: PropertyVideo[];
   createdAt: string;
 }
 
 export type EnergyRating = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "EN_TRAMITE" | "EXENTO";
 
 export interface PropertyImage {
+  id: string;
+  propertyId: string;
+  url: string;
+  order: number;
+  createdAt: string;
+}
+
+export interface PropertyVideo {
   id: string;
   propertyId: string;
   url: string;

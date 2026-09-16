@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, listingTypeLabels, propertyStatusLabels, pr
 import { generateDescription, improveDescription } from "../lib/textGenerator";
 import { useToast } from "../components/Toast";
 import { PropertyGallery } from "../components/PropertyGallery";
+import { PropertyVideos } from "../components/PropertyVideos";
 import { PropertyForm, emptyPropertyForm, fromProperty, toPropertyPayload } from "../components/PropertyForm";
 import { WEBSITE_URL } from "../lib/config";
 
@@ -150,6 +151,10 @@ export function PropertyDetail() {
 
       <div className="mt-6">
         <PropertyGallery propertyId={property.id} images={property.images ?? []} />
+      </div>
+
+      <div className="mt-6">
+        <PropertyVideos propertyId={property.id} videos={property.videos ?? []} />
       </div>
 
       <div className="mt-6">

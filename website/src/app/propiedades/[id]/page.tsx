@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getProperty } from "@/lib/api";
 import { PropertyGallery } from "@/components/PropertyGallery";
+import { PropertyVideos } from "@/components/PropertyVideos";
 import { ContactForm } from "@/components/ContactForm";
 import { MortgageCalculator } from "@/components/MortgageCalculator";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -101,6 +102,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <PropertyGallery images={property.images} title={property.title} />
+          <PropertyVideos videos={property.videos} title={property.title} />
 
           <div className="mt-8 flex flex-wrap gap-6 border-y border-line py-6 text-sm text-ink-soft">
             {property.bedrooms != null && (

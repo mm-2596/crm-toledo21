@@ -191,12 +191,25 @@ model Property {
   deals      Deal[]
   valuations Valuation[]
   images     PropertyImage[]
+  videos     PropertyVideo[]
 
   @@index([city])
   @@index([status])
 }
 
 model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model PropertyVideo {
   id         String   @id @default(cuid())
   propertyId String
   url        String

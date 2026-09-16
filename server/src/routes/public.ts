@@ -63,8 +63,20 @@ const publicPropertySelect = {
   createdAt: true,
   updatedAt: true,
   images: { select: { id: true, url: true, order: true } },
+  videos: { select: { id: true, url: true, order: true } },
   agent: { select: { id: true, name: true, email: true, phone: true } },
 } as const;
+
+function withAbsoluteMedia<T extends { images: { url: string }[]; videos: { url: string }[] }>(
+  property: T,
+  baseUrl: string,
+): T {
+  return {
+    ...property,
+    images: property.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` })),
+    videos: property.videos.map((vid) => ({ ...vid, url: `${baseUrl}${vid.url}` })),
+  };
+}
 
 publicRouter.get(
   "/properties",
@@ -101,12 +113,9 @@ publicRouter.get(
     ]);
 
     const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
-    const withAbsoluteImages = properties.map((p) => ({
-      ...p,
-      images: p.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` })),
-    }));
+    const propertiesWithMedia = properties.map((p) => withAbsoluteMedia(p, baseUrl));
 
-    res.json({ total, page: Number(page) || 1, pageSize: take, properties: withAbsoluteImages });
+    res.json({ total, page: Number(page) || 1, pageSize: take, properties: propertiesWithMedia });
   }),
 );
 
@@ -120,7 +129,6 @@ publicRouter.get(
     if (!property) return res.status(404).json({ error: "Propiedad no encontrada" });
 
     const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
-    const images = property.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` }));
 
     const similar = await prisma.property.findMany({
       where: {
@@ -134,9 +142,8 @@ publicRouter.get(
     });
 
     res.json({
-      ...property,
-      images,
-      similar: similar.map((p) => ({ ...p, images: p.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` })) })),
+      ...withAbsoluteMedia(property, baseUrl),
+      similar: similar.map((p) => withAbsoluteMedia(p, baseUrl)),
     });
   }),
 );
@@ -266,7 +273,7 @@ publicRouter.get(
 
     res.json({
       ...withAbsolutePhoto(agent, baseUrl),
-      properties: properties.map((p) => ({ ...p, images: p.images.map((img) => ({ ...img, url: `${baseUrl}${img.url}` })) })),
+      properties: properties.map((p) => withAbsoluteMedia(p, baseUrl)),
       reviews,
       averageRating: reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null,
     });

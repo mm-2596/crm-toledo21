@@ -32,6 +32,12 @@ export interface PublicImage {
   order: number;
 }
 
+export interface PublicVideo {
+  id: string;
+  url: string;
+  order: number;
+}
+
 export interface PublicProperty {
   id: string;
   reference: string;
@@ -72,6 +78,7 @@ export interface PublicProperty {
   createdAt: string;
   updatedAt: string;
   images: PublicImage[];
+  videos: PublicVideo[];
   agent?: PublicAgent | null;
 }
 
