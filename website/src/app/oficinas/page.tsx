@@ -62,8 +62,7 @@ export default function OfficesPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16 pt-28">
       <div className="max-w-2xl">
-        <p className="text-xs font-medium uppercase tracking-wider text-gold">Dónde estamos</p>
-        <h1 className="mt-2 font-display text-3xl text-ink sm:text-4xl">Nuestras oficinas</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">Nuestras oficinas</h1>
         <p className="mt-3 text-sm text-ink-soft sm:text-base">
           Desde 1997 acompañando a nuestros clientes. Hoy tenemos presencia en Madrid sur y en Valencia — ven a
           visitarnos o contáctanos desde la oficina que te quede más cerca.

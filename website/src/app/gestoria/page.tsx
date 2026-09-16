@@ -48,22 +48,23 @@ export default function GestoriaPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16 pt-28">
       <div className="max-w-2xl">
-        <p className="text-xs font-medium uppercase tracking-wider text-gold">Somos Tu Gestoría</p>
-        <h1 className="mt-2 font-display text-3xl text-ink sm:text-4xl">La cara amable de tu gestoría</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">La cara amable de tu gestoría</h1>
         <p className="mt-3 text-sm text-ink-soft sm:text-base">
           Desde 1997 resolviendo los trámites de nuestros clientes, ya sea que compren, vendan o simplemente
           necesiten poner en orden su situación como autónomo, empresa o herencia.
         </p>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 divide-y divide-line border-y border-line">
         {SERVICES.map((service) => (
-          <div key={service.title} className="rounded-2xl border border-line bg-paper p-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-soft text-gold">
-              <service.icon size={18} />
+          <div key={service.title} className="flex flex-col gap-4 py-7 sm:flex-row sm:items-start sm:gap-8">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold">
+              <service.icon size={19} />
             </span>
-            <h3 className="mt-4 font-display text-lg text-ink">{service.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{service.description}</p>
+            <div>
+              <h3 className="font-display text-lg text-ink">{service.title}</h3>
+              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-soft">{service.description}</p>
+            </div>
           </div>
         ))}
       </div>

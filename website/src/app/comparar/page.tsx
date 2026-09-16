@@ -61,8 +61,7 @@ export default function ComparePage() {
     <div className="mx-auto max-w-7xl px-6 pb-14 pt-28">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-gold">Comparador</p>
-          <h1 className="mt-2 font-display text-3xl text-ink sm:text-4xl">Compara propiedades</h1>
+          <h1 className="font-display text-3xl text-ink sm:text-4xl">Compara propiedades</h1>
         </div>
         {visibleProperties.length > 0 && (
           <button onClick={clear} className="text-sm text-ink-soft underline-offset-4 hover:text-ink hover:underline">

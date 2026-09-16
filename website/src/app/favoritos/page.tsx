@@ -33,8 +33,7 @@ export default function FavoritesPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 pb-14 pt-28">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-gold">Favoritos</p>
-        <h1 className="mt-2 font-display text-3xl text-ink sm:text-4xl">Tus propiedades guardadas</h1>
+        <h1 className="font-display text-3xl text-ink sm:text-4xl">Tus propiedades guardadas</h1>
       </div>
 
       {loading ? (

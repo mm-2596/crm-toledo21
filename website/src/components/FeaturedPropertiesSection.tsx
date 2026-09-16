@@ -16,8 +16,7 @@ export function FeaturedPropertiesSection({ sale, rent }: { sale: PublicProperty
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:justify-between sm:text-left">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-gold">Selección Toledo21</p>
-            <h2 className="mt-2 font-display text-3xl text-paper sm:text-4xl">Propiedades destacadas</h2>
+            <h2 className="font-display text-3xl text-paper sm:text-4xl">Propiedades destacadas</h2>
           </div>
 
           <div className="flex overflow-hidden rounded-full border border-paper/15 bg-paper/5 p-1 text-sm">

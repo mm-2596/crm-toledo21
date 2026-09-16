@@ -28,8 +28,7 @@ export default async function Home() {
 
       <section className="mx-auto max-w-7xl px-6 pt-20">
         <div className="text-center">
-          <p className="text-xs font-medium uppercase tracking-wider text-gold">¿Qué ofrecemos?</p>
-          <h2 className="mx-auto mt-3 max-w-xl font-display text-3xl text-ink sm:text-4xl">
+          <h2 className="mx-auto max-w-xl font-display text-3xl text-ink sm:text-4xl">
             Comprar o vender puede ser abrumador — lo hacemos sencillo.
           </h2>
         </div>
