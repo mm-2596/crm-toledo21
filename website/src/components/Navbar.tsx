@@ -15,6 +15,7 @@ const links = [
   { href: "/equipo", label: "Equipo" },
   { href: "/oficinas", label: "Oficinas" },
   { href: "/calculadora", label: "Calculadora" },
+  { href: "/quienes-somos", label: "Quiénes somos" },
 ];
 
 // Comparar y Favoritos ya tienen su propio icono con contador en el navbar

@@ -22,6 +22,7 @@ export function Footer() {
           <div>
             <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Explorar</div>
             <ul className="flex flex-col gap-2 text-sm">
+              <li><Link href="/quienes-somos" className="text-ink-soft hover:text-ink">Quiénes somos</Link></li>
               <li><Link href="/propiedades" className="text-ink-soft hover:text-ink">Propiedades</Link></li>
               <li><Link href="/equipo" className="text-ink-soft hover:text-ink">Equipo</Link></li>
               <li><Link href="/comparar" className="text-ink-soft hover:text-ink">Comparar</Link></li>
