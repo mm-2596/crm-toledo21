@@ -5,6 +5,7 @@ import { InfiniteMarquee } from "@/components/InfiniteMarquee";
 import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { HomeContactForm } from "@/components/HomeContactForm";
 
 export default async function Home() {
@@ -36,6 +37,8 @@ export default async function Home() {
       <ProcessShowcase />
 
       <WhyChooseUs />
+
+      <TestimonialsSection />
 
       <HomeContactForm />
     </div>
