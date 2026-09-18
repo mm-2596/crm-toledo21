@@ -20,7 +20,6 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
   const sectionRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, reduceMotion ? 1 : 1.28]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.55, 0.8], [1, 1, 0]);
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
   return (
     <section ref={sectionRef} className="relative h-[175vh]">
       <div className="sticky top-0 h-screen overflow-hidden bg-ink">
-        <HeroBackground scale={scale} />
+        <HeroBackground progress={scrollYProgress} />
 
         {properties[active] && <FeaturedSpotlight property={properties[active]} />}
 
