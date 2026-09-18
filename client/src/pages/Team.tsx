@@ -12,7 +12,7 @@ function RoleBadge({ role }: { role: TeamMember["role"] }) {
   return (
     <span
       className={`rounded px-2 py-0.5 text-xs font-medium ${
-        role === "ADMIN" ? "bg-indigo-50 text-indigo-700" : "bg-slate-100 text-slate-600"
+        role === "ADMIN" ? "bg-slate-50 text-slate-800" : "bg-slate-100 text-slate-600"
       }`}
     >
       {role === "ADMIN" ? "Administrador" : "Agente"}
@@ -32,20 +32,20 @@ function InviteCodeCard() {
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5">
-      <h2 className="mb-1 text-sm font-semibold text-indigo-900">Código de invitación del equipo</h2>
-      <p className="mb-3 text-sm text-indigo-900/70">
+    <div className="mb-6 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+      <h2 className="mb-1 text-sm font-semibold text-slate-900">Código de invitación del equipo</h2>
+      <p className="mb-3 text-sm text-slate-900/70">
         Compártelo con un nuevo empleado para que pueda crear su cuenta en{" "}
         <span className="font-medium">/registro</span>.
       </p>
       <div className="flex items-center gap-2">
-        <code className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">
+        <code className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">
           {data?.inviteCode ?? "…"}
         </code>
         <button
           onClick={handleCopy}
           disabled={!data?.inviteCode}
-          className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? "Copiado" : "Copiar"}
@@ -219,7 +219,7 @@ export function Team() {
                           }
                           disabled={isSelf || updateMutation.isPending}
                           title={member.role === "ADMIN" ? "Quitar permisos de administrador" : "Hacer administrador"}
-                          className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-indigo-300 hover:text-indigo-700 disabled:opacity-30"
+                          className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-slate-300 hover:text-slate-800 disabled:opacity-30"
                         >
                           <ShieldCheck size={15} />
                         </button>

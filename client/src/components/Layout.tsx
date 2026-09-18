@@ -38,7 +38,7 @@ export function Layout() {
       <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-slate-200/70 bg-white/70 px-4 py-6 backdrop-blur-xl">
         <div>
           <div className="mb-8 flex items-center gap-2 px-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-sm font-bold tracking-tight text-white shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold tracking-tight text-white shadow-sm">
               T21
             </div>
             <div>
@@ -54,7 +54,7 @@ export function Layout() {
                 end={link.end}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-                    isActive ? "bg-indigo-600/10 text-indigo-700" : "text-slate-600 hover:bg-slate-900/5"
+                    isActive ? "bg-slate-900/10 text-slate-800" : "text-slate-600 hover:bg-slate-900/5"
                   }`
                 }
               >
@@ -70,7 +70,7 @@ export function Layout() {
             to="/ayuda"
             className={({ isActive }) =>
               `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-                isActive ? "bg-indigo-600/10 text-indigo-700" : "text-slate-500 hover:bg-slate-900/5"
+                isActive ? "bg-slate-900/10 text-slate-800" : "text-slate-500 hover:bg-slate-900/5"
               }`
             }
           >

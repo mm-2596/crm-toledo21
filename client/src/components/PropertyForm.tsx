@@ -9,7 +9,7 @@ import {
 import type { Property } from "../api/types";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400";
+  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-400";
 const labelClass = "mb-1 block text-xs font-medium text-slate-500";
 
 interface AmenityOption {
@@ -366,7 +366,7 @@ export function PropertyForm({
                 type="checkbox"
                 checked={Boolean(value[a.key])}
                 onChange={(e) => set(a.key, e.target.checked as PropertyFormValues[typeof a.key])}
-                className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+                className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
               />
               {a.label}
             </label>

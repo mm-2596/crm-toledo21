@@ -58,7 +58,7 @@ export function Tasks() {
                   <td className="px-4 py-3 text-slate-800">{activity.description}</td>
                   <td className="px-4 py-3">
                     {activity.contact ? (
-                      <Link to={`/contactos/${activity.contact.id}`} className="text-indigo-700 hover:underline">
+                      <Link to={`/contactos/${activity.contact.id}`} className="text-slate-800 hover:underline">
                         {activity.contact.name}
                       </Link>
                     ) : (
@@ -68,7 +68,7 @@ export function Tasks() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => completeMutation.mutate(activity.id)}
-                      className="text-xs font-medium text-indigo-700 hover:underline"
+                      className="text-xs font-medium text-slate-800 hover:underline"
                     >
                       Completar
                     </button>

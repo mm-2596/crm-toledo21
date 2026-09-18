@@ -66,7 +66,7 @@ export function ContactDetail() {
 
   return (
     <div>
-      <Link to="/contactos" className="text-sm text-indigo-700 hover:underline">
+      <Link to="/contactos" className="text-sm text-slate-800 hover:underline">
         ← Volver a contactos
       </Link>
       <div className="mt-2 mb-6 flex items-start justify-between">
@@ -115,7 +115,7 @@ export function ContactDetail() {
           {!showQualifier ? (
             <button
               onClick={() => setShowQualifier(true)}
-              className="mt-4 flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+              className="mt-4 flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-100"
             >
               <Sparkles size={14} />
               Cualificar lead con IA
@@ -137,8 +137,8 @@ export function ContactDetail() {
       </div>
 
       {hasPreferences && (matches ?? []).length > 0 && (
-        <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5">
-          <div className="mb-3 flex items-center gap-1.5 text-indigo-700">
+        <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+          <div className="mb-3 flex items-center gap-1.5 text-slate-800">
             <Wand2 size={16} />
             <h2 className="text-sm font-semibold">Propiedades recomendadas para este lead</h2>
           </div>
@@ -151,7 +151,7 @@ export function ContactDetail() {
               >
                 <div className="font-medium text-slate-800">{property.title}</div>
                 <div className="text-xs text-slate-500">{property.zone || property.city}</div>
-                <div className="mt-1 font-semibold text-indigo-700">{formatCurrency(property.price)}</div>
+                <div className="mt-1 font-semibold text-slate-800">{formatCurrency(property.price)}</div>
               </Link>
             ))}
           </div>
@@ -178,7 +178,7 @@ export function ContactDetail() {
           <input name="dueDate" type="date" className="rounded-lg border border-slate-300 px-2 py-2 text-sm" />
           <button
             type="submit"
-            className="col-span-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className="col-span-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             Añadir
           </button>
@@ -202,7 +202,7 @@ export function ContactDetail() {
               {!activity.completed && (
                 <button
                   onClick={() => completeActivity.mutate(activity.id)}
-                  className="text-xs font-medium text-indigo-700 hover:underline"
+                  className="text-xs font-medium text-slate-800 hover:underline"
                 >
                   Completar
                 </button>

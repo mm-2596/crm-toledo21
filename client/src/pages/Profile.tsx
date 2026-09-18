@@ -60,7 +60,7 @@ export function Profile() {
           href={`${WEBSITE_URL}/equipo/${user.id}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 text-indigo-600 hover:underline"
+          className="inline-flex items-center gap-1 text-slate-900 hover:underline"
         >
           directorio de agentes <ExternalLink size={12} />
         </a>
@@ -80,7 +80,7 @@ export function Profile() {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={photoMutation.isPending}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
               title="Cambiar foto"
             >
               <Camera size={13} />
@@ -110,7 +110,7 @@ export function Profile() {
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
               placeholder="Ej. Agente senior de ventas"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-400"
             />
           </div>
           <div>
@@ -119,7 +119,7 @@ export function Profile() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+34 600 000 000"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-400"
             />
           </div>
           <div>
@@ -129,7 +129,7 @@ export function Profile() {
               onChange={(e) => setBio(e.target.value)}
               rows={4}
               placeholder="Unas líneas sobre tu experiencia, especialidad o zona de trabajo…"
-              className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-400"
             />
           </div>
         </div>
@@ -137,7 +137,7 @@ export function Profile() {
         <button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
         >
           {saveMutation.isPending ? "Guardando…" : "Guardar cambios"}
         </button>

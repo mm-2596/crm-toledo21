@@ -13,7 +13,7 @@ function GuideCard({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 text-slate-900">
           <Icon size={18} />
         </div>
         <h2 className="text-base font-semibold text-slate-900">{title}</h2>
@@ -100,12 +100,12 @@ export function Help() {
         />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
-        <div className="mb-2 flex items-center gap-2 text-indigo-700">
+      <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-5">
+        <div className="mb-2 flex items-center gap-2 text-slate-800">
           <Sparkles size={18} />
           <h2 className="text-sm font-semibold">Sobre las funciones de IA de este CRM</h2>
         </div>
-        <p className="text-sm text-indigo-900/80">
+        <p className="text-sm text-slate-900/80">
           Por ahora, el calificador de leads, el asistente y el redactor de textos funcionan con reglas
           integradas en el propio CRM (sin conectarse a WhatsApp ni a un proveedor de IA externo), así que
           ya puedes usarlos hoy mismo. Cuando la agencia lo decida, se pueden conectar a un modelo de IA

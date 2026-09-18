@@ -67,8 +67,8 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
   const bubbleTransition = { type: "spring" as const, bounce: 0, duration: 0.3 };
 
   return (
-    <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
-      <div className="mb-3 flex items-center gap-2 text-indigo-700">
+    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+      <div className="mb-3 flex items-center gap-2 text-slate-800">
         <Sparkles size={16} />
         <h3 className="text-sm font-semibold">Calificador de leads (IA)</h3>
       </div>
@@ -84,7 +84,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
             <div className="mb-1 max-w-[85%] rounded-xl rounded-bl-sm bg-white px-3 py-1.5 text-xs text-slate-600 shadow-sm">
               {h.q}
             </div>
-            <div className="ml-auto max-w-[85%] rounded-xl rounded-br-sm bg-indigo-600 px-3 py-1.5 text-right text-xs text-white shadow-sm">
+            <div className="ml-auto max-w-[85%] rounded-xl rounded-br-sm bg-slate-900 px-3 py-1.5 text-right text-xs text-white shadow-sm">
               {h.a}
             </div>
           </motion.div>
@@ -110,12 +110,12 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                 onChange={(e) => setAnswers({ ...answers, zone: e.target.value })}
                 onKeyDown={(e) => e.key === "Enter" && answers.zone && setStep(1)}
                 placeholder="Ej. Casco Histórico"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-400"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-400"
               />
               <button
                 disabled={!answers.zone}
                 onClick={() => setStep(1)}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
               >
                 Siguiente
               </button>
@@ -131,7 +131,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                     setAnswers({ ...answers, listingType: lt });
                     setStep(2);
                   }}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                 >
                   {lt === "VENTA" ? "Comprar" : "Alquilar"}
                 </button>
@@ -147,11 +147,11 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                 onChange={(e) => setAnswers({ ...answers, budgetMax: e.target.value ? Number(e.target.value) : null })}
                 onKeyDown={(e) => e.key === "Enter" && setStep(3)}
                 placeholder="Ej. 320000"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-400"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-400"
               />
               <button
                 onClick={() => setStep(3)}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white"
               >
                 Siguiente
               </button>
@@ -166,9 +166,9 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                 onChange={(e) => setAnswers({ ...answers, bedroomsMin: e.target.value ? Number(e.target.value) : null })}
                 onKeyDown={(e) => e.key === "Enter" && setStep(4)}
                 placeholder="Ej. 2"
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-400"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-400"
               />
-              <button onClick={() => setStep(4)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white">
+              <button onClick={() => setStep(4)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white">
                 Siguiente
               </button>
             </div>
@@ -186,7 +186,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                     setAnswers({ ...answers, needsFinancing: opt.value });
                     setStep(5);
                   }}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                 >
                   {opt.label}
                 </button>
@@ -201,7 +201,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={bubbleTransition}
-          className="rounded-xl border border-indigo-200 bg-white p-3"
+          className="rounded-xl border border-slate-200 bg-white p-3"
         >
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-700">Lead cualificado</span>
@@ -226,7 +226,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
           <button
             onClick={handleSave}
             disabled={saving}
-            className="mt-3 w-full rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {saving ? "Guardando…" : "Guardar en la ficha del contacto"}
           </button>

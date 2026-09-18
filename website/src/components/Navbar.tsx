@@ -5,17 +5,23 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart, Menu, Scale, Search, X } from "lucide-react";
+import { ChevronDown, Heart, Menu, Scale, Search, X } from "lucide-react";
 import { useCompare } from "./CompareContext";
 import { useFavorites } from "./FavoritesContext";
 
-const links = [
+// Los enlaces siempre visibles son los que un visitante busca primero;
+// el resto (trámites, herramientas) se agrupan bajo "Servicios" para no
+// saturar la barra con seis enlaces sueltos al mismo nivel.
+const primaryLinks = [
   { href: "/propiedades", label: "Propiedades" },
-  { href: "/gestoria", label: "Gestoría" },
-  { href: "/equipo", label: "Equipo" },
-  { href: "/oficinas", label: "Oficinas" },
-  { href: "/calculadora", label: "Calculadora" },
   { href: "/quienes-somos", label: "Quiénes somos" },
+  { href: "/equipo", label: "Equipo" },
+];
+
+const serviceLinks = [
+  { href: "/gestoria", label: "Servicios de gestoría" },
+  { href: "/calculadora", label: "Calculadora de hipoteca" },
+  { href: "/oficinas", label: "Nuestras oficinas" },
 ];
 
 // Comparar y Favoritos ya tienen su propio icono con contador en el navbar
@@ -35,7 +41,9 @@ export function Navbar() {
   const [heroVisible, setHeroVisible] = useState(isHome);
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
+  const [servicesOpen, setServicesOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
   const { ids } = useCompare();
   const { ids: favoriteIds } = useFavorites();
 
@@ -57,10 +65,13 @@ export function Navbar() {
       if (searching && searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearching(false);
       }
+      if (servicesOpen && servicesRef.current && !servicesRef.current.contains(e.target as Node)) {
+        setServicesOpen(false);
+      }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [searching]);
+  }, [searching, servicesOpen]);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -95,7 +106,7 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            {links.map((link) => (
+            {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -106,6 +117,43 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            <div ref={servicesRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setServicesOpen((v) => !v)}
+                className={`flex items-center gap-1 text-sm transition-colors ${
+                  onDark ? "text-paper/75 hover:text-paper" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Servicios
+                <ChevronDown size={14} className={`transition-transform ${servicesOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {servicesOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.2 }}
+                    style={{ transformOrigin: "top left" }}
+                    className="absolute left-0 top-full mt-3 w-56 overflow-hidden rounded-2xl border border-line/60 bg-paper py-2 shadow-lg shadow-black/[0.08]"
+                  >
+                    {serviceLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setServicesOpen(false)}
+                        className="block px-4 py-2 text-sm text-ink-soft hover:bg-paper-dim hover:text-ink"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </nav>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -211,7 +259,7 @@ export function Navbar() {
               className="mt-2 overflow-hidden rounded-3xl border border-line/60 bg-paper/95 shadow-lg shadow-black/[0.06] backdrop-blur-xl md:hidden"
             >
               <div className="flex flex-col gap-1 px-6 py-4">
-                {[...links, ...mobileOnlyLinks].map((link) => (
+                {[...primaryLinks, ...mobileOnlyLinks].map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -221,7 +269,26 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <Link href="/agentes" onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-ink">
+
+                <div className="mt-2 border-t border-line pt-2 text-xs font-medium uppercase tracking-wider text-ink-soft/70">
+                  Servicios
+                </div>
+                {serviceLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="py-2 text-sm text-ink-soft"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                <Link
+                  href="/agentes"
+                  onClick={() => setOpen(false)}
+                  className="mt-2 border-t border-line pt-3 text-sm font-medium text-ink"
+                >
                   Zona de agentes
                 </Link>
               </div>

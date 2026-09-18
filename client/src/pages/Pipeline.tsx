@@ -56,7 +56,7 @@ export function Pipeline() {
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Pipeline de ventas</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
         >
           <PlusCircle size={16} />
           {showForm ? "Cancelar" : "Nueva oportunidad"}
@@ -96,7 +96,7 @@ export function Pipeline() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="col-span-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             Crear oportunidad
           </button>
@@ -130,7 +130,7 @@ export function Pipeline() {
                   <div>
                     <div className="font-medium text-slate-800">{deal.contact?.name}</div>
                     {deal.property && <div className="text-xs text-slate-500">{deal.property.title}</div>}
-                    {deal.value != null && <div className="mt-1 text-xs font-medium text-indigo-700">{formatCurrency(deal.value)}</div>}
+                    {deal.value != null && <div className="mt-1 text-xs font-medium text-slate-800">{formatCurrency(deal.value)}</div>}
                   </div>
                 </div>
               ))}

@@ -85,7 +85,7 @@ export function PropertyDetail() {
 
   return (
     <div>
-      <Link to="/propiedades" className="text-sm text-indigo-700 hover:underline">
+      <Link to="/propiedades" className="text-sm text-slate-800 hover:underline">
         ← Volver a propiedades
       </Link>
       <div className="mt-2 mb-6 flex items-start justify-between">
@@ -101,22 +101,22 @@ export function PropertyDetail() {
             href={`${WEBSITE_URL}/api/properties/${property.id}/pdf`}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
           >
             <Download size={13} /> Descargar ficha en PDF
           </a>
         </div>
-        <p className="text-2xl font-semibold tracking-tight text-indigo-700">{formatCurrency(property.price)}</p>
+        <p className="text-2xl font-semibold tracking-tight text-slate-800">{formatCurrency(property.price)}</p>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <Sparkles size={17} className="text-indigo-600" />
+          <Sparkles size={17} className="text-slate-900" />
           <h2 className="text-lg font-medium text-slate-900">Valoración automática</h2>
           <button
             onClick={() => estimate.mutate()}
             disabled={!canEstimate || estimate.isPending}
-            className="ml-auto rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+            className="ml-auto rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-40"
           >
             {estimate.isPending ? "Calculando…" : "Estimar precio"}
           </button>
@@ -163,7 +163,7 @@ export function PropertyDetail() {
           <button
             onClick={() => saveForm.mutate()}
             disabled={saveForm.isPending}
-            className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {saveForm.isPending ? "Guardando…" : "Guardar cambios"}
           </button>
@@ -172,7 +172,7 @@ export function PropertyDetail() {
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <MapPin size={17} className="text-indigo-600" />
+          <MapPin size={17} className="text-slate-900" />
           <h2 className="text-lg font-medium text-slate-900">Ubicación exacta (mapa)</h2>
         </div>
         <p className="mb-3 text-xs text-slate-400">Coordenadas para el mapa en portales y en la web.</p>
@@ -185,7 +185,7 @@ export function PropertyDetail() {
               value={coords.latitude}
               onChange={(e) => setCoords({ ...coords, latitude: e.target.value })}
               placeholder="Ej. 39.8628"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
             />
           </div>
           <div>
@@ -196,7 +196,7 @@ export function PropertyDetail() {
               value={coords.longitude}
               onChange={(e) => setCoords({ ...coords, longitude: e.target.value })}
               placeholder="Ej. -4.0273"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
             />
           </div>
         </div>
@@ -204,7 +204,7 @@ export function PropertyDetail() {
           <button
             onClick={() => saveCoords.mutate()}
             disabled={saveCoords.isPending}
-            className="mt-3 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-3 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {saveCoords.isPending ? "Guardando…" : "Guardar coordenadas"}
           </button>
@@ -214,20 +214,20 @@ export function PropertyDetail() {
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-lg font-medium text-slate-900">
-            <Wand2 size={17} className="text-indigo-600" />
+            <Wand2 size={17} className="text-slate-900" />
             Redactor de descripciones (IA)
           </h2>
           <div className="flex gap-2">
             <button
               onClick={() => setForm({ ...form, description: generateDescription(property) })}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
             >
               Generar
             </button>
             <button
               onClick={() => setForm({ ...form, description: improveDescription(form.description) })}
               disabled={!form.description.trim()}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-40"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-40"
             >
               Mejorar redacción
             </button>
@@ -241,13 +241,13 @@ export function PropertyDetail() {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={5}
           placeholder="Escribe o genera una descripción para esta propiedad…"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
         />
         {formChanged && (
           <button
             onClick={() => saveForm.mutate()}
             disabled={saveForm.isPending}
-            className="mt-2 rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-2 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {saveForm.isPending ? "Guardando…" : "Guardar cambios"}
           </button>

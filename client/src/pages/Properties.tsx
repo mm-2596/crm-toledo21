@@ -44,7 +44,7 @@ export function Properties() {
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Propiedades</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
         >
           <PlusCircle size={16} />
           {showForm ? "Cancelar" : "Nueva propiedad"}
@@ -60,7 +60,7 @@ export function Properties() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {createMutation.isPending ? "Guardando…" : "Guardar propiedad"}
           </button>
@@ -88,7 +88,7 @@ export function Properties() {
             <Link
               key={property.id}
               to={`/propiedades/${property.id}`}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md hover:border-indigo-300"
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md hover:border-slate-300"
             >
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-400">{property.reference}</span>
@@ -100,7 +100,7 @@ export function Properties() {
               <p className="text-sm text-slate-500">
                 {propertyTypeLabels[property.type]} · {property.city || "-"}
               </p>
-              <p className="mt-2 text-lg font-semibold text-indigo-700">{formatCurrency(property.price)}</p>
+              <p className="mt-2 text-lg font-semibold text-slate-800">{formatCurrency(property.price)}</p>
             </Link>
           ))}
         </div>

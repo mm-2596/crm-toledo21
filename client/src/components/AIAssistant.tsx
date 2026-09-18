@@ -23,8 +23,9 @@ const WELCOME =
   "· \"propiedades en Toledo\" — inmuebles disponibles\n" +
   "· \"resumen\" — las cifras del panel\n\n" +
   "✍️ Y también puedo crear cosas por ti:\n" +
-  "· \"crear contacto Laura Díaz 622333444\" — dar de alta un lead\n" +
-  "· \"nueva tarea llamar a Ana mañana\" — agendar un seguimiento\n\n" +
+  "· \"agrégame a Laura Díaz con número 622333444\" — dar de alta un lead\n" +
+  "· \"nueva tarea llamar a Ana mañana\" — agendar un seguimiento\n" +
+  "· \"agrégame a Julio con número 622778822 y ponle una cita para el jueves\" — las dos cosas a la vez\n\n" +
   "Prueba uno de los botones de abajo, o escríbeme directamente. 🙂";
 
 const SUGGESTIONS = ["Resumen", "Tareas", "Citas de hoy", "Propiedades disponibles"];
@@ -47,7 +48,26 @@ function isSameDay(a: Date, b: Date): boolean {
   return startOfDay(a).getTime() === startOfDay(b).getTime();
 }
 
-/** Extrae una fecha en lenguaje natural simple (hoy, mañana, dd/mm) y devuelve el resto del texto sin ella. */
+const WEEKDAYS: Record<string, number> = {
+  domingo: 0,
+  lunes: 1,
+  martes: 2,
+  miercoles: 3,
+  "miércoles": 3,
+  jueves: 4,
+  viernes: 5,
+  sabado: 6,
+  "sábado": 6,
+};
+
+function nextWeekday(targetIndex: number): Date {
+  const d = new Date();
+  const diff = (targetIndex - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+/** Extrae una fecha en lenguaje natural simple (hoy, mañana, día de la semana, dd/mm) y devuelve el resto del texto sin ella. */
 function extractDate(text: string): { date: Date | null; rest: string } {
   if (/\bmañana\b/i.test(text)) {
     const date = new Date();
@@ -56,6 +76,12 @@ function extractDate(text: string): { date: Date | null; rest: string } {
   }
   if (/\bhoy\b/i.test(text)) {
     return { date: new Date(), rest: text.replace(/\bhoy\b/i, "").trim() };
+  }
+  const weekdayMatch = text.match(/\b(?:para\s+el\s+|el\s+)?(lunes|martes|mi[ée]rcoles|jueves|viernes|s[áa]bado|domingo)\b/i);
+  if (weekdayMatch) {
+    const key = weekdayMatch[1].toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const date = nextWeekday(WEEKDAYS[key]);
+    return { date, rest: text.replace(weekdayMatch[0], "").trim() };
   }
   const match = text.match(/(\d{1,2})\/(\d{1,2})/);
   if (match) {
@@ -88,8 +114,58 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     return `Hecho ✅ Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
   }
 
-  if (q.startsWith("nueva tarea")) {
-    let rest = input.replace(/nueva tarea/i, "").trim();
+  const CONTACT_TRIGGER = /\b(agr[eé]game|agregar?|a[ñn]ad(?:e|eme)|apunta(?:me)?|dar de alta)\b/i;
+  if (CONTACT_TRIGGER.test(q) && !q.startsWith("crear contacto")) {
+    // Un mensaje puede pedir dos cosas a la vez ("agrégame a Julio... y
+    // ponle una cita para el jueves") — se separa por la primera " y " para
+    // tratar cada mitad por separado.
+    const andIndex = input.search(/\sy\s/i);
+    const contactPart = andIndex === -1 ? input : input.slice(0, andIndex);
+    const taskPart = andIndex === -1 ? null : input.slice(andIndex + 3).trim();
+
+    let contactSegment = contactPart.replace(CONTACT_TRIGGER, "").trim().replace(/^a\s+/i, "");
+    const email = extractEmail(contactSegment);
+    const phone = extractPhone(contactSegment);
+    const name = contactSegment
+      .replace(email ?? "", "")
+      .replace(phone ?? "", "")
+      .replace(/\bcon\s+(n[uú]mero|tel[eé]fono|tel)\b/gi, "")
+      .replace(/[,]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!name) return 'Dime al menos el nombre, por ejemplo: "agrégame a Julio con número 622778822".';
+
+    const contact = await ContactsApi.create({ name, phone: phone ?? null, email: email ?? null, source: "MANUAL" });
+    queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+    let reply = `Hecho ✅ Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
+
+    if (taskPart && /\b(cita|tarea|agenda|recordatorio)\b/i.test(taskPart)) {
+      const { date, rest: withoutDate } = extractDate(taskPart);
+      let description = withoutDate
+        .replace(/\b(ponle|pon(me)?|agenda(le|me)?|crea(le)?|añade(le)?)\b/gi, "")
+        .replace(/\ben\s+tareas?\b/gi, "")
+        .trim();
+      if (!description || /^(una\s+)?cita\b/i.test(description)) description = `Cita con ${contact.name}`;
+
+      await ActivitiesApi.create({
+        type: "TAREA",
+        description,
+        contactId: contact.id,
+        dueDate: date ? date.toISOString() : null,
+      });
+      queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      reply += `\nTambién le creé una tarea${date ? ` para ${formatDate(date.toISOString())}` : ""}: "${description}".`;
+    }
+
+    return reply;
+  }
+
+  const NEW_TASK_TRIGGER = /^(nueva tarea|crear tarea|agregar tarea|agrega tarea|pon(?:me)?\s+una\s+tarea|agenda(?:me)?\s+una\s+tarea)\b/i;
+  if (NEW_TASK_TRIGGER.test(q)) {
+    let rest = input.replace(NEW_TASK_TRIGGER, "").trim();
     const { date, rest: withoutDate } = extractDate(rest);
     rest = withoutDate;
 
@@ -241,8 +317,8 @@ export function AIAssistant() {
             style={{ transformOrigin: "bottom right" }}
             className="fixed bottom-24 right-5 z-40 flex h-[30rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl"
           >
-            <div className="flex items-center gap-2.5 border-b border-slate-100 bg-gradient-to-r from-indigo-50/80 to-white px-4 py-3.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+            <div className="flex items-center gap-2.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-4 py-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
                 <Sparkles size={15} />
               </div>
               <div className="min-w-0 flex-1">
@@ -265,7 +341,7 @@ export function AIAssistant() {
                   className={`whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                     m.role === "assistant"
                       ? "mr-8 rounded-tl-sm bg-slate-100 text-slate-700"
-                      : "ml-auto max-w-[85%] rounded-tr-sm bg-indigo-600 text-white"
+                      : "ml-auto max-w-[85%] rounded-tr-sm bg-slate-900 text-white"
                   }`}
                 >
                   {m.text}
@@ -284,7 +360,7 @@ export function AIAssistant() {
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[11px] font-medium text-indigo-700 hover:bg-indigo-100"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-800 hover:bg-slate-100"
                     >
                       {s}
                     </button>
@@ -300,13 +376,13 @@ export function AIAssistant() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Escribe aquí…"
-                  className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-xs outline-none focus:border-indigo-400"
+                  className="w-full rounded-lg border border-slate-200 py-2 pl-8 pr-3 text-xs outline-none focus:border-slate-400"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40"
                 aria-label="Enviar"
               >
                 <Send size={14} />
@@ -320,7 +396,7 @@ export function AIAssistant() {
         onClick={() => setOpen((v) => !v)}
         whileTap={reduceMotion ? undefined : { scale: 0.92 }}
         transition={{ type: "spring", bounce: 0, duration: 0.2 }}
-        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700"
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800"
         aria-label={open ? "Cerrar asistente IA" : "Abrir asistente IA"}
       >
         {open ? <X size={22} /> : <Bot size={22} />}

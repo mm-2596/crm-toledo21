@@ -1,12 +1,27 @@
 import Link from "next/link";
 import Image from "next/image";
 
+const EXPLORE_LINKS = [
+  { href: "/propiedades", label: "Propiedades" },
+  { href: "/comparar", label: "Comparar" },
+  { href: "/favoritos", label: "Favoritos" },
+  { href: "/calculadora", label: "Calculadora de hipoteca" },
+];
+
+const COMPANY_LINKS = [
+  { href: "/quienes-somos", label: "Quiénes somos" },
+  { href: "/equipo", label: "Equipo" },
+  { href: "/gestoria", label: "Servicios de gestoría" },
+  { href: "/oficinas", label: "Nuestras oficinas" },
+  { href: "/agentes", label: "Zona de agentes" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t border-line bg-paper-dim">
       <div className="mx-auto max-w-7xl px-6 py-14">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-          <div>
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2 lg:col-span-1">
             <Image
               src="/logo/toledo21-logo.png"
               alt="Toledo21 — somos tu inmobiliaria.es"
@@ -20,17 +35,19 @@ export function Footer() {
             </p>
           </div>
           <div>
-            <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Explorar</div>
+            <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Propiedades</div>
             <ul className="flex flex-col gap-2 text-sm">
-              <li><Link href="/quienes-somos" className="text-ink-soft hover:text-ink">Quiénes somos</Link></li>
-              <li><Link href="/propiedades" className="text-ink-soft hover:text-ink">Propiedades</Link></li>
-              <li><Link href="/equipo" className="text-ink-soft hover:text-ink">Equipo</Link></li>
-              <li><Link href="/comparar" className="text-ink-soft hover:text-ink">Comparar</Link></li>
-              <li><Link href="/favoritos" className="text-ink-soft hover:text-ink">Favoritos</Link></li>
-              <li><Link href="/calculadora" className="text-ink-soft hover:text-ink">Calculadora de hipoteca</Link></li>
-              <li><Link href="/gestoria" className="text-ink-soft hover:text-ink">Servicios de gestoría</Link></li>
-              <li><Link href="/oficinas" className="text-ink-soft hover:text-ink">Nuestras oficinas</Link></li>
-              <li><Link href="/agentes" className="text-ink-soft hover:text-ink">Zona de agentes</Link></li>
+              {EXPLORE_LINKS.map((link) => (
+                <li key={link.href}><Link href={link.href} className="text-ink-soft hover:text-ink">{link.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Empresa</div>
+            <ul className="flex flex-col gap-2 text-sm">
+              {COMPANY_LINKS.map((link) => (
+                <li key={link.href}><Link href={link.href} className="text-ink-soft hover:text-ink">{link.label}</Link></li>
+              ))}
             </ul>
           </div>
           <div>

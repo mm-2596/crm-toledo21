@@ -47,7 +47,7 @@ export function PropertyGallery({ propertyId, images }: { propertyId: string; im
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={upload.isPending}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
         >
           <ImagePlus size={14} />
           {upload.isPending ? "Subiendo…" : "Subir foto"}

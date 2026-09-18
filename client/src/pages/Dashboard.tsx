@@ -43,10 +43,10 @@ export function Dashboard() {
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
       {isEmpty && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
-          <Sparkles size={20} className="mt-0.5 shrink-0 text-indigo-600" />
-          <div className="text-sm text-indigo-900/80">
-            <span className="font-medium text-indigo-900">¡Bienvenido/a al CRM!</span> Empieza dando de alta
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <Sparkles size={20} className="mt-0.5 shrink-0 text-slate-900" />
+          <div className="text-sm text-slate-900/80">
+            <span className="font-medium text-slate-900">¡Bienvenido/a al CRM!</span> Empieza dando de alta
             tu primer <Link to="/contactos" className="underline">contacto</Link> y tu primera{" "}
             <Link to="/propiedades" className="underline">propiedad</Link>. Si tienes dudas sobre cómo usar
             cada sección, consulta la <Link to="/ayuda" className="underline">guía rápida</Link>.
@@ -55,7 +55,7 @@ export function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <StatCard label="Contactos" value={data.contactsCount} icon={Users} accent="bg-indigo-50 text-indigo-600" />
+        <StatCard label="Contactos" value={data.contactsCount} icon={Users} accent="bg-slate-50 text-slate-900" />
         <StatCard
           label="Propiedades disponibles"
           value={data.propertiesAvailable}
