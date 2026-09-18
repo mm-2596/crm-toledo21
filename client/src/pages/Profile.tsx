@@ -53,14 +53,14 @@ export function Profile() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Mi perfil</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Mi perfil</h1>
       <p className="mb-6 text-sm text-slate-500">
         Esto es lo que verán los visitantes de la web en tu ficha pública del{" "}
         <a
           href={`${WEBSITE_URL}/equipo/${user.id}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1 text-slate-900 hover:underline"
+          className="inline-flex items-center gap-1 text-[#1c1815] hover:underline"
         >
           directorio de agentes <ExternalLink size={12} />
         </a>
@@ -80,7 +80,7 @@ export function Profile() {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={photoMutation.isPending}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm hover:bg-slate-800 disabled:opacity-50"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1c1815] text-white shadow-sm hover:bg-[#2a241f] disabled:opacity-50"
               title="Cambiar foto"
             >
               <Camera size={13} />
@@ -98,7 +98,7 @@ export function Profile() {
             />
           </div>
           <div>
-            <p className="font-medium text-slate-900">{user.name}</p>
+            <p className="font-medium text-[#1c1815]">{user.name}</p>
             <p className="text-sm text-slate-500">{user.email}</p>
           </div>
         </div>
@@ -137,7 +137,7 @@ export function Profile() {
         <button
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
-          className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          className="mt-5 w-full rounded-lg bg-[#1c1815] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
         >
           {saveMutation.isPending ? "Guardando…" : "Guardar cambios"}
         </button>

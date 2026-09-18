@@ -53,10 +53,10 @@ export function Pipeline() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Pipeline de ventas</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Pipeline de ventas</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
         >
           <PlusCircle size={16} />
           {showForm ? "Cancelar" : "Nueva oportunidad"}
@@ -96,7 +96,7 @@ export function Pipeline() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="col-span-4 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             Crear oportunidad
           </button>
@@ -128,9 +128,9 @@ export function Pipeline() {
                 >
                   <GripVertical size={14} className="mt-0.5 shrink-0 text-slate-300 group-hover:text-slate-400" />
                   <div>
-                    <div className="font-medium text-slate-800">{deal.contact?.name}</div>
+                    <div className="font-medium text-[#2a241f]">{deal.contact?.name}</div>
                     {deal.property && <div className="text-xs text-slate-500">{deal.property.title}</div>}
-                    {deal.value != null && <div className="mt-1 text-xs font-medium text-slate-800">{formatCurrency(deal.value)}</div>}
+                    {deal.value != null && <div className="mt-1 text-xs font-medium text-[#2a241f]">{formatCurrency(deal.value)}</div>}
                   </div>
                 </div>
               ))}

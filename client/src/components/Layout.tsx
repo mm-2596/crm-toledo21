@@ -34,15 +34,12 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen bg-slate-50 text-[#1c1815]">
       <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-slate-200/70 bg-white/70 px-4 py-6 backdrop-blur-xl">
         <div>
           <div className="mb-8 flex items-center gap-2 px-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold tracking-tight text-white shadow-sm">
-              T21
-            </div>
-            <div>
-              <div className="text-sm font-semibold leading-tight tracking-tight text-slate-900">Toledo21 CRM</div>
+            <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-7 w-auto object-contain" />
+            <div className="border-l border-slate-200 pl-2">
               <div className="text-xs text-slate-500">Gestión inmobiliaria</div>
             </div>
           </div>
@@ -53,8 +50,10 @@ export function Layout() {
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-                    isActive ? "bg-slate-900/10 text-slate-800" : "text-slate-600 hover:bg-slate-900/5"
+                  `flex items-center gap-2.5 rounded-lg border-l-2 px-[10px] py-2 text-sm font-medium transition-colors duration-150 ${
+                    isActive
+                      ? "border-[#c9a06a] bg-[#1c1815] text-white shadow-sm"
+                      : "border-transparent text-slate-600 hover:bg-[#1c1815]/5"
                   }`
                 }
               >
@@ -70,7 +69,7 @@ export function Layout() {
             to="/ayuda"
             className={({ isActive }) =>
               `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ${
-                isActive ? "bg-slate-900/10 text-slate-800" : "text-slate-500 hover:bg-slate-900/5"
+                isActive ? "bg-[#1c1815] text-white shadow-sm" : "text-slate-500 hover:bg-[#1c1815]/5"
               }`
             }
           >
@@ -82,7 +81,7 @@ export function Layout() {
             <div className="mt-2 flex items-center gap-2 rounded-lg px-1">
               <NavLink
                 to="/perfil"
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 hover:bg-slate-900/5"
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 hover:bg-[#1c1815]/5"
                 title="Editar mi perfil público"
               >
                 {user.photoUrl ? (
@@ -104,7 +103,7 @@ export function Layout() {
               <button
                 onClick={handleLogout}
                 title="Cerrar sesión"
-                className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-900/5 hover:text-slate-600"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-[#1c1815]/5 hover:text-slate-600"
               >
                 <LogOut size={15} />
               </button>

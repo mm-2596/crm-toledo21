@@ -13,10 +13,10 @@ function GuideCard({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 text-slate-900">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 text-[#1c1815]">
           <Icon size={18} />
         </div>
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-base font-semibold text-[#1c1815]">{title}</h2>
       </div>
       <ol className="flex list-decimal flex-col gap-1.5 pl-4 text-sm text-slate-600">
         {steps.map((step, i) => (
@@ -30,7 +30,7 @@ function GuideCard({
 export function Help() {
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Guía rápida para el equipo</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Guía rápida para el equipo</h1>
       <p className="mb-6 text-sm text-slate-500">
         Cómo usar el CRM en el día a día. Si tienes dudas, pregunta al responsable del CRM.
       </p>
@@ -101,11 +101,11 @@ export function Help() {
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-5">
-        <div className="mb-2 flex items-center gap-2 text-slate-800">
+        <div className="mb-2 flex items-center gap-2 text-[#2a241f]">
           <Sparkles size={18} />
           <h2 className="text-sm font-semibold">Sobre las funciones de IA de este CRM</h2>
         </div>
-        <p className="text-sm text-slate-900/80">
+        <p className="text-sm text-[#1c1815]/80">
           Por ahora, el calificador de leads, el asistente y el redactor de textos funcionan con reglas
           integradas en el propio CRM (sin conectarse a WhatsApp ni a un proveedor de IA externo), así que
           ya puedes usarlos hoy mismo. Cuando la agencia lo decida, se pueden conectar a un modelo de IA

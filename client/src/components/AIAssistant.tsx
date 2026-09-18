@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Bot, Search, Send, Sparkles, X } from "lucide-react";
+import { Bot, LayoutList, Search, Send, Sparkles, X } from "lucide-react";
 import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency, formatDate } from "../lib/format";
 import type { QueryClient } from "@tanstack/react-query";
@@ -14,21 +14,28 @@ interface Message {
 
 let msgId = 1;
 
-const WELCOME =
-  "¡Hola! 👋 Soy tu asistente dentro del CRM. Estoy aquí para ahorrarte clics: puedo consultar datos al momento o anotar cosas por ti, sin que cambies de pantalla.\n\n" +
-  "🔎 Puedes preguntarme cosas como:\n" +
-  "· \"tareas\" — tus pendientes\n" +
-  "· \"citas de hoy\" o \"citas de mañana\" — tu agenda\n" +
-  "· \"buscar Ana\" — localizar un contacto\n" +
-  "· \"propiedades en Toledo\" — inmuebles disponibles\n" +
-  "· \"resumen\" — las cifras del panel\n\n" +
-  "✍️ Y también puedo crear cosas por ti:\n" +
-  "· \"agrégame a Laura Díaz con número 622333444\" — dar de alta un lead\n" +
-  "· \"nueva tarea llamar a Ana mañana\" — agendar un seguimiento\n" +
-  "· \"agrégame a Julio con número 622778822 y ponle una cita para el jueves\" — las dos cosas a la vez\n\n" +
-  "Prueba uno de los botones de abajo, o escríbeme directamente. 🙂";
+const ROOT_TEXT = "¡Hola! 👋 Soy tu asistente del CRM. ¿Qué quieres hacer?";
+
+type MenuStage = "root" | "consultar" | "contacto" | "tarea" | null;
+
+const CATEGORIES: { key: Exclude<MenuStage, "root" | null>; label: string }[] = [
+  { key: "consultar", label: "🔎 Consultar información" },
+  { key: "contacto", label: "✍️ Dar de alta un contacto" },
+  { key: "tarea", label: "📅 Crear una tarea o cita" },
+];
+
+const CATEGORY_TEXT: Record<Exclude<MenuStage, "root" | null>, string> = {
+  consultar: "Puedo darte estos datos al momento. Elige uno, o escríbeme directamente algo como \"buscar Ana\" o \"propiedades en Getafe\":",
+  contacto:
+    "Para dar de alta un contacto, escríbeme algo como:\n\n\"agrégame a Laura Díaz con número 622333444\"\n\n" +
+    "Y si además quieres crearle una cita a la vez:\n\n\"agrégame a Julio con número 622778822 y ponle una cita para el jueves\"",
+  tarea:
+    "Para crear una tarea o cita, escríbeme algo como:\n\n\"nueva tarea llamar a Ana mañana\"\n\n" +
+    "Si quieres asociarla a un contacto que ya exista, añade \"para <nombre>\" al final.",
+};
 
 const SUGGESTIONS = ["Resumen", "Tareas", "Citas de hoy", "Propiedades disponibles"];
+const MENU_TRIGGER = /^(hola|ayuda|men[uú]|qu[eé] puedes hacer)\b/i;
 
 function extractEmail(text: string): string | undefined {
   return text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i)?.[0];
@@ -94,8 +101,6 @@ function extractDate(text: string): { date: Date | null; rest: string } {
 
 async function answer(input: string, queryClient: QueryClient): Promise<string> {
   const q = input.toLowerCase().trim();
-
-  if (/^hola\b|^ayuda\b|^que puedes hacer|^qué puedes hacer/.test(q)) return WELCOME;
 
   if (q.startsWith("crear contacto")) {
     const rest = input.replace(/crear contacto/i, "").trim();
@@ -269,24 +274,54 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     );
   }
 
-  return 'Uy, no entendí eso todavía 🤔 Escribe "ayuda" para ver todo lo que puedo hacer.';
+  return 'Uy, no entendí eso todavía 🤔 Escribe "ayuda" para ver el menú de opciones.';
 }
 
 export function AIAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([{ id: msgId++, role: "assistant", text: WELCOME }]);
+  const [messages, setMessages] = useState<Message[]>([{ id: msgId++, role: "assistant", text: ROOT_TEXT }]);
+  const [menuStage, setMenuStage] = useState<MenuStage>("root");
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
 
+  function scrollToBottom() {
+    requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }));
+  }
+
+  function showRootMenu() {
+    setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: ROOT_TEXT }]);
+    setMenuStage("root");
+    scrollToBottom();
+  }
+
+  function selectCategory(key: Exclude<MenuStage, "root" | null>, label: string) {
+    setMessages((prev) => [
+      ...prev,
+      { id: msgId++, role: "user", text: label },
+      { id: msgId++, role: "assistant", text: CATEGORY_TEXT[key] },
+    ]);
+    setMenuStage(key);
+    scrollToBottom();
+  }
+
   async function send(text: string) {
     const clean = text.trim();
     if (!clean) return;
     setMessages((prev) => [...prev, { id: msgId++, role: "user", text: clean }]);
     setInput("");
+
+    if (MENU_TRIGGER.test(clean)) {
+      setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: ROOT_TEXT }]);
+      setMenuStage("root");
+      scrollToBottom();
+      return;
+    }
+
     setThinking(true);
+    setMenuStage(null);
     try {
       const reply = await answer(clean, queryClient);
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: reply }]);
@@ -294,7 +329,7 @@ export function AIAssistant() {
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: "Algo falló al procesar eso. ¿Puedes reformularlo?" }]);
     } finally {
       setThinking(false);
-      requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }));
+      scrollToBottom();
     }
   }
 
@@ -302,8 +337,6 @@ export function AIAssistant() {
     e.preventDefault();
     send(input);
   }
-
-  const showSuggestions = messages.length === 1;
 
   return (
     <>
@@ -318,16 +351,24 @@ export function AIAssistant() {
             className="fixed bottom-24 right-5 z-40 flex h-[30rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex items-center gap-2.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-4 py-3.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1c1815] text-white shadow-sm">
                 <Sparkles size={15} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-slate-900">Asistente IA</div>
+                <div className="text-sm font-semibold text-[#1c1815]">Asistente IA</div>
                 <div className="truncate text-[11px] text-slate-500">Pregúntame o pídeme que anote algo</div>
               </div>
               <button
+                onClick={showRootMenu}
+                className="shrink-0 rounded-full p-1.5 text-slate-400 hover:bg-[#1c1815]/5 hover:text-slate-600"
+                aria-label="Ver menú de opciones"
+                title="Ver menú de opciones"
+              >
+                <LayoutList size={15} />
+              </button>
+              <button
                 onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-slate-900/5 hover:text-slate-600"
+                className="shrink-0 rounded-full p-1 text-slate-400 hover:bg-[#1c1815]/5 hover:text-slate-600"
                 aria-label="Cerrar asistente"
               >
                 <X size={16} />
@@ -341,7 +382,7 @@ export function AIAssistant() {
                   className={`whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                     m.role === "assistant"
                       ? "mr-8 rounded-tl-sm bg-slate-100 text-slate-700"
-                      : "ml-auto max-w-[85%] rounded-tr-sm bg-slate-900 text-white"
+                      : "ml-auto max-w-[85%] rounded-tr-sm bg-[#1c1815] text-white"
                   }`}
                 >
                   {m.text}
@@ -354,17 +395,46 @@ export function AIAssistant() {
                   <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
                 </div>
               )}
-              {showSuggestions && !thinking && (
+              {menuStage === "root" && !thinking && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c.key}
+                      onClick={() => selectCategory(c.key, c.label)}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-[#2a241f] hover:bg-slate-100"
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {menuStage === "consultar" && !thinking && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {SUGGESTIONS.map((s) => (
                     <button
                       key={s}
                       onClick={() => send(s)}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-800 hover:bg-slate-100"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-[#2a241f] hover:bg-slate-100"
                     >
                       {s}
                     </button>
                   ))}
+                  <button
+                    onClick={showRootMenu}
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50"
+                  >
+                    ⬅ Volver
+                  </button>
+                </div>
+              )}
+              {(menuStage === "contacto" || menuStage === "tarea") && !thinking && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <button
+                    onClick={showRootMenu}
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50"
+                  >
+                    ⬅ Volver al menú
+                  </button>
                 </div>
               )}
             </div>
@@ -382,7 +452,7 @@ export function AIAssistant() {
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1c1815] text-white hover:bg-[#2a241f] disabled:opacity-40"
                 aria-label="Enviar"
               >
                 <Send size={14} />
@@ -396,7 +466,7 @@ export function AIAssistant() {
         onClick={() => setOpen((v) => !v)}
         whileTap={reduceMotion ? undefined : { scale: 0.92 }}
         transition={{ type: "spring", bounce: 0, duration: 0.2 }}
-        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800"
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#1c1815] text-white shadow-lg hover:bg-[#2a241f]"
         aria-label={open ? "Cerrar asistente IA" : "Abrir asistente IA"}
       >
         {open ? <X size={22} /> : <Bot size={22} />}

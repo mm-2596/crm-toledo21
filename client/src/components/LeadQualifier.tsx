@@ -68,7 +68,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
 
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-      <div className="mb-3 flex items-center gap-2 text-slate-800">
+      <div className="mb-3 flex items-center gap-2 text-[#2a241f]">
         <Sparkles size={16} />
         <h3 className="text-sm font-semibold">Calificador de leads (IA)</h3>
       </div>
@@ -84,7 +84,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
             <div className="mb-1 max-w-[85%] rounded-xl rounded-bl-sm bg-white px-3 py-1.5 text-xs text-slate-600 shadow-sm">
               {h.q}
             </div>
-            <div className="ml-auto max-w-[85%] rounded-xl rounded-br-sm bg-slate-900 px-3 py-1.5 text-right text-xs text-white shadow-sm">
+            <div className="ml-auto max-w-[85%] rounded-xl rounded-br-sm bg-[#1c1815] px-3 py-1.5 text-right text-xs text-white shadow-sm">
               {h.a}
             </div>
           </motion.div>
@@ -115,7 +115,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
               <button
                 disabled={!answers.zone}
                 onClick={() => setStep(1)}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+                className="rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
               >
                 Siguiente
               </button>
@@ -151,7 +151,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
               />
               <button
                 onClick={() => setStep(3)}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white"
+                className="rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white"
               >
                 Siguiente
               </button>
@@ -168,7 +168,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
                 placeholder="Ej. 2"
                 className="flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-slate-400"
               />
-              <button onClick={() => setStep(4)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white">
+              <button onClick={() => setStep(4)} className="rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white">
                 Siguiente
               </button>
             </div>
@@ -226,7 +226,7 @@ export function LeadQualifier({ contactId, onSaved }: { contactId: string; onSav
           <button
             onClick={handleSave}
             disabled={saving}
-            className="mt-3 w-full rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {saving ? "Guardando…" : "Guardar en la ficha del contacto"}
           </button>

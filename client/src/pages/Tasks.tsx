@@ -25,7 +25,7 @@ export function Tasks() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Tareas pendientes</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Tareas pendientes</h1>
       <p className="mb-6 text-sm text-slate-500">
         Llamadas, visitas y seguimientos con fecha, de todos los contactos. Se añaden desde la ficha de cada contacto.
       </p>
@@ -55,10 +55,10 @@ export function Tasks() {
                 <tr key={activity.id} className="border-t border-slate-100">
                   <td className="px-4 py-3 text-slate-600">{formatDate(activity.dueDate)}</td>
                   <td className="px-4 py-3 text-slate-600">{activityTypeLabels[activity.type]}</td>
-                  <td className="px-4 py-3 text-slate-800">{activity.description}</td>
+                  <td className="px-4 py-3 text-[#2a241f]">{activity.description}</td>
                   <td className="px-4 py-3">
                     {activity.contact ? (
-                      <Link to={`/contactos/${activity.contact.id}`} className="text-slate-800 hover:underline">
+                      <Link to={`/contactos/${activity.contact.id}`} className="text-[#2a241f] hover:underline">
                         {activity.contact.name}
                       </Link>
                     ) : (
@@ -68,7 +68,7 @@ export function Tasks() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => completeMutation.mutate(activity.id)}
-                      className="text-xs font-medium text-slate-800 hover:underline"
+                      className="text-xs font-medium text-[#2a241f] hover:underline"
                     >
                       Completar
                     </button>

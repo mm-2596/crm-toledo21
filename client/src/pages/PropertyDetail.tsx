@@ -85,12 +85,12 @@ export function PropertyDetail() {
 
   return (
     <div>
-      <Link to="/propiedades" className="text-sm text-slate-800 hover:underline">
+      <Link to="/propiedades" className="text-sm text-[#2a241f] hover:underline">
         ← Volver a propiedades
       </Link>
       <div className="mt-2 mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{property.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">{property.title}</h1>
           <p className="flex items-center gap-2 text-sm text-slate-500">
             Ref. {property.reference} · {propertyTypeLabels[property.type]} · {listingTypeLabels[property.listingType]}
             <span className={`rounded px-2 py-0.5 text-xs font-medium ${statusBadgeClasses[property.status]}`}>
@@ -106,17 +106,17 @@ export function PropertyDetail() {
             <Download size={13} /> Descargar ficha en PDF
           </a>
         </div>
-        <p className="text-2xl font-semibold tracking-tight text-slate-800">{formatCurrency(property.price)}</p>
+        <p className="text-2xl font-semibold tracking-tight text-[#2a241f]">{formatCurrency(property.price)}</p>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <Sparkles size={17} className="text-slate-900" />
-          <h2 className="text-lg font-medium text-slate-900">Valoración automática</h2>
+          <Sparkles size={17} className="text-[#1c1815]" />
+          <h2 className="text-lg font-medium text-[#1c1815]">Valoración automática</h2>
           <button
             onClick={() => estimate.mutate()}
             disabled={!canEstimate || estimate.isPending}
-            className="ml-auto rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-40"
+            className="ml-auto rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-40"
           >
             {estimate.isPending ? "Calculando…" : "Estimar precio"}
           </button>
@@ -137,7 +137,7 @@ export function PropertyDetail() {
         <ul className="flex flex-wrap gap-2">
           {(valuations ?? []).map((v) => (
             <li key={v.id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
-              <div className="font-medium text-slate-800">{formatCurrency(v.estimatedValue)}</div>
+              <div className="font-medium text-[#2a241f]">{formatCurrency(v.estimatedValue)}</div>
               <div className="text-xs text-slate-500">
                 {v.factors ? `${formatCurrency(v.factors.avgPricePerM2)}/m² · ${v.factors.comparablesCount} comparables` : ""}
                 {" · "}
@@ -163,7 +163,7 @@ export function PropertyDetail() {
           <button
             onClick={() => saveForm.mutate()}
             disabled={saveForm.isPending}
-            className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-3 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {saveForm.isPending ? "Guardando…" : "Guardar cambios"}
           </button>
@@ -172,8 +172,8 @@ export function PropertyDetail() {
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center gap-1.5">
-          <MapPin size={17} className="text-slate-900" />
-          <h2 className="text-lg font-medium text-slate-900">Ubicación exacta (mapa)</h2>
+          <MapPin size={17} className="text-[#1c1815]" />
+          <h2 className="text-lg font-medium text-[#1c1815]">Ubicación exacta (mapa)</h2>
         </div>
         <p className="mb-3 text-xs text-slate-400">Coordenadas para el mapa en portales y en la web.</p>
         <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
@@ -204,7 +204,7 @@ export function PropertyDetail() {
           <button
             onClick={() => saveCoords.mutate()}
             disabled={saveCoords.isPending}
-            className="mt-3 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-3 rounded-lg bg-[#1c1815] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {saveCoords.isPending ? "Guardando…" : "Guardar coordenadas"}
           </button>
@@ -213,8 +213,8 @@ export function PropertyDetail() {
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="flex items-center gap-1.5 text-lg font-medium text-slate-900">
-            <Wand2 size={17} className="text-slate-900" />
+          <h2 className="flex items-center gap-1.5 text-lg font-medium text-[#1c1815]">
+            <Wand2 size={17} className="text-[#1c1815]" />
             Redactor de descripciones (IA)
           </h2>
           <div className="flex gap-2">
@@ -247,7 +247,7 @@ export function PropertyDetail() {
           <button
             onClick={() => saveForm.mutate()}
             disabled={saveForm.isPending}
-            className="mt-2 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-2 rounded-lg bg-[#1c1815] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {saveForm.isPending ? "Guardando…" : "Guardar cambios"}
           </button>

@@ -212,7 +212,7 @@ export function fromProperty(p: Property): PropertyFormValues {
 function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <div className="border-b border-slate-100 pb-5 pt-5 first:pt-0 last:border-0 last:pb-0">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <h3 className="text-sm font-semibold text-[#1c1815]">{title}</h3>
       {subtitle && <p className="mb-3 text-xs text-slate-400">{subtitle}</p>}
       <div className={subtitle ? "" : "mt-3"}>{children}</div>
     </div>
@@ -366,7 +366,7 @@ export function PropertyForm({
                 type="checkbox"
                 checked={Boolean(value[a.key])}
                 onChange={(e) => set(a.key, e.target.checked as PropertyFormValues[typeof a.key])}
-                className="h-3.5 w-3.5 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                className="h-3.5 w-3.5 rounded border-slate-300 text-[#1c1815] focus:ring-slate-400"
               />
               {a.label}
             </label>

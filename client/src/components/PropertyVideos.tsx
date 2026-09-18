@@ -43,7 +43,7 @@ export function PropertyVideos({ propertyId, videos }: { propertyId: string; vid
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-medium text-slate-900">Vídeos</h2>
+        <h2 className="text-lg font-medium text-[#1c1815]">Vídeos</h2>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={upload.isPending}
@@ -68,7 +68,7 @@ export function PropertyVideos({ propertyId, videos }: { propertyId: string; vid
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {videos.map((video) => (
-            <div key={video.id} className="group relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-900">
+            <div key={video.id} className="group relative aspect-video overflow-hidden rounded-lg border border-slate-200 bg-[#1c1815]">
               <video src={video.url} className="h-full w-full object-cover" controls preload="metadata" />
               <button
                 onClick={() => remove.mutate(video.id)}

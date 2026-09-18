@@ -12,7 +12,7 @@ function RoleBadge({ role }: { role: TeamMember["role"] }) {
   return (
     <span
       className={`rounded px-2 py-0.5 text-xs font-medium ${
-        role === "ADMIN" ? "bg-slate-50 text-slate-800" : "bg-slate-100 text-slate-600"
+        role === "ADMIN" ? "bg-slate-50 text-[#2a241f]" : "bg-slate-100 text-slate-600"
       }`}
     >
       {role === "ADMIN" ? "Administrador" : "Agente"}
@@ -33,19 +33,19 @@ function InviteCodeCard() {
 
   return (
     <div className="mb-6 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
-      <h2 className="mb-1 text-sm font-semibold text-slate-900">Código de invitación del equipo</h2>
-      <p className="mb-3 text-sm text-slate-900/70">
+      <h2 className="mb-1 text-sm font-semibold text-[#1c1815]">Código de invitación del equipo</h2>
+      <p className="mb-3 text-sm text-[#1c1815]/70">
         Compártelo con un nuevo empleado para que pueda crear su cuenta en{" "}
         <span className="font-medium">/registro</span>.
       </p>
       <div className="flex items-center gap-2">
-        <code className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">
+        <code className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-[#2a241f]">
           {data?.inviteCode ?? "…"}
         </code>
         <button
           onClick={handleCopy}
           disabled={!data?.inviteCode}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-[#2a241f] hover:bg-slate-50 disabled:opacity-50"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? "Copiado" : "Copiar"}
@@ -94,7 +94,7 @@ function ReviewModerationCard() {
           <div key={review.id} className="rounded-xl border border-amber-200 bg-white p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium text-[#2a241f]">
                   {review.authorName} → <span className="text-slate-500">{review.agent.name}</span>
                 </p>
                 <div className="mt-0.5 flex items-center gap-0.5">
@@ -154,7 +154,7 @@ export function Team() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Equipo</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Equipo</h1>
       <p className="mb-6 text-sm text-slate-500">
         Gestiona quién tiene acceso al CRM y con qué permisos. Solo los administradores ven esta pantalla.
       </p>
@@ -187,7 +187,7 @@ export function Team() {
                           {member.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium text-slate-800">
+                          <div className="font-medium text-[#2a241f]">
                             {member.name}
                             {isSelf && <span className="ml-1.5 text-xs font-normal text-slate-400">(tú)</span>}
                           </div>
@@ -219,7 +219,7 @@ export function Team() {
                           }
                           disabled={isSelf || updateMutation.isPending}
                           title={member.role === "ADMIN" ? "Quitar permisos de administrador" : "Hacer administrador"}
-                          className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-slate-300 hover:text-slate-800 disabled:opacity-30"
+                          className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-slate-300 hover:text-[#2a241f] disabled:opacity-30"
                         >
                           <ShieldCheck size={15} />
                         </button>

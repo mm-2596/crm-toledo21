@@ -21,7 +21,7 @@ function StatCard({
         <Icon size={18} />
       </div>
       <div className="text-sm text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{value}</div>
+      <div className="mt-1 text-2xl font-semibold tracking-tight text-[#1c1815]">{value}</div>
     </div>
   );
 }
@@ -39,14 +39,14 @@ export function Dashboard() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">Panel general</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel general</h1>
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
       {isEmpty && (
         <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
-          <Sparkles size={20} className="mt-0.5 shrink-0 text-slate-900" />
-          <div className="text-sm text-slate-900/80">
-            <span className="font-medium text-slate-900">¡Bienvenido/a al CRM!</span> Empieza dando de alta
+          <Sparkles size={20} className="mt-0.5 shrink-0 text-[#1c1815]" />
+          <div className="text-sm text-[#1c1815]/80">
+            <span className="font-medium text-[#1c1815]">¡Bienvenido/a al CRM!</span> Empieza dando de alta
             tu primer <Link to="/contactos" className="underline">contacto</Link> y tu primera{" "}
             <Link to="/propiedades" className="underline">propiedad</Link>. Si tienes dudas sobre cómo usar
             cada sección, consulta la <Link to="/ayuda" className="underline">guía rápida</Link>.
@@ -55,7 +55,7 @@ export function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        <StatCard label="Contactos" value={data.contactsCount} icon={Users} accent="bg-slate-50 text-slate-900" />
+        <StatCard label="Contactos" value={data.contactsCount} icon={Users} accent="bg-slate-50 text-[#1c1815]" />
         <StatCard
           label="Propiedades disponibles"
           value={data.propertiesAvailable}
@@ -73,12 +73,12 @@ export function Dashboard() {
       </div>
 
       <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-medium text-slate-900">Oportunidades por etapa</h2>
+        <h2 className="mb-4 text-lg font-medium text-[#1c1815]">Oportunidades por etapa</h2>
         <div className="flex flex-col gap-2">
           {data.dealsByStage.map((stage) => (
             <div key={stage.id} className="flex items-center justify-between border-b border-slate-100 py-2 text-sm">
               <span className="text-slate-700">{stage.name}</span>
-              <span className="font-medium text-slate-900">{stage._count.deals}</span>
+              <span className="font-medium text-[#1c1815]">{stage._count.deals}</span>
             </div>
           ))}
         </div>

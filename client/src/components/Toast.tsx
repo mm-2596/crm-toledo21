@@ -36,7 +36,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
               transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="pointer-events-auto flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md"
+              className="pointer-events-auto flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-4 py-3 text-sm font-medium text-[#2a241f] shadow-lg backdrop-blur-md"
             >
               {toast.kind === "success" ? (
                 <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />

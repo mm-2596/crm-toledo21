@@ -43,7 +43,7 @@ export function PropertyGallery({ propertyId, images }: { propertyId: string; im
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-medium text-slate-900">Fotos</h2>
+        <h2 className="text-lg font-medium text-[#1c1815]">Fotos</h2>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={upload.isPending}

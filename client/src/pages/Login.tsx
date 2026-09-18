@@ -41,11 +41,8 @@ export function Login() {
         transition={{ type: "spring", bounce: 0, duration: 0.35 }}
         className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white/80 p-8 shadow-xl backdrop-blur-xl"
       >
-        <div className="mb-6 flex flex-col items-center gap-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold tracking-tight text-white shadow-sm">
-            T21
-          </div>
-          <h1 className="text-lg font-semibold tracking-tight text-slate-900">Toledo21 CRM</h1>
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-9 w-auto object-contain" />
           <p className="text-sm text-slate-500">Inicia sesión para continuar</p>
         </div>
 
@@ -70,7 +67,7 @@ export function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-1 rounded-lg bg-[#1c1815] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {loading ? "Entrando…" : "Iniciar sesión"}
           </button>
@@ -78,7 +75,7 @@ export function Login() {
 
         <p className="mt-5 text-center text-sm text-slate-500">
           ¿Eres nuevo en el equipo?{" "}
-          <Link to="/registro" className="font-medium text-slate-800 hover:underline">
+          <Link to="/registro" className="font-medium text-[#2a241f] hover:underline">
             Crea tu cuenta
           </Link>
         </p>

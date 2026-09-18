@@ -41,10 +41,10 @@ export function Properties() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Propiedades</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Propiedades</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
         >
           <PlusCircle size={16} />
           {showForm ? "Cancelar" : "Nueva propiedad"}
@@ -60,7 +60,7 @@ export function Properties() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="mt-3 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="mt-3 w-full rounded-lg bg-[#1c1815] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             {createMutation.isPending ? "Guardando…" : "Guardar propiedad"}
           </button>
@@ -96,11 +96,11 @@ export function Properties() {
                   {propertyStatusLabels[property.status]}
                 </span>
               </div>
-              <h3 className="font-medium text-slate-900">{property.title}</h3>
+              <h3 className="font-medium text-[#1c1815]">{property.title}</h3>
               <p className="text-sm text-slate-500">
                 {propertyTypeLabels[property.type]} · {property.city || "-"}
               </p>
-              <p className="mt-2 text-lg font-semibold text-slate-800">{formatCurrency(property.price)}</p>
+              <p className="mt-2 text-lg font-semibold text-[#2a241f]">{formatCurrency(property.price)}</p>
             </Link>
           ))}
         </div>

@@ -44,10 +44,10 @@ export function Contacts() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Contactos</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Contactos</h1>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
         >
           <UserPlus size={16} />
           {showForm ? "Cancelar" : "Nuevo contacto"}
@@ -67,7 +67,7 @@ export function Contacts() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="col-span-2 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
           >
             Guardar contacto
           </button>
@@ -106,7 +106,7 @@ export function Contacts() {
               {(data ?? []).map((contact: Contact) => (
                 <tr key={contact.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <Link to={`/contactos/${contact.id}`} className="font-medium text-slate-800 hover:underline">
+                    <Link to={`/contactos/${contact.id}`} className="font-medium text-[#2a241f] hover:underline">
                       {contact.name}
                     </Link>
                   </td>
