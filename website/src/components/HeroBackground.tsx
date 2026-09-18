@@ -25,8 +25,7 @@ export function HeroBackground({ progress }: { progress: MotionValue<number> }) 
 function Glow() {
   return (
     <div className="absolute inset-0 [mix-blend-mode:screen]">
-      <div className="absolute bottom-0 left-1/2 h-[26rem] w-[44rem] -translate-x-1/2 translate-y-1/3 rounded-full bg-gold/25 blur-[130px]" />
-      <div className="absolute -left-24 -top-16 h-[22rem] w-[22rem] rounded-full bg-gold/15 blur-[100px]" />
+      <div className="absolute left-1/2 top-1/2 h-[46rem] w-[46rem] -translate-x-1/2 -translate-y-[58%] rounded-full bg-gold/30 blur-[150px]" />
     </div>
   );
 }
