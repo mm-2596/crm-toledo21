@@ -1,67 +1,114 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMotionValueEvent, useReducedMotion, type MotionValue } from "framer-motion";
 import * as THREE from "three";
 
-const GOLD = "#c9a06a";
+const GOLD = "#d9ae74";
 const GOLD_DEEP = "#a9834f";
+const GOLD_PALE = "#f3d9ad";
 
-interface NodeSpec {
-  position: [number, number, number];
-  radius: number;
-  detail: 0 | 1;
+// Un satélite orbitando alrededor de la gema central — pequeños, con su
+// propio radio y velocidad de órbita, dan sensación de sistema en movimiento
+// en vez de un solo objeto estático.
+interface Satellite {
+  orbitRadius: number;
+  orbitSpeed: number;
+  orbitOffset: number;
+  tilt: number;
+  size: number;
 }
 
-// Un pequeño "sistema" de nodos dorados flotando en profundidad real, unidos
-// por algunas líneas — sugiere red/conexión (propiedades, agentes, clientes)
-// sin ser literal ni fotorrealista.
-const NODES: NodeSpec[] = [
-  { position: [-2.3, 0.6, 0], radius: 0.85, detail: 1 },
-  { position: [2.1, -0.5, -1.2], radius: 0.55, detail: 0 },
-  { position: [0.5, 1.5, -0.6], radius: 0.38, detail: 0 },
-  { position: [-1.1, -1.4, -0.9], radius: 0.5, detail: 1 },
-  { position: [2.6, 1.2, -2.1], radius: 0.3, detail: 0 },
-  { position: [-2.7, -0.9, -1.7], radius: 0.32, detail: 0 },
+const SATELLITES: Satellite[] = [
+  { orbitRadius: 2.6, orbitSpeed: 0.35, orbitOffset: 0, tilt: 0.25, size: 0.22 },
+  { orbitRadius: 3.1, orbitSpeed: -0.24, orbitOffset: 2.1, tilt: -0.4, size: 0.16 },
+  { orbitRadius: 2.2, orbitSpeed: 0.5, orbitOffset: 4.2, tilt: 0.55, size: 0.13 },
+  { orbitRadius: 3.6, orbitSpeed: -0.18, orbitOffset: 1.2, tilt: -0.15, size: 0.19 },
 ];
 
-const LINKS: [number, number][] = [
-  [0, 2],
-  [0, 3],
-  [1, 2],
-  [1, 4],
-  [3, 5],
-  [2, 4],
-];
+function Satellites({ clock }: { clock: React.MutableRefObject<number> }) {
+  const refs = useRef<(THREE.Mesh | null)[]>([]);
 
-function Nodes() {
+  useFrame(() => {
+    const t = clock.current;
+    SATELLITES.forEach((s, i) => {
+      const mesh = refs.current[i];
+      if (!mesh) return;
+      const angle = t * s.orbitSpeed + s.orbitOffset;
+      mesh.position.set(
+        Math.cos(angle) * s.orbitRadius,
+        Math.sin(angle * 0.6) * s.orbitRadius * Math.sin(s.tilt),
+        Math.sin(angle) * s.orbitRadius * Math.cos(s.tilt),
+      );
+    });
+  });
+
   return (
     <>
-      {NODES.map((n, i) => (
-        <mesh key={i} position={n.position}>
-          <icosahedronGeometry args={[n.radius, n.detail]} />
-          <meshStandardMaterial color={GOLD} metalness={0.75} roughness={0.32} emissive={GOLD_DEEP} emissiveIntensity={0.12} />
+      {SATELLITES.map((s, i) => (
+        <mesh key={i} ref={(el) => { refs.current[i] = el; }}>
+          <octahedronGeometry args={[s.size, 0]} />
+          <meshStandardMaterial color={GOLD} metalness={0.85} roughness={0.25} emissive={GOLD_DEEP} emissiveIntensity={0.2} />
         </mesh>
-      ))}
-      {LINKS.map(([a, b], i) => (
-        <Link key={i} start={NODES[a].position} end={NODES[b].position} />
       ))}
     </>
   );
 }
 
-function Link({ start, end }: { start: [number, number, number]; end: [number, number, number] }) {
-  const geometry = useRef<THREE.BufferGeometry>(null);
+// La gema central: un núcleo sólido facetado envuelto en una segunda capa
+// de alambre (wireframe) más grande que gira al revés — ese contraste de
+// capas es lo que le da un aire "tecnológico/joya" distinto a una simple
+// figura sólida.
+function Gem({ clock, reduceMotion }: { clock: React.MutableRefObject<number>; reduceMotion: boolean }) {
+  const core = useRef<THREE.Mesh>(null);
+  const shell = useRef<THREE.Mesh>(null);
+
+  useFrame(() => {
+    const t = clock.current;
+    if (core.current) {
+      core.current.rotation.y = reduceMotion ? 0 : t * 0.22;
+      core.current.rotation.x = reduceMotion ? 0 : Math.sin(t * 0.3) * 0.15;
+    }
+    if (shell.current) {
+      shell.current.rotation.y = reduceMotion ? 0 : -t * 0.12;
+      shell.current.rotation.x = reduceMotion ? 0 : Math.cos(t * 0.2) * 0.1;
+    }
+  });
+
   return (
-    <line>
-      <bufferGeometry
-        ref={geometry}
-        onUpdate={(g) => g.setFromPoints([new THREE.Vector3(...start), new THREE.Vector3(...end)])}
-      />
-      <lineBasicMaterial color={GOLD} transparent opacity={0.25} />
-    </line>
+    <>
+      <mesh ref={core}>
+        <icosahedronGeometry args={[1.35, 1]} />
+        <meshPhysicalMaterial
+          color={GOLD}
+          metalness={0.9}
+          roughness={0.18}
+          emissive={GOLD_DEEP}
+          emissiveIntensity={0.15}
+          clearcoat={0.6}
+          clearcoatRoughness={0.25}
+        />
+      </mesh>
+      <mesh ref={shell}>
+        <icosahedronGeometry args={[1.95, 1]} />
+        <meshBasicMaterial color={GOLD_PALE} wireframe transparent opacity={0.22} />
+      </mesh>
+    </>
   );
+}
+
+// La luz principal recorre una órbita propia — un facetado dorado solo
+// "brilla" de verdad cuando la luz se mueve sobre él, así que el
+// movimiento de la luz hace más por la sensación de joya que el giro solo.
+function OrbitingLight({ clock }: { clock: React.MutableRefObject<number> }) {
+  const light = useRef<THREE.PointLight>(null);
+  useFrame(() => {
+    if (!light.current) return;
+    const t = clock.current * 0.4;
+    light.current.position.set(Math.cos(t) * 4, Math.sin(t * 0.7) * 2.5, Math.sin(t) * 4);
+  });
+  return <pointLight ref={light} intensity={90} color={GOLD_PALE} />;
 }
 
 function Scene({ progress, reduceMotion }: { progress: MotionValue<number>; reduceMotion: boolean }) {
@@ -74,22 +121,55 @@ function Scene({ progress, reduceMotion }: { progress: MotionValue<number>; redu
   });
 
   useFrame((_, delta) => {
+    if (!reduceMotion) clock.current += delta;
     const g = group.current;
     if (!g) return;
-    if (!reduceMotion) {
-      clock.current += delta;
-      g.rotation.y = clock.current * 0.06;
-      g.rotation.x = Math.sin(clock.current * 0.15) * 0.08;
-    }
-    // Mismo efecto de acercamiento que antes tenía el fondo 2D al hacer scroll.
-    g.scale.setScalar(1 + scrollRef.current * 0.35);
-    g.rotation.z = scrollRef.current * 0.25;
+    g.scale.setScalar(1 + scrollRef.current * 0.4);
+    g.rotation.y = scrollRef.current * 0.6;
   });
 
   return (
     <group ref={group}>
-      <Nodes />
+      <Gem clock={clock} reduceMotion={reduceMotion} />
+      <Satellites clock={clock} />
+      <OrbitingLight clock={clock} />
     </group>
+  );
+}
+
+// Pseudoaleatorio determinista (sin Math.random) para que la nube de puntos
+// sea estable entre renders sin depender de una función impura.
+function pseudoRandom(seed: number): number {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function Sparks() {
+  const positions = useMemo(() => {
+    const arr = new Float32Array(90 * 3);
+    for (let i = 0; i < 90; i++) {
+      const r = 3.5 + pseudoRandom(i * 3.1) * 3;
+      const theta = pseudoRandom(i * 7.7 + 1) * Math.PI * 2;
+      const phi = Math.acos(2 * pseudoRandom(i * 5.3 + 2) - 1);
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      arr[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return arr;
+  }, []);
+
+  const points = useRef<THREE.Points>(null);
+  useFrame((_, delta) => {
+    if (points.current) points.current.rotation.y += delta * 0.015;
+  });
+
+  return (
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color={GOLD_PALE} size={0.035} transparent opacity={0.55} sizeAttenuation />
+    </points>
   );
 }
 
@@ -99,14 +179,14 @@ export function Hero3D({ progress }: { progress: MotionValue<number> }) {
   return (
     <Canvas
       dpr={[1, 1.5]}
-      camera={{ position: [0, 0, 6], fov: 45 }}
+      camera={{ position: [0, 0, 6.5], fov: 45 }}
       gl={{ antialias: true, alpha: true }}
       className="!absolute inset-0"
     >
-      <ambientLight intensity={0.55} />
-      <pointLight position={[5, 5, 5]} intensity={80} color="#f3d9ad" />
-      <pointLight position={[-5, -3, -2]} intensity={25} color={GOLD_DEEP} />
+      <ambientLight intensity={0.4} />
+      <pointLight position={[-5, -3, -2]} intensity={20} color={GOLD_DEEP} />
       <Scene progress={progress} reduceMotion={!!reduceMotion} />
+      <Sparks />
     </Canvas>
   );
 }
