@@ -105,16 +105,43 @@ function Shards({ edges, reduceMotion, startDelay }: { edges: Edge[]; reduceMoti
   );
 }
 
+// Un rectángulo hueco (puerta/ventana): cuatro puntos como lazo cerrado,
+// ligeramente por delante de la fachada para que no se confunda con ella.
+function rectOutline(w: number, h: number): THREE.BufferGeometry {
+  const hw = w / 2;
+  const hh = h / 2;
+  return new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-hw, -hh, 0),
+    new THREE.Vector3(hw, -hh, 0),
+    new THREE.Vector3(hw, hh, 0),
+    new THREE.Vector3(-hw, hh, 0),
+  ]);
+}
+
 function Faces({ reduceMotion, revealAt }: { reduceMotion: boolean; revealAt: number }) {
   const bodyRef = useRef<THREE.Mesh>(null);
   const roofRef = useRef<THREE.Mesh>(null);
+  const chimneyRef = useRef<THREE.Mesh>(null);
+  const detailRefs = useRef<THREE.Line[]>([]);
+
+  const doorGeom = useMemo(() => rectOutline(0.34, 0.58), []);
+  const windowGeom = useMemo(() => rectOutline(0.3, 0.3), []);
 
   useFrame(({ clock }) => {
     const t = reduceMotion ? 999 : clock.elapsedTime;
     const p = Math.min(1, Math.max(0, (t - revealAt) / 0.7));
+    const p2 = Math.min(1, Math.max(0, (t - revealAt - 0.15) / 0.6));
     if (bodyRef.current) (bodyRef.current.material as THREE.MeshStandardMaterial).opacity = p;
     if (roofRef.current) (roofRef.current.material as THREE.MeshStandardMaterial).opacity = p;
+    if (chimneyRef.current) (chimneyRef.current.material as THREE.MeshStandardMaterial).opacity = p2;
+    detailRefs.current.forEach((line) => {
+      if (line) (line.material as THREE.LineBasicMaterial).opacity = p2 * 0.85;
+    });
   });
+
+  const doorY = -0.795 + 0.29;
+  const windowY = -0.05;
+  const frontZ = 1.9 / 2 + 0.015;
 
   return (
     <>
@@ -123,9 +150,23 @@ function Faces({ reduceMotion, revealAt }: { reduceMotion: boolean; revealAt: nu
         <meshStandardMaterial color={INK} metalness={0.4} roughness={0.6} transparent opacity={0} />
       </mesh>
       <mesh ref={roofRef} position={[0, 1.06, 0]} rotation={[0, Math.PI / 4, 0]}>
-        <coneGeometry args={[1.55, 1.15, 4]} />
+        <coneGeometry args={[1.75, 1.15, 4]} />
         <meshStandardMaterial color={INK} metalness={0.4} roughness={0.6} transparent opacity={0} />
       </mesh>
+      <mesh ref={chimneyRef} position={[0.55, 1.35, 0.3]}>
+        <boxGeometry args={[0.22, 0.55, 0.22]} />
+        <meshStandardMaterial color={INK} metalness={0.4} roughness={0.6} transparent opacity={0} />
+      </mesh>
+
+      <lineLoop ref={(el) => { if (el) detailRefs.current[0] = el; }} geometry={doorGeom} position={[0, doorY, frontZ]}>
+        <lineBasicMaterial color={GOLD} transparent opacity={0} />
+      </lineLoop>
+      <lineLoop ref={(el) => { if (el) detailRefs.current[1] = el; }} geometry={windowGeom} position={[-0.55, windowY, frontZ]}>
+        <lineBasicMaterial color={GOLD} transparent opacity={0} />
+      </lineLoop>
+      <lineLoop ref={(el) => { if (el) detailRefs.current[2] = el; }} geometry={windowGeom} position={[0.55, windowY, frontZ]}>
+        <lineBasicMaterial color={GOLD} transparent opacity={0} />
+      </lineLoop>
     </>
   );
 }
@@ -147,7 +188,11 @@ function House({ progress, reduceMotion }: { progress: MotionValue<number>; redu
     [],
   );
   const roofEdges = useMemo(
-    () => edgesFromGeometry(new THREE.ConeGeometry(1.55, 1.15, 4).rotateY(Math.PI / 4).translate(0, 1.06, 0)),
+    () => edgesFromGeometry(new THREE.ConeGeometry(1.75, 1.15, 4).rotateY(Math.PI / 4).translate(0, 1.06, 0)),
+    [],
+  );
+  const chimneyEdges = useMemo(
+    () => edgesFromGeometry(new THREE.BoxGeometry(0.22, 0.55, 0.22).translate(0.55, 1.35, 0.3)),
     [],
   );
 
@@ -165,6 +210,7 @@ function House({ progress, reduceMotion }: { progress: MotionValue<number>; redu
     <group ref={group}>
       <Shards edges={bodyEdges} reduceMotion={reduceMotion} startDelay={0} />
       <Shards edges={roofEdges} reduceMotion={reduceMotion} startDelay={0.4} />
+      <Shards edges={chimneyEdges} reduceMotion={reduceMotion} startDelay={0.75} />
       <Faces reduceMotion={reduceMotion} revealAt={1.3} />
     </group>
   );
