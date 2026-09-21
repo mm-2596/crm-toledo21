@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, type CSSProperties } from 'react';
 import Image from 'next/image';
 import apartment from './assets/apartment.webp';
 import { mountApartmentScene } from './scene-controller';
+import { PlanAssembly } from './plan-assembly';
 import { ROOMS } from './rooms';
 import styles from './ApartmentScene.module.css';
 
@@ -38,6 +39,7 @@ export function ApartmentScene({ className = '', eager = true }: ApartmentSceneP
       data-t21-ready="false"
       data-t21-motion="off"
       data-t21-active="all"
+      data-t21-assembling="true"
       aria-label="Explora una vivienda ilustrada"
     >
       <div className={styles.topline}>
@@ -47,15 +49,7 @@ export function ApartmentScene({ className = '', eager = true }: ApartmentSceneP
       <div className={styles.viewport} data-t21-pointer-area="">
         <div className={styles.art} data-t21-art="">
           <div className={styles.floating}>
-            <Image
-              className={styles.image}
-              src={apartment}
-              alt="Ilustración de una vivienda abierta vista desde arriba: cocina con isla, salón amueblado, dormitorio, baño y terraza con plantas. No corresponde a un inmueble en venta."
-              unoptimized
-              loading={eager ? 'eager' : 'lazy'}
-              fetchPriority={eager ? 'high' : 'auto'}
-              draggable={false}
-            />
+            <PlanAssembly eager={eager} />
             {ROOMS.map((room) => (
               <button
                 key={room.id}
@@ -64,6 +58,7 @@ export function ApartmentScene({ className = '', eager = true }: ApartmentSceneP
                 style={{ '--t21-x': `${room.x}%`, '--t21-y': `${room.y}%`, '--t21-width': `${room.width}%` } as CSSProperties}
                 data-t21-room={room.id}
                 data-t21-control=""
+                data-t21-hotspot=""
                 aria-label={`Explorar ${room.label.toLowerCase()}`}
                 aria-controls={panelId}
                 aria-pressed="false"

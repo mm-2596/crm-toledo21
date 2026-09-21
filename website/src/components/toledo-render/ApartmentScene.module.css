@@ -15,50 +15,16 @@
 .kicker { font-size: 10px; letter-spacing: 0.17em; line-height: 1.6; color: var(--t21-gold); }
 .kicker > span { display: inline-block; width: 5px; height: 5px; background: currentColor; border-radius: 50%; margin: 0 7px 2px 0; }
 .concept { font-size: 10px; color: #b6ada2; white-space: nowrap; }
-.viewport { position: relative; width: 100%; aspect-ratio: 1048 / 890; perspective: 1200px; overflow: hidden; border-radius: 4px; }
+.viewport { position: relative; width: 100%; aspect-ratio: 1048 / 890; perspective: 1200px; }
 .art { width: 100%; height: 100%; transform: translateX(var(--t21-tx, 0px)) rotateX(var(--t21-rx, 0deg)) rotateY(var(--t21-ry, 0deg)); transition: transform 280ms ease-out; }
 .floating { position: relative; width: 100%; height: 100%; animation: t21-float 8s ease-in-out infinite; animation-play-state: paused; }
 .scene[data-t21-motion="on"] .floating { animation-play-state: running; }
 .scene .viewport:hover .floating, .scene .viewport:focus-within .floating { animation-play-state: paused; }
 .image { display: block; width: 100%; height: auto; max-width: 100%; user-select: none; }
-
-/* Entrada al cargar: el conjunto aparece y una luz dorada recorre el render
-   una sola vez, como si se "montara" delante del usuario. No se repite ni
-   se relaciona con el flotado continuo (t21-float) ni con prefers-reduced-motion. */
-.scene { opacity: 0; animation: t21-scene-in 700ms cubic-bezier(.16,.8,.24,1) 40ms forwards; }
-.viewport::after {
-  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  background: linear-gradient(100deg, transparent 42%, rgba(217, 174, 116, 0.4) 50%, transparent 58%);
-  transform: translateX(-140%) skewX(-12deg);
-  animation: t21-sweep 1100ms cubic-bezier(.3,.7,.3,1) 520ms forwards;
-  mix-blend-mode: screen;
-}
-.hotspot { opacity: 0; animation: t21-hotspot-in 480ms cubic-bezier(.2,.85,.2,1) forwards; }
-.hotspot:nth-of-type(1) { animation-delay: 640ms; }
-.hotspot:nth-of-type(2) { animation-delay: 730ms; }
-.hotspot:nth-of-type(3) { animation-delay: 820ms; }
-.hotspot:nth-of-type(4) { animation-delay: 910ms; }
-.roomPicker, .panel, .controls, .disclaimer { opacity: 0; animation: t21-rise-in 520ms cubic-bezier(.2,.8,.2,1) forwards; }
-.roomPicker { animation-delay: 980ms; }
-.panel { animation-delay: 1040ms; }
-.controls { animation-delay: 1090ms; }
-.disclaimer { animation-delay: 1130ms; }
-@keyframes t21-scene-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes t21-sweep {
-  from { transform: translateX(-140%) skewX(-12deg); }
-  to { transform: translateX(180%) skewX(-12deg); }
-}
-@keyframes t21-hotspot-in {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-@keyframes t21-rise-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* El montaje inicial (trazo + estancias + cierre) vive en plan-assembly.module.css.
+   Las etiquetas HTML quedan ocultas mientras se ensambla para no competir
+   visualmente con el trazado; scene-controller.ts controla data-t21-assembling. */
+.scene[data-t21-assembling="true"] .hotspot { visibility: hidden; pointer-events: none; }
 /* Existing illustrated tags are covered by real, focusable HTML labels. */
 .hotspot {
   position: absolute; left: var(--t21-x); top: var(--t21-y);
@@ -136,9 +102,5 @@
   .floating { animation: none !important; }
   .art { transform: none !important; transition: none !important; }
   .scene *, .scene *::before, .scene *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
-  .scene, .hotspot, .roomPicker, .panel, .controls, .disclaimer {
-    animation: none !important; opacity: 1 !important; transform: none !important;
-  }
   .hotspot { transform: translate(-50%, -50%) !important; }
-  .viewport::after { animation: none !important; content: none !important; }
 }

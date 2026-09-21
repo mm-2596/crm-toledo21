@@ -1,0 +1,54 @@
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1048 / 890;
+  isolation: isolate;
+}
+.finalImage {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  user-select: none;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.part { opacity: 0; transform-box: view-box; }
+.blueprint { fill: none; stroke: #b98c50; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.glow { fill: none; stroke: #f3d9ad; stroke-width: 1.5; opacity: 0; }
+.stage[data-assembly-phase="waiting"] .finalImage { opacity: 0; }
+.stage[data-assembly-phase="waiting"] .blueprint { opacity: .35; }
+.stage[data-assembly-phase="assembling"] .finalImage { opacity: 0; }
+.stage[data-assembly-phase="complete"] .overlay { display: none; }
+.stage[data-assembly-phase="complete"] .finalImage { opacity: 1; }
+/* La clase doble conserva el tamaño frente al font:inherit del figure existente. */
+.replay.replay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #a9834f55;
+  border-radius: 999px;
+  background: #a9834f0b;
+  color: #d9ae74;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.replay.replay:hover:not(:disabled) { border-color: #d9ae74; background: #a9834f20; }
+.replay.replay:disabled { color: #9c9081; cursor: default; }
+@media (max-width: 480px) {
+  .replay.replay { font-size: 10px; padding-inline: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage .finalImage { opacity: 1 !important; }
+  .stage .overlay { display: none !important; }
+}
