@@ -45,13 +45,20 @@ function extractPhone(text: string): string | undefined {
   return text.match(/(\+?\d[\d\s]{5,}\d)/)?.[0]?.trim();
 }
 
-/** Encuentra el nombre aunque venga como "que se llama X" / "llamado X"; si no,
- * limpia el resto de la frase (número, correo, muletillas) como haría un humano. */
+/** Encuentra el nombre en frases como "que se llama X", "con nombre X" o
+ * "llamado X". Si no hay ninguna de esas muletillas, se apoya en que un
+ * nombre propio casi siempre empieza en mayúscula ("Laura Díaz con número
+ * ...") para no arrastrar el resto de la frase. Solo como último recurso
+ * limpia palabra por palabra el texto completo. */
 function extractName(segment: string, email?: string, phone?: string): string {
-  const calledMatch = segment.match(
-    /\b(?:que\s+se\s+llama|se\s+llama|llamad[oa])\s+([^,]+?)(?=\s+\b(?:con|y|correo|tel[eé]fono|n[uú]mero|email|e-?mail)\b|$)/i,
+  const connectorMatch = segment.match(
+    /\b(?:que\s+se\s+llama|se\s+llama|llamad[oa]|(?:con\s+|de\s+)?nombre)\s*:?\s+([^,]+?)(?=\s+\b(?:y|con|correo|tel[eé]fono|n[uú]mero|email|e-?mail|su|es)\b|[.,]|$)/i,
   );
-  if (calledMatch) return calledMatch[1].trim();
+  if (connectorMatch) return connectorMatch[1].trim();
+
+  const capitalizedRun = segment.match(/[A-ZÁÉÍÓÚÑ][a-zà-ÿ'’-]+(?:\s+[A-ZÁÉÍÓÚÑ][a-zà-ÿ'’-]+){0,3}/);
+  if (capitalizedRun) return capitalizedRun[0].trim();
+
   return segment
     .replace(email ?? "", "")
     .replace(phone ?? "", "")
@@ -62,19 +69,16 @@ function extractName(segment: string, email?: string, phone?: string): string {
     .trim();
 }
 
-/** Un mensaje puede pedir dos cosas a la vez ("...y correo x@x.com y además
- * creame una cita para el jueves"). Partir por la PRIMERA " y " cortaría el
- * correo a la mitad, así que se busca la ÚLTIMA " y " que preceda a una
- * palabra de cita/tarea, para no romper datos de contacto que también
- * contengan un " y " (un correo, una dirección...). */
+/** Un mensaje puede pedir dos cosas a la vez ("...y correo x@x.com además
+ * creame una cita para el jueves"). Partir por la primera " y " suelta es
+ * frágil: el correo o el "y su número es..." también llevan un " y ".
+ * En su lugar se busca directamente dónde EMPIEZA la petición de cita/tarea
+ * (el verbo de creación pegado a "cita"/"tarea"), así los datos de contacto
+ * que vengan antes —aunque contengan sus propios " y "— quedan intactos. */
 function findTaskSplit(text: string): RegExpMatchArray | null {
-  const matches = [...text.matchAll(/\sy\s/gi)];
-  let chosen: RegExpMatchArray | null = null;
-  for (const m of matches) {
-    const after = text.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 60);
-    if (/\b(cita|tarea|agenda|recordatorio)\b/i.test(after)) chosen = m;
-  }
-  return chosen;
+  return text.match(
+    /\b(?:y\s+|adem[aá]s\s+)?(?:cr[eé]a(?:r|me)?|ponle|pon(?:me)?|agenda(?:le|me)?|añade(le)?)\s+(?:un\s+|una\s+)?(?:cita|tarea|agenda|recordatorio)\b/i,
+  );
 }
 
 function startOfDay(date: Date): Date {
@@ -151,7 +155,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
   if (CONTACT_TRIGGER.test(q) && !q.startsWith("crear contacto")) {
     const splitMatch = findTaskSplit(input);
     const contactPart = splitMatch ? input.slice(0, splitMatch.index ?? 0) : input;
-    const taskPart = splitMatch ? input.slice((splitMatch.index ?? 0) + splitMatch[0].length).trim() : null;
+    const taskPart = splitMatch ? input.slice(splitMatch.index ?? 0).trim() : null;
 
     const contactSegment = contactPart.replace(CONTACT_TRIGGER, "").trim().replace(/^a\s+/i, "");
     const email = extractEmail(contactSegment);
@@ -168,6 +172,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     if (taskPart && /\b(cita|tarea|agenda|recordatorio)\b/i.test(taskPart)) {
       const { date, rest: withoutDate } = extractDate(taskPart);
       let description = withoutDate
+        .replace(/^\s*y\b/i, "")
         .replace(/\b(adem[aá]s)\b/gi, "")
         .replace(/\b(ponle|pon(me)?|agenda(le|me)?|cr[eé]a(?:le|me)?|añade(le)?)\b/gi, "")
         .replace(/\ben\s+tareas?\b/gi, "")
