@@ -108,18 +108,52 @@ function ProcessShowcaseDesktop() {
             </motion.div>
           </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active}
-              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.95 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="flex aspect-[4/3] max-h-full items-center justify-center rounded-3xl bg-paper-dim"
-            >
-              <Icon size={64} className="text-gold" strokeWidth={1.2} />
-            </motion.div>
-          </AnimatePresence>
+          <div className="relative flex aspect-[4/3] max-h-full items-center justify-center overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-paper-dim to-paper">
+            {/* Número fantasma: da escala y profundidad al fondo, sin competir con el icono. */}
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={active}
+                initial={{ opacity: 0, x: reduceMotion ? 0 : 14 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: reduceMotion ? 0 : -14 }}
+                transition={{ duration: 0.5 }}
+                className="pointer-events-none absolute -right-6 -top-10 select-none font-display text-[220px] leading-none text-ink/[0.04]"
+              >
+                {String(active + 1).padStart(2, "0")}
+              </motion.span>
+            </AnimatePresence>
+
+            {!reduceMotion && (
+              <>
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute h-44 w-44 rounded-full border border-gold/25"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 46, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute h-64 w-64 rounded-full border border-dashed border-gold/15"
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 64, repeat: Infinity, ease: "linear" }}
+                />
+              </>
+            )}
+            <div aria-hidden="true" className="absolute h-32 w-32 rounded-full bg-gold/25 blur-3xl" />
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.8, rotate: reduceMotion ? 0 : -10 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.8, rotate: reduceMotion ? 0 : 10 }}
+                transition={{ type: "spring", bounce: 0.35, duration: 0.55 }}
+                className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-paper shadow-lg shadow-black/10"
+              >
+                <Icon size={40} className="text-gold" strokeWidth={1.4} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>
