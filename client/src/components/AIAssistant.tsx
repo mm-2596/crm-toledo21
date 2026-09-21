@@ -45,6 +45,38 @@ function extractPhone(text: string): string | undefined {
   return text.match(/(\+?\d[\d\s]{5,}\d)/)?.[0]?.trim();
 }
 
+/** Encuentra el nombre aunque venga como "que se llama X" / "llamado X"; si no,
+ * limpia el resto de la frase (número, correo, muletillas) como haría un humano. */
+function extractName(segment: string, email?: string, phone?: string): string {
+  const calledMatch = segment.match(
+    /\b(?:que\s+se\s+llama|se\s+llama|llamad[oa])\s+([^,]+?)(?=\s+\b(?:con|y|correo|tel[eé]fono|n[uú]mero|email|e-?mail)\b|$)/i,
+  );
+  if (calledMatch) return calledMatch[1].trim();
+  return segment
+    .replace(email ?? "", "")
+    .replace(phone ?? "", "")
+    .replace(/\bcon\s+(el\s+)?(n[uú]mero|tel[eé]fono|tel)(\s+de\s+tel[eé]fono)?\b/gi, "")
+    .replace(/\b(y\s+)?correo(\s+electr[oó]nico)?\b/gi, "")
+    .replace(/[,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Un mensaje puede pedir dos cosas a la vez ("...y correo x@x.com y además
+ * creame una cita para el jueves"). Partir por la PRIMERA " y " cortaría el
+ * correo a la mitad, así que se busca la ÚLTIMA " y " que preceda a una
+ * palabra de cita/tarea, para no romper datos de contacto que también
+ * contengan un " y " (un correo, una dirección...). */
+function findTaskSplit(text: string): RegExpMatchArray | null {
+  const matches = [...text.matchAll(/\sy\s/gi)];
+  let chosen: RegExpMatchArray | null = null;
+  for (const m of matches) {
+    const after = text.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 60);
+    if (/\b(cita|tarea|agenda|recordatorio)\b/i.test(after)) chosen = m;
+  }
+  return chosen;
+}
+
 function startOfDay(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -106,12 +138,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     const rest = input.replace(/crear contacto/i, "").trim();
     const email = extractEmail(rest);
     const phone = extractPhone(rest);
-    const name = rest
-      .replace(email ?? "", "")
-      .replace(phone ?? "", "")
-      .replace(/[,]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    const name = extractName(rest, email, phone);
     if (!name) return 'Dime al menos el nombre, por ejemplo: "crear contacto Laura Díaz 622333444".';
     const contact = await ContactsApi.create({ name, phone: phone ?? null, email: email ?? null, source: "MANUAL" });
     queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -119,25 +146,17 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     return `Hecho ✅ Contacto creado: ${contact.name}${phone ? ` · ${phone}` : ""}${email ? ` · ${email}` : ""}.`;
   }
 
-  const CONTACT_TRIGGER = /\b(agr[eé]game|agregar?|a[ñn]ad(?:e|eme)|apunta(?:me)?|dar de alta)\b/i;
+  const CONTACT_TRIGGER =
+    /\b(agr[eé]game|agregar?|a[ñn]ad(?:e|eme)|apunta(?:me)?|dar de alta|cr[eé]a(?:r|me)?\s+(?:un\s+|una\s+)?(?:cliente|contacto))\b/i;
   if (CONTACT_TRIGGER.test(q) && !q.startsWith("crear contacto")) {
-    // Un mensaje puede pedir dos cosas a la vez ("agrégame a Julio... y
-    // ponle una cita para el jueves") — se separa por la primera " y " para
-    // tratar cada mitad por separado.
-    const andIndex = input.search(/\sy\s/i);
-    const contactPart = andIndex === -1 ? input : input.slice(0, andIndex);
-    const taskPart = andIndex === -1 ? null : input.slice(andIndex + 3).trim();
+    const splitMatch = findTaskSplit(input);
+    const contactPart = splitMatch ? input.slice(0, splitMatch.index ?? 0) : input;
+    const taskPart = splitMatch ? input.slice((splitMatch.index ?? 0) + splitMatch[0].length).trim() : null;
 
-    let contactSegment = contactPart.replace(CONTACT_TRIGGER, "").trim().replace(/^a\s+/i, "");
+    const contactSegment = contactPart.replace(CONTACT_TRIGGER, "").trim().replace(/^a\s+/i, "");
     const email = extractEmail(contactSegment);
     const phone = extractPhone(contactSegment);
-    const name = contactSegment
-      .replace(email ?? "", "")
-      .replace(phone ?? "", "")
-      .replace(/\bcon\s+(n[uú]mero|tel[eé]fono|tel)\b/gi, "")
-      .replace(/[,]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    const name = extractName(contactSegment, email, phone);
 
     if (!name) return 'Dime al menos el nombre, por ejemplo: "agrégame a Julio con número 622778822".';
 
@@ -149,10 +168,16 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     if (taskPart && /\b(cita|tarea|agenda|recordatorio)\b/i.test(taskPart)) {
       const { date, rest: withoutDate } = extractDate(taskPart);
       let description = withoutDate
-        .replace(/\b(ponle|pon(me)?|agenda(le|me)?|crea(le)?|añade(le)?)\b/gi, "")
+        .replace(/\b(adem[aá]s)\b/gi, "")
+        .replace(/\b(ponle|pon(me)?|agenda(le|me)?|cr[eé]a(?:le|me)?|añade(le)?)\b/gi, "")
         .replace(/\ben\s+tareas?\b/gi, "")
+        .replace(/\b(una|la)\s+cita\b/gi, "")
+        .replace(/^\s*para\s+/i, "")
+        .replace(/\s+/g, " ")
         .trim();
-      if (!description || /^(una\s+)?cita\b/i.test(description)) description = `Cita con ${contact.name}`;
+      if (/^llamar(?:l[oa])?$/i.test(description)) description = `Llamar a ${contact.name}`;
+      else if (!description || /^cita\b/i.test(description)) description = `Cita con ${contact.name}`;
+      else description = description.charAt(0).toUpperCase() + description.slice(1);
 
       await ActivitiesApi.create({
         type: "TAREA",
@@ -168,7 +193,8 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
     return reply;
   }
 
-  const NEW_TASK_TRIGGER = /^(nueva tarea|crear tarea|agregar tarea|agrega tarea|pon(?:me)?\s+una\s+tarea|agenda(?:me)?\s+una\s+tarea)\b/i;
+  const NEW_TASK_TRIGGER =
+    /^(nueva tarea|nueva cita|crear tarea|crear cita|agregar tarea|agrega tarea|pon(?:me)?\s+una\s+(?:tarea|cita)|agenda(?:me)?\s+una\s+(?:tarea|cita)|cr[eé]a(?:r|me)?\s+(?:un\s+|una\s+)?(?:tarea|cita))\b/i;
   if (NEW_TASK_TRIGGER.test(q)) {
     let rest = input.replace(NEW_TASK_TRIGGER, "").trim();
     const { date, rest: withoutDate } = extractDate(rest);
