@@ -1,0 +1,42 @@
+.hero { color: #f7f4ee; background: #14110f; font-family: inherit; position: relative; isolation: isolate; width: 100%; }
+.hero, .hero * { box-sizing: border-box; }
+.grid { display: grid; grid-template-columns: minmax(0, .86fr) minmax(0, 1.3fr); align-items: center; gap: clamp(12px, 2.7vw, 56px); width: min(1570px, 100%); margin: 0 auto; padding: 34px clamp(22px, 4vw, 72px) 54px; }
+.copy { position: relative; min-width: 0; z-index: 1; padding: 0 0 70px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 9px 12px; margin-bottom: 29px; border: 1px solid #a9834f5e; background: #a9834f0b; border-radius: 40px; color: #d3b17e; font-size: 10px; letter-spacing: .13em; line-height: 1.4; }
+.eyebrow > span { width: 5px; height: 5px; border-radius: 50%; background: #dab174; }
+.title { font-size: clamp(38px, 4.4vw, 70px); line-height: 1.08; font-weight: 600; letter-spacing: -.048em; margin: 0; text-wrap: balance; }
+.title span { color: #c39b62; }
+.description { max-width: 450px; color: #c6beb4; font-size: clamp(15px, 1.25vw, 18px); line-height: 1.65; margin: 26px 0 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 32px; }
+.primary, .secondary { min-height: 54px; padding: 15px 24px; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 22px; font-size: 14px; line-height: 1.25; text-decoration: none; transition: background 180ms, box-shadow 180ms; font-weight: 500; }
+.primary { color: #1c150c; background: linear-gradient(125deg, #e5c791, #c69c61); border: 1px solid #e5c791; box-shadow: 0 7px 32px #aa824926; }
+.secondary { color: #f7f2e9; background: #14110f; border: 1px solid #b9915e; }
+.primary:hover { box-shadow: 0 7px 35px #d9ae7447; }
+.secondary:hover { background: #2b2218; }
+.actions a:focus-visible { outline: 2px solid #f3d9ad; outline-offset: 5px; }
+.editorial { display: flex; align-items: flex-start; gap: 16px; border-top: 1px solid #a9834f38; margin-top: 48px; padding-top: 22px; max-width: 440px; }
+.editorial > span { color: #a9834f; font-size: 9px; white-space: nowrap; padding-top: 4px; letter-spacing: .08em; }
+.editorial p { margin: 0; font-size: 12px; color: #aaa093; line-height: 1.7; }
+.editorial strong { font-weight: 400; color: #d4c7b5; }
+.visual { min-width: 0; }
+@media (max-width: 1023px) {
+  .grid { grid-template-columns: minmax(0, 1fr); max-width: 840px; gap: 36px; padding-top: 30px; }
+  .copy { padding: 0; }
+  .title { font-size: clamp(38px, 7.1vw, 65px); }
+  .description { max-width: 550px; }
+  .editorial { display: none; }
+  .visual { width: 100%; max-width: 790px; justify-self: center; }
+}
+@media (max-width: 520px) {
+  .grid { padding: 25px 20px 34px; gap: 30px; }
+  .eyebrow { margin-bottom: 23px; font-size: 9px; }
+  .title { font-size: clamp(35px, 10.5vw, 52px); }
+  .description { margin-top: 22px; font-size: 15px; }
+  .actions { gap: 10px; margin-top: 25px; }
+  .primary, .secondary { padding: 14px 18px; font-size: 13px; min-height: 50px; }
+}
+@media (max-width: 350px) {
+  .grid { padding-inline: 16px; }
+  .primary, .secondary { padding-inline: 14px; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .hero * { transition-duration: 0s !important; } }

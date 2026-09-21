@@ -1,0 +1,41 @@
+/* Estos estilos no cambian logo, tipografía ni colores del resto del sitio. */
+.composition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(24px, 3vw, 56px);
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  position: relative;
+  isolation: isolate;
+}
+.copy, .visual { min-width: 0; position: relative; }
+.copy { z-index: 1; overflow-wrap: break-word; }
+.visual { isolation: isolate; }
+.stage {
+  position: relative;
+  width: 100%;
+  height: clamp(340px, 39vw, 550px);
+  min-width: 0;
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent;
+}
+/* No poner transform: scale(...) en stage, visual ni sus ancestros. */
+@media (max-width: 1023px) {
+  .composition { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .stage { height: clamp(250px, 76vw, 420px); }
+}
+/* Ajuste local de tamaño, no de familia tipográfica. */
+.copy h1 {
+  position: relative;
+  max-width: 100%;
+  font-size: clamp(2.25rem, 3.8vw, 4rem);
+  line-height: 1.06;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+@media (max-width: 1023px) {
+  .copy h1 { font-size: clamp(2rem, 8.8vw, 3.4rem); }
+}

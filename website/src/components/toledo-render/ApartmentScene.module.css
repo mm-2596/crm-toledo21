@@ -1,0 +1,144 @@
+.scene {
+  --t21-ink: #14110f;
+  --t21-gold: #d9ae74;
+  --t21-text: #f7f4ee;
+  --t21-muted: #bcb3a8;
+  width: 100%; max-width: 1060px; min-width: 0; margin: 0;
+  color: var(--t21-text); font-family: inherit;
+  position: relative; isolation: isolate;
+}
+.scene, .scene * { box-sizing: border-box; }
+.scene button { font: inherit; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+.scene button:disabled { cursor: default; }
+.scene button:focus-visible { outline: 2px solid #f3d9ad; outline-offset: 4px; }
+.topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 20px; }
+.kicker { font-size: 10px; letter-spacing: 0.17em; line-height: 1.6; color: var(--t21-gold); }
+.kicker > span { display: inline-block; width: 5px; height: 5px; background: currentColor; border-radius: 50%; margin: 0 7px 2px 0; }
+.concept { font-size: 10px; color: #b6ada2; white-space: nowrap; }
+.viewport { position: relative; width: 100%; aspect-ratio: 1048 / 890; perspective: 1200px; overflow: hidden; border-radius: 4px; }
+.art { width: 100%; height: 100%; transform: translateX(var(--t21-tx, 0px)) rotateX(var(--t21-rx, 0deg)) rotateY(var(--t21-ry, 0deg)); transition: transform 280ms ease-out; }
+.floating { position: relative; width: 100%; height: 100%; animation: t21-float 8s ease-in-out infinite; animation-play-state: paused; }
+.scene[data-t21-motion="on"] .floating { animation-play-state: running; }
+.scene .viewport:hover .floating, .scene .viewport:focus-within .floating { animation-play-state: paused; }
+.image { display: block; width: 100%; height: auto; max-width: 100%; user-select: none; }
+
+/* Entrada al cargar: el conjunto aparece y una luz dorada recorre el render
+   una sola vez, como si se "montara" delante del usuario. No se repite ni
+   se relaciona con el flotado continuo (t21-float) ni con prefers-reduced-motion. */
+.scene { opacity: 0; animation: t21-scene-in 700ms cubic-bezier(.16,.8,.24,1) 40ms forwards; }
+.viewport::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(100deg, transparent 42%, rgba(217, 174, 116, 0.4) 50%, transparent 58%);
+  transform: translateX(-140%) skewX(-12deg);
+  animation: t21-sweep 1100ms cubic-bezier(.3,.7,.3,1) 520ms forwards;
+  mix-blend-mode: screen;
+}
+.hotspot { opacity: 0; animation: t21-hotspot-in 480ms cubic-bezier(.2,.85,.2,1) forwards; }
+.hotspot:nth-of-type(1) { animation-delay: 640ms; }
+.hotspot:nth-of-type(2) { animation-delay: 730ms; }
+.hotspot:nth-of-type(3) { animation-delay: 820ms; }
+.hotspot:nth-of-type(4) { animation-delay: 910ms; }
+.roomPicker, .panel, .controls, .disclaimer { opacity: 0; animation: t21-rise-in 520ms cubic-bezier(.2,.8,.2,1) forwards; }
+.roomPicker { animation-delay: 980ms; }
+.panel { animation-delay: 1040ms; }
+.controls { animation-delay: 1090ms; }
+.disclaimer { animation-delay: 1130ms; }
+@keyframes t21-scene-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes t21-sweep {
+  from { transform: translateX(-140%) skewX(-12deg); }
+  to { transform: translateX(180%) skewX(-12deg); }
+}
+@keyframes t21-hotspot-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes t21-rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Existing illustrated tags are covered by real, focusable HTML labels. */
+.hotspot {
+  position: absolute; left: var(--t21-x); top: var(--t21-y);
+  transform: translate(-50%, -50%); width: calc(var(--t21-width) + 6px); min-width: 50px; min-height: 48px;
+  display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: #f8f3e9;
+}
+.hotspotLabel {
+  display: block; width: 100%; padding: 7px 5px; border: 1px solid #a9834f; border-radius: 50px;
+  background: #191409; font-size: clamp(10px, 1.03vw, 15px); line-height: 1.1;
+  transition: background 180ms, box-shadow 180ms;
+}
+.hotspot:hover .hotspotLabel, .hotspot[aria-pressed="true"] .hotspotLabel {
+  background: #644c2d; box-shadow: 0 0 0 4px #d9ae7414, 0 6px 25px #0008;
+}
+.roomPicker { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: -7px 0 16px; position: relative; z-index: 1; }
+.roomPicker button, .dialogPicker button {
+  min-height: 44px; padding: 9px 13px; border: 1px solid #a9834f38; border-radius: 100px;
+  color: #d9d2c8; background: #1d1813; font-size: 12px; line-height: 1.2;
+  transition: border-color 180ms, background 180ms;
+}
+.roomPicker button > span { color: #ad8958; font-size: 10px; margin-right: 8px; }
+.roomPicker button:hover, .dialogPicker button:hover { border-color: #a9834f; }
+.roomPicker button[aria-pressed="true"], .dialogPicker button[aria-pressed="true"] { background: #372a1c; border-color: #d9ae74; color: #fff4de; }
+.panel { display: flex; gap: 18px; align-items: flex-start; margin: 0 22px; padding: 18px 0; border-top: 1px solid #b997612e; min-height: 95px; }
+.panelNumber { flex: 0 0 39px; color: #b69059; font-size: 33px; font-weight: 300; letter-spacing: -.08em; line-height: 1.2; }
+.panelTitle { font-size: 16px; font-weight: 500; margin: 0 0 6px; line-height: 1.3; }
+.panelDescription { font-size: 12px; color: var(--t21-muted); line-height: 1.6; margin: 0; max-width: 510px; }
+.controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 0 22px; }
+.scene .expand, .scene .pause { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 44px; border-radius: 8px; border: 0; }
+.scene .expand { background: transparent; color: #f0d5ac; font-size: 12px; padding: 6px 0; }
+.expand > span { margin-left: 5px; }
+.expand svg { width: 16px; height: 16px; }
+.scene .pause { background: transparent; color: #bcb2a5; font-size: 10px; padding: 6px 0; }
+.pause svg { width: 13px; height: 13px; }
+.pause:disabled { color: #aaa092; }
+.disclaimer { font-size: 10px; color: #b1a597; line-height: 1.6; margin: 8px 22px 0; }
+.dialog { color: #f7f4ee; background: #14110f; border: 1px solid #a9834f73; border-radius: 20px; padding: 0; margin: auto;
+  width: min(1160px, calc(100vw - 28px)); max-width: none; height: min(980px, calc(100dvh - 28px)); max-height: none;
+  box-shadow: 0 30px 120px #000c; font-family: inherit;
+}
+.dialog::backdrop { background: #060504e8; backdrop-filter: blur(8px); }
+.dialog:not([open]) { display: none; }
+.dialogInner { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.dialogHeader { display: flex; gap: 18px; justify-content: space-between; align-items: center; padding: 19px 24px 12px; flex-shrink: 0; }
+.dialogHeader h2 { font-size: clamp(17px, 2vw, 23px); font-weight: 500; margin: 6px 0 0; line-height: 1.3; }
+.close { flex: 0 0 44px; width: 44px; height: 44px; border: 1px solid #a9834f60; border-radius: 50%; background: #221a13; color: #f7f4ee; font-size: 27px !important; }
+.dialogViewport { display: grid; place-items: center; flex: 1; min-height: 0; overflow: hidden; position: relative; container-type: size; }
+.dialogArt { position: relative; width: min(100%, calc((100dvh - 235px) * 1.177528)); width: min(100cqw, calc(100cqh * 1.177528)); aspect-ratio: 1048 / 890; }
+.dialogImage { display: block; width: 100%; height: auto; transform: translate(var(--t21-shift-x, 0%), var(--t21-shift-y, 0%)) scale(var(--t21-zoom, 1)); transition: transform 650ms cubic-bezier(.2,.7,.25,1); transform-origin: 50% 50%; user-select: none; }
+.dialogFooter { padding: 12px 20px 18px; border-top: 1px solid #a9834f26; position: relative; z-index: 1; flex-shrink: 0; background: #14110f; }
+.dialogPicker { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; }
+.dialogFooter p { margin: 11px 0 0; font-size: 10px; line-height: 1.5; color: #b8afa4; text-align: center; }
+@keyframes t21-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (max-width: 640px) {
+  .topline { padding: 0 4px; gap: 8px; }
+  .kicker { font-size: 8px; letter-spacing: .13em; }
+  .concept { font-size: 9px; }
+  .hotspotLabel { font-size: 9px; padding: 5px 4px; }
+  .hotspot { min-width: 53px; }
+  .hotspot[data-t21-room="dormitorio"] { min-width: 69px; }
+  .roomPicker { gap: 5px; margin-top: 3px; }
+  .roomPicker button { font-size: 11px; padding: 8px 10px; }
+  .roomPicker button > span { display: none; }
+  .panel { gap: 14px; margin: 0 8px; min-height: 110px; padding: 16px 0; }
+  .panelTitle { font-size: 15px; }
+  .panelDescription { font-size: 12px; }
+  .controls { margin: 0 8px; }
+  .disclaimer { margin: 8px 8px 0; font-size: 9px; }
+  .dialogHeader { padding: 15px 16px 9px; }
+  .dialogHeader h2 { font-size: 17px; }
+  .dialogFooter { padding: 12px 10px; }
+  .dialogPicker button { font-size: 11px; padding: 8px 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating { animation: none !important; }
+  .art { transform: none !important; transition: none !important; }
+  .scene *, .scene *::before, .scene *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
+  .scene, .hotspot, .roomPicker, .panel, .controls, .disclaimer {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
+  .hotspot { transform: translate(-50%, -50%) !important; }
+  .viewport::after { animation: none !important; content: none !important; }
+}

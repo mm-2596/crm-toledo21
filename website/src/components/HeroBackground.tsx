@@ -1,23 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import dynamic from "next/dynamic";
-import { motion, type MotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 
-// three.js/WebGL solo puede montarse en el navegador — se carga en cliente
-// puro para que Next no intente prerenderizarlo ni tocarlo durante el SSR.
-const Hero3D = dynamic(() => import("./Hero3D").then((m) => m.Hero3D), { ssr: false });
-
-// El hero se queda fijo en pantalla mientras se hace scroll (ver Hero.tsx);
-// ese mismo progreso de scroll (0 a 1) se le pasa al lienzo 3D para que
-// acerque y gire ligeramente el conjunto de nodos al bajar por la página.
-export function HeroBackground({ progress }: { progress: MotionValue<number> }) {
+// Decoración ambiental del hero (resplandor + partículas). El objeto 3D ya
+// no vive aquí: ahora es Hero3D dentro de HeroComposition, con su propia
+// altura y sin posicionamiento absoluto de pantalla completa (ver Hero.tsx).
+export function HeroBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-ink">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-ink">
       <Glow />
-      <Hero3D progress={progress} />
       <FloatingParticles />
-      <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/20" />
     </div>
   );
 }
