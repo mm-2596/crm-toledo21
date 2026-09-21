@@ -25,7 +25,7 @@ export function HomeContactForm() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 pb-20">
+    <section id="contacto" className="mx-auto max-w-7xl px-6 pb-20 scroll-mt-24">
       <div className="relative grid grid-cols-1 gap-12 overflow-hidden rounded-3xl bg-ink px-8 py-14 sm:px-12 lg:grid-cols-2 lg:gap-16">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold/10 blur-[100px]" />
 

@@ -14,8 +14,8 @@ export default async function Home() {
     getProperties({ listingType: "ALQUILER" }).catch(() => ({ properties: [], total: 0, page: 1, pageSize: 0 })),
   ]);
 
-  const destacados = featured.properties.slice(0, 3);
-  const alquiler = forRent.properties.slice(0, 3);
+  const destacados = featured.properties.slice(0, 6);
+  const alquiler = forRent.properties.slice(0, 6);
   const heroProperties = [...featured.properties, ...forRent.properties].slice(0, 5);
 
   return (
@@ -23,9 +23,9 @@ export default async function Home() {
       <Hero properties={heroProperties} />
       <HeroSearchPanel />
 
-      <InfiniteMarquee />
-
       <FeaturedPropertiesSection sale={destacados} rent={alquiler} />
+
+      <InfiniteMarquee />
 
       <section className="mx-auto max-w-7xl px-6 pt-20">
         <div className="text-center">
