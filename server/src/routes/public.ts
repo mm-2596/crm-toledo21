@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { signToken } from "../lib/auth.js";
-import { sendLeadConfirmationEmail } from "../lib/email.js";
+import { sendLeadConfirmationEmail, sendNewLeadAlertEmail } from "../lib/email.js";
 
 export const publicRouter = Router();
 
@@ -197,6 +197,30 @@ publicRouter.post(
         });
       }
     }
+
+    const isValuation = Boolean(data.message?.startsWith("TASACIÓN GRATUITA"));
+    if (isValuation) {
+      // Tarea con vencimiento a 24 h (la promesa hecha en la web): aparece en
+      // "Tareas" y en el resumen del asistente hasta que alguien la complete.
+      await prisma.activity.create({
+        data: {
+          type: "TAREA",
+          description: "Llamar para dar la tasación gratuita solicitada en la web",
+          dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          contactId: contact.id,
+        },
+      });
+    }
+
+    const crmBase = (process.env.CLIENT_ORIGIN || "").replace(/\/+$/, "");
+    sendNewLeadAlertEmail({
+      isValuation,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      message: data.message,
+      contactUrl: `${crmBase}/contactos/${contact.id}`,
+    }).catch(() => {});
 
     if (data.email) {
       // No bloquea la respuesta: si el correo falla, el lead ya está
