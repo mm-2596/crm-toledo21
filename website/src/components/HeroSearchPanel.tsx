@@ -23,7 +23,7 @@ export function HeroSearchPanel() {
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (isSelling) {
-      document.getElementById("contacto")?.scrollIntoView({ behavior: "smooth" });
+      router.push("/tasacion");
       return;
     }
     const params = new URLSearchParams({ listingType: mode });

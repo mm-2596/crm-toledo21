@@ -1,6 +1,7 @@
 import { getProperties } from "@/lib/api";
 import { Hero } from "@/components/Hero";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
+import { ValuationBanner } from "@/components/ValuationBanner";
 import { InfiniteMarquee } from "@/components/InfiniteMarquee";
 import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
@@ -22,6 +23,8 @@ export default async function Home() {
     <div>
       <Hero properties={heroProperties} />
       <HeroSearchPanel />
+
+      <ValuationBanner />
 
       <FeaturedPropertiesSection sale={destacados} rent={alquiler} />
 

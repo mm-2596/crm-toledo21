@@ -14,6 +14,7 @@ import { useFavorites } from "./FavoritesContext";
 // saturar la barra con seis enlaces sueltos al mismo nivel.
 const primaryLinks = [
   { href: "/propiedades", label: "Propiedades" },
+  { href: "/tasacion", label: "Tasación gratis" },
   { href: "/quienes-somos", label: "Quiénes somos" },
   { href: "/equipo", label: "Equipo" },
 ];
