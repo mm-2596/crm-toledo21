@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push --skip-generate",
+    "db:check": "node scripts/schema-diff.mjs",
     "import:properties": "node scripts/import-properties.mjs",
     "postinstall": "prisma generate"
   },

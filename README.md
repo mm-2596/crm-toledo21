@@ -164,3 +164,15 @@ preocuparse por CORS.
    gestionéis el dominio `toledo21.com` (fuera de Railway, en vuestro
    proveedor de DNS). Railway emite el certificado SSL solo.
 6. Cada `git push` a `main` vuelve a desplegar automáticamente.
+
+## Cambios en la base de datos: comprobar antes de desplegar
+
+Al arrancar, el servicio ejecuta `prisma db push`. Si el cambio de esquema incluye algo que pueda perder datos (por ejemplo, una restricción `@unique` nueva), Prisma se niega a continuar y el servicio entra en bucle de reinicios: **el CRM queda caído**. Por eso, antes de hacer `git push` de un cambio en `server/prisma/schema.prisma`:
+
+```bash
+cd server
+npm run db:check              # enseña el SQL pendiente y avisa de lo delicado
+npm run db:check -- --apply   # lo aplica, solo si es puramente aditivo
+```
+
+Si avisa de algo (borrados, restricciones únicas, columnas obligatorias sin valor por defecto), no se aplica solo: hay que revisar el SQL a mano.
