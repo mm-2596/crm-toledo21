@@ -70,9 +70,55 @@ export interface Contact {
   needsFinancing?: boolean | null;
   priority?: ContactPriority | null;
   notes?: string | null;
+  marketingConsent?: boolean;
+  marketingConsentAt?: string | null;
+  unsubscribedAt?: string | null;
   createdAt: string;
   deals?: Deal[];
   activities?: Activity[];
+}
+
+export type CampaignStatus = "BORRADOR" | "ENVIANDO" | "ENVIADA";
+
+export interface CampaignSegment {
+  sources?: ContactSource[];
+  listingType?: ListingType;
+  propertyType?: PropertyType;
+  priority?: ContactPriority;
+  zone?: string;
+  onlyValuations?: boolean;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  segment?: CampaignSegment | null;
+  status: CampaignStatus;
+  recipientCount: number;
+  sentCount: number;
+  failedCount: number;
+  createdAt: string;
+  sentAt?: string | null;
+  sends?: { id: string; email: string; error?: string | null }[];
+}
+
+export interface CampaignInput {
+  name: string;
+  subject: string;
+  body: string;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  segment: CampaignSegment;
+}
+
+export interface AudienceInfo {
+  count: number;
+  withoutConsent: number;
+  unsubscribed: number;
 }
 
 export interface Property {

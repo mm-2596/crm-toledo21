@@ -134,3 +134,91 @@ export async function sendLeadConfirmationEmail(to: string, name: string) {
     console.error("Error enviando correo de confirmación de lead:", err);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Campañas de email marketing
+// ---------------------------------------------------------------------------
+
+export interface CampaignContent {
+  subject: string;
+  body: string;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+}
+
+export interface CampaignMessage {
+  to: string;
+  name: string;
+  unsubscribeUrl: string;
+}
+
+export function isSafeHttpUrl(value: string | null | undefined): value is string {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+/** El cuerpo se escribe como texto plano: los párrafos se separan con una línea en blanco y {{nombre}} se sustituye por el nombre de pila. */
+export function renderCampaignHtml(content: CampaignContent, name: string, unsubscribeUrl: string) {
+  const firstName = escapeHtml(name.trim().split(/\s+/)[0] || "");
+  const paragraphs = content.body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const html = escapeHtml(p).replace(/\{\{\s*nombre\s*\}\}/gi, firstName).replace(/\n/g, "<br />");
+      return `<p style="margin:0 0 14px 0;font-size:15px;line-height:1.65;color:#4a443d;">${html}</p>`;
+    })
+    .join("");
+
+  const cta =
+    content.ctaLabel && isSafeHttpUrl(content.ctaUrl)
+      ? `<tr><td style="padding:8px 32px 32px 32px;"><a href="${escapeHtml(content.ctaUrl)}" style="display:inline-block;background:#14110f;color:#faf8f4;text-decoration:none;font-size:14px;font-weight:600;padding:13px 26px;border-radius:999px;">${escapeHtml(content.ctaLabel)}</a></td></tr>`
+      : "";
+
+  return `
+  <div style="background:#f1ede4;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#faf8f4;border-radius:16px;overflow:hidden;border:1px solid #e4ddd0;">
+      <tr><td style="padding:28px 32px 0 32px;"><img src="${WEBSITE_URL}/logo/toledo21-wordmark.png" alt="Toledo21" height="34" style="height:34px;width:auto;display:block;border-radius:3px;" /></td></tr>
+      <tr><td style="padding:24px 32px 12px 32px;"><h1 style="margin:0;font-size:22px;line-height:1.3;color:#14110f;">${escapeHtml(content.subject)}</h1></td></tr>
+      <tr><td style="padding:0 32px 16px 32px;">${paragraphs}</td></tr>
+      ${cta}
+      <tr><td style="padding:20px 32px;border-top:1px solid #e4ddd0;">
+        <p style="margin:0;font-size:12px;line-height:1.7;color:#8a8378;">
+          Toledo21 · Somos Tu Inmobiliaria · C. Toledo, 21, 28901 Getafe, Madrid<br />
+          Recibes este email porque aceptaste recibir comunicaciones de Toledo21.
+          <a href="${escapeHtml(unsubscribeUrl)}" style="color:#8a8378;">Darme de baja</a>
+        </p>
+      </td></tr>
+    </table>
+  </div>`;
+}
+
+/** Envía un lote (Resend admite hasta 100 correos por petición). Devuelve un error por lote, no por destinatario. */
+export async function sendCampaignBatch(
+  content: CampaignContent,
+  messages: CampaignMessage[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!resend) return { ok: false, error: "RESEND_API_KEY no configurada" };
+  try {
+    const { error } = await resend.batch.send(
+      messages.map((m) => ({
+        from: FROM_EMAIL,
+        to: m.to,
+        subject: content.subject,
+        html: renderCampaignHtml(content, m.name, m.unsubscribeUrl),
+        headers: {
+          "List-Unsubscribe": `<${m.unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      })),
+    );
+    return error ? { ok: false, error: error.message } : { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Error desconocido" };
+  }
+}

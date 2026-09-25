@@ -35,7 +35,7 @@ export function getProperty(id: string): Promise<PropertyDetailResponse> {
   return apiFetch<PropertyDetailResponse>(`/api/public/properties/${id}`);
 }
 
-export function submitLead(data: { name: string; email?: string; phone?: string; message?: string; propertyId?: string }) {
+export function submitLead(data: { name: string; email?: string; phone?: string; message?: string; propertyId?: string; marketingConsent?: boolean }) {
   return apiFetch<{ ok: true }>(`/api/public/leads`, {
     method: "POST",
     body: JSON.stringify(data),

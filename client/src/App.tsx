@@ -9,6 +9,7 @@ import { Pipeline } from "./pages/Pipeline";
 import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
 import { Team } from "./pages/Team";
+import { Campaigns } from "./pages/Campaigns";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="ayuda" element={<Help />} />
           <Route path="perfil" element={<Profile />} />
           <Route element={<AdminRoute />}>
+            <Route path="campanas" element={<Campaigns />} />
             <Route path="equipo" element={<Team />} />
           </Route>
         </Route>

@@ -24,7 +24,16 @@ const contactInput = z.object({
   needsFinancing: z.boolean().optional().nullable(),
   priority: z.enum(["ALTA", "MEDIA", "BAJA"]).optional().nullable(),
   notes: z.string().optional().nullable(),
+  marketingConsent: z.boolean().optional(),
 });
+
+/** Al dar el consentimiento se registra la fecha y se anula una baja anterior; al retirarlo, deja de recibir campañas. */
+function withConsentDates<T extends { marketingConsent?: boolean }>(data: T) {
+  if (data.marketingConsent === true) {
+    return { ...data, marketingConsentAt: new Date(), unsubscribedAt: null };
+  }
+  return data;
+}
 
 contactsRouter.get(
   "/",
@@ -107,7 +116,7 @@ contactsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = contactInput.parse(req.body);
-    const contact = await prisma.contact.create({ data });
+    const contact = await prisma.contact.create({ data: withConsentDates(data) });
     res.status(201).json(contact);
   }),
 );
@@ -118,7 +127,7 @@ contactsRouter.put(
     const data = contactInput.partial().parse(req.body);
     const contact = await prisma.contact.update({
       where: { id: String(req.params.id) },
-      data,
+      data: withConsentDates(data),
     });
     res.json(contact);
   }),

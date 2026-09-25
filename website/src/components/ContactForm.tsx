@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { sendLead } from "@/app/propiedades/[id]/actions";
+import { MarketingConsent } from "./MarketingConsent";
 
 export function ContactForm({ propertyId, propertyTitle }: { propertyId: string; propertyTitle: string }) {
   const [isPending, startTransition] = useTransition();
@@ -53,6 +54,8 @@ export function ContactForm({ propertyId, propertyTitle }: { propertyId: string;
         placeholder="Cuéntanos qué te interesa saber…"
         className="resize-none rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
       />
+
+      <MarketingConsent />
 
       {result?.error && <p className="text-xs text-red-600">{result.error}</p>}
 

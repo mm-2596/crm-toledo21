@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Users,
   ShieldCheck,
+  Megaphone,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -26,7 +27,10 @@ export function Layout() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { user, logout } = useAuth();
-  const visibleLinks = user?.role === "ADMIN" ? [...links, { to: "/equipo", label: "Equipo", icon: ShieldCheck }] : links;
+  const visibleLinks =
+    user?.role === "ADMIN"
+      ? [...links, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
+      : links;
 
   async function handleLogout() {
     await logout();

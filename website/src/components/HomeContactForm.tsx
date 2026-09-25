@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Send, User, MessageSquare } from "lucide-react";
 import { sendLead } from "@/app/propiedades/[id]/actions";
+import { MarketingConsent } from "./MarketingConsent";
 
 const fieldClass =
   "peer w-full rounded-xl border border-line bg-paper px-10 py-3.5 text-sm text-ink placeholder-transparent outline-none transition-colors focus:border-gold focus:ring-2 focus:ring-gold/25";
@@ -126,6 +127,8 @@ export function HomeContactForm() {
                   ¿Qué buscas o en qué podemos ayudarte?
                 </label>
               </div>
+
+              <MarketingConsent />
 
               {result?.error && <p className="text-xs text-red-600">{result.error}</p>}
 

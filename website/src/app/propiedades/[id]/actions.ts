@@ -8,6 +8,7 @@ export async function sendLead(formData: FormData) {
   const phone = String(formData.get("phone") || "").trim();
   const message = String(formData.get("message") || "").trim();
   const propertyId = String(formData.get("propertyId") || "").trim();
+  const marketingConsent = formData.get("marketingConsent") === "on" || formData.get("marketingConsent") === "true";
 
   if (!name) return { ok: false, error: "El nombre es obligatorio" };
 
@@ -18,6 +19,7 @@ export async function sendLead(formData: FormData) {
       phone: phone || undefined,
       message: message || undefined,
       propertyId: propertyId || undefined,
+      marketingConsent,
     });
     return { ok: true };
   } catch {

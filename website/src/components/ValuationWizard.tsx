@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Building2, Check, Home, Send, Store, Trees } from "lucide-react";
 import { sendLead } from "@/app/propiedades/[id]/actions";
+import { MarketingConsent } from "./MarketingConsent";
 
 const TYPES = [
   { value: "Piso", icon: Building2 },
@@ -47,6 +48,7 @@ export function ValuationWizard() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -83,6 +85,7 @@ export function ValuationWizard() {
     formData.set("email", email.trim());
     formData.set("phone", phone.trim());
     formData.set("message", lines.join("\n"));
+    if (consent) formData.set("marketingConsent", "true");
 
     startTransition(async () => {
       const res = await sendLead(formData);
@@ -259,8 +262,9 @@ export function ValuationWizard() {
                 />
               </label>
               <p className="text-xs leading-relaxed text-ink-soft sm:col-span-2">
-                Usamos tus datos solo para gestionar tu tasación. Sin compromiso.
+                Usamos tus datos para gestionar tu tasación, sin compromiso.
               </p>
+              <MarketingConsent checked={consent} onChange={setConsent} className="sm:col-span-2" />
             </div>
           )}
         </motion.div>

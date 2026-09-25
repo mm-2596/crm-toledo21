@@ -1,6 +1,10 @@
 import { api } from "./client";
 import type {
   Activity,
+  AudienceInfo,
+  Campaign,
+  CampaignInput,
+  CampaignSegment,
   AgentReview,
   Contact,
   DashboardSummary,
@@ -113,4 +117,16 @@ export const ValuationsApi = {
   }) => api.post<Valuation>("/valuations/estimate", data).then((r) => r.data),
   forProperty: (propertyId: string) =>
     api.get<Valuation[]>(`/valuations/property/${propertyId}`).then((r) => r.data),
+};
+
+export const CampaignsApi = {
+  list: () => api.get<Campaign[]>("/campaigns").then((r) => r.data),
+  get: (id: string) => api.get<Campaign>(`/campaigns/${id}`).then((r) => r.data),
+  create: (data: CampaignInput) => api.post<Campaign>("/campaigns", data).then((r) => r.data),
+  update: (id: string, data: CampaignInput) => api.put<Campaign>(`/campaigns/${id}`, data).then((r) => r.data),
+  remove: (id: string) => api.delete(`/campaigns/${id}`),
+  audience: (segment: CampaignSegment) =>
+    api.post<AudienceInfo>("/campaigns/audience", { segment }).then((r) => r.data),
+  sendTest: (id: string, email: string) => api.post(`/campaigns/${id}/test`, { email }),
+  send: (id: string) => api.post<{ ok: true; recipients: number }>(`/campaigns/${id}/send`).then((r) => r.data),
 };

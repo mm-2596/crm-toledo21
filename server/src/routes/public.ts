@@ -154,6 +154,7 @@ const leadInput = z.object({
   phone: z.string().optional().nullable(),
   message: z.string().optional().nullable(),
   propertyId: z.string().optional().nullable(),
+  marketingConsent: z.boolean().optional(),
 });
 
 publicRouter.post(
@@ -171,6 +172,8 @@ publicRouter.post(
         email: data.email ?? null,
         phone: data.phone ?? null,
         source: "WEB_HOUZEZ",
+        marketingConsent: data.marketingConsent === true,
+        marketingConsentAt: data.marketingConsent === true ? new Date() : null,
         propertyType: property?.type,
         listingType: property?.listingType,
         preferredZone: property?.zone,
@@ -229,6 +232,46 @@ publicRouter.post(
     }
 
     res.status(201).json({ ok: true });
+  }),
+);
+
+function unsubscribePage(title: string, text: string): string {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<body style="margin:0;background:#f1ede4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<div style="max-width:460px;margin:12vh auto;padding:32px;background:#faf8f4;border:1px solid #e4ddd0;border-radius:16px;">
+<h1 style="margin:0 0 12px;font-size:20px;color:#14110f;">${title}</h1><p style="margin:0;font-size:15px;line-height:1.6;color:#4a443d;">${text}</p></div></body></html>`;
+}
+
+async function unsubscribeByToken(token: string): Promise<boolean> {
+  if (!token || token === "prueba") return token === "prueba";
+  const result = await prisma.contact.updateMany({
+    where: { unsubscribeToken: token },
+    data: { marketingConsent: false, unsubscribedAt: new Date() },
+  });
+  return result.count > 0;
+}
+
+// Baja con un clic desde el enlace del email (GET) o desde el botón nativo del cliente de correo (POST).
+publicRouter.get(
+  "/unsubscribe",
+  asyncHandler(async (req, res) => {
+    const ok = await unsubscribeByToken(String(req.query.token || ""));
+    res
+      .status(ok ? 200 : 404)
+      .type("html")
+      .send(
+        ok
+          ? unsubscribePage("Te has dado de baja", "Ya no recibirás más comunicaciones comerciales de Toledo21. Lamentamos verte marchar.")
+          : unsubscribePage("Enlace no válido", "No hemos encontrado esta suscripción. Puede que ya te hayas dado de baja."),
+      );
+  }),
+);
+
+publicRouter.post(
+  "/unsubscribe",
+  asyncHandler(async (req, res) => {
+    const ok = await unsubscribeByToken(String(req.query.token || ""));
+    res.status(ok ? 200 : 404).json({ ok });
   }),
 );
 

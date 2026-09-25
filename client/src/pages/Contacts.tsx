@@ -37,6 +37,7 @@ export function Contacts() {
       phone: String(form.get("phone") || "") || null,
       preferredZone: String(form.get("preferredZone") || "") || null,
       notes: String(form.get("notes") || "") || null,
+      marketingConsent: form.get("marketingConsent") === "on",
     });
     e.currentTarget.reset();
   }
@@ -64,6 +65,10 @@ export function Contacts() {
           <input name="phone" placeholder="Teléfono" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="preferredZone" placeholder="Zona de interés" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <textarea name="notes" placeholder="Notas" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <label className="col-span-2 flex items-start gap-2 text-xs text-slate-500">
+            <input type="checkbox" name="marketingConsent" className="mt-0.5" />
+            Esta persona ha dado su consentimiento para recibir comunicaciones comerciales por email.
+          </label>
           <button
             type="submit"
             disabled={createMutation.isPending}
@@ -112,6 +117,12 @@ export function Contacts() {
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {contact.email || "-"} {contact.phone ? `· ${contact.phone}` : ""}
+                    {contact.marketingConsent && (
+                      <span className="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">Acepta emails</span>
+                    )}
+                    {contact.unsubscribedAt && (
+                      <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">Baja</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{contactSourceLabels[contact.source]}</td>
                   <td className="px-4 py-3 text-slate-600">{contact.preferredZone || "-"}</td>

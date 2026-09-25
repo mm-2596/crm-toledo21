@@ -13,10 +13,11 @@ import { activitiesRouter } from "./routes/activities.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
+import { campaignsRouter } from "./routes/campaigns.js";
 import { feedRouter } from "./routes/feed.js";
 import { publicRouter } from "./routes/public.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
-import { requireAuth } from "./lib/auth.js";
+import { requireAdmin, requireAuth } from "./lib/auth.js";
 import { UPLOADS_ROOT } from "./lib/upload.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -45,6 +46,7 @@ app.use("/api/activities", requireAuth, activitiesRouter);
 app.use("/api/dashboard", requireAuth, dashboardRouter);
 app.use("/api/users", requireAuth, usersRouter);
 app.use("/api/valuations", requireAuth, valuationsRouter);
+app.use("/api/campaigns", requireAuth, requireAdmin, campaignsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
 app.use("/api", notFound);

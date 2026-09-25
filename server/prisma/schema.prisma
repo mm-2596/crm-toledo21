@@ -121,11 +121,11 @@ model AgentReview {
 }
 
 model Contact {
-  id            String        @id @default(cuid())
-  name          String
-  email         String?
-  phone         String?
-  source        ContactSource @default(MANUAL)
+  id             String           @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  source         ContactSource    @default(MANUAL)
   budgetMin      Int?
   budgetMax      Int?
   preferredZone  String?
@@ -138,6 +138,13 @@ model Contact {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
+  /// Consentimiento para recibir comunicaciones comerciales (RGPD / LSSI).
+  marketingConsent   Boolean   @default(false)
+  marketingConsentAt DateTime?
+  unsubscribedAt     DateTime?
+  /// Token del enlace de baja de los emails. Se genera al enviar la primera campaña.
+  unsubscribeToken   String?   @unique
+
   deals      Deal[]
   activities Activity[]
 
@@ -146,46 +153,46 @@ model Contact {
 }
 
 model Property {
-  id            String         @id @default(cuid())
-  reference     String         @unique
-  title         String
-  type          PropertyType
-  listingType   ListingType    @default(VENTA)
-  status        PropertyStatus @default(DISPONIBLE)
-  price         Int
-  city          String?
-  zone          String?
-  address       String?
-  latitude      Float?
-  longitude     Float?
-  bedrooms      Int?
-  bathrooms     Int?
-  areaM2        Int?
-  usableAreaM2  Int?
-  floor         Int?
-  hasElevator   Boolean?
-  energyRating  String?
+  id                     String             @id @default(cuid())
+  reference              String             @unique
+  title                  String
+  type                   PropertyType
+  listingType            ListingType        @default(VENTA)
+  status                 PropertyStatus     @default(DISPONIBLE)
+  price                  Int
+  city                   String?
+  zone                   String?
+  address                String?
+  latitude               Float?
+  longitude              Float?
+  bedrooms               Int?
+  bathrooms              Int?
+  areaM2                 Int?
+  usableAreaM2           Int?
+  floor                  Int?
+  hasElevator            Boolean?
+  energyRating           String?
   energyConsumptionValue Float?
   energyEmissionsRating  String?
   energyEmissionsValue   Float?
-  condition       PropertyCondition?
-  yearBuilt       Int?
-  parkingSpaces   Int?
-  heating         HeatingType?
-  hasAirConditioning Boolean?
-  hasTerrace      Boolean?
-  hasBalcony      Boolean?
-  hasGarden       Boolean?
-  hasPool         Boolean?
-  hasStorageRoom  Boolean?
-  isFurnished     Boolean?
-  isExterior      Boolean?
-  hoaFees         Int?
-  description   String?        @db.Text
-  houzezId      String?        @unique
-  agentId       String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  condition              PropertyCondition?
+  yearBuilt              Int?
+  parkingSpaces          Int?
+  heating                HeatingType?
+  hasAirConditioning     Boolean?
+  hasTerrace             Boolean?
+  hasBalcony             Boolean?
+  hasGarden              Boolean?
+  hasPool                Boolean?
+  hasStorageRoom         Boolean?
+  isFurnished            Boolean?
+  isExterior             Boolean?
+  hoaFees                Int?
+  description            String?            @db.Text
+  houzezId               String?            @unique
+  agentId                String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   agent      User?           @relation(fields: [agentId], references: [id])
   deals      Deal[]
@@ -285,4 +292,45 @@ model Valuation {
   property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
+}
+
+enum CampaignStatus {
+  BORRADOR
+  ENVIANDO
+  ENVIADA
+}
+
+/// Campaña de email marketing enviada desde el CRM.
+model Campaign {
+  id             String         @id @default(cuid())
+  name           String
+  subject        String
+  body           String         @db.Text
+  ctaLabel       String?
+  ctaUrl         String?
+  /// Filtros de audiencia (ver routes/campaigns.ts). Siempre se exige consentimiento y no estar dado de baja.
+  segment        Json?
+  status         CampaignStatus @default(BORRADOR)
+  recipientCount Int            @default(0)
+  sentCount      Int            @default(0)
+  failedCount    Int            @default(0)
+  createdAt      DateTime       @default(now())
+  sentAt         DateTime?
+
+  sends CampaignSend[]
+}
+
+model CampaignSend {
+  id         String   @id @default(cuid())
+  campaignId String
+  contactId  String
+  email      String
+  status     String // "ENVIADO" | "ERROR"
+  error      String?
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([contactId])
 }
