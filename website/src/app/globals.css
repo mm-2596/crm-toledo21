@@ -4,13 +4,13 @@
   --font-display: var(--font-display);
   --font-body: var(--font-body);
 
-  --color-ink: #14110f;
-  --color-ink-soft: #4a443d;
-  --color-paper: #faf8f4;
+  --color-ink: #2b302a;
+  --color-ink-soft: #566057;
+  --color-paper: #fbfaf5;
   --color-paper-dim: #f1ede4;
-  --color-line: #e4ddd0;
-  --color-gold: #a9834f;
-  --color-gold-soft: #ede3d1;
+  --color-line: #dfe3d8;
+  --color-gold: #2fc7b6;
+  --color-gold-soft: #d6f5f0;
 }
 
 body {
