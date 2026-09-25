@@ -94,13 +94,13 @@ export function Navbar() {
           }`}
           style={{ paddingTop: onDark ? 12 : 8, paddingBottom: onDark ? 12 : 8 }}
         >
-          <Link href="/" className="relative h-6 w-[125px] shrink-0 sm:h-7 sm:w-[146px]" aria-label="Toledo21">
+          <Link href="/" className="relative h-7 w-[102px] shrink-0 sm:h-8 sm:w-[117px]" aria-label="Toledo21">
             <Image
-              src={onDark ? "/logo/toledo21-logo-dark-mark.png" : "/logo/toledo21-logo-mark.png"}
+              src="/logo/toledo21-wordmark.png"
               alt="Toledo21"
               fill
-              sizes="150px"
-              className="object-contain object-left"
+              sizes="120px"
+              className="rounded-[3px] object-contain object-left"
               priority
             />
           </Link>

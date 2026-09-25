@@ -23,11 +23,11 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <Image
-              src="/logo/toledo21-logo.png"
+              src="/logo/toledo21-wordmark.png"
               alt="Toledo21 — somos tu inmobiliaria.es"
-              width={1237}
-              height={435}
-              className="h-14 w-auto object-contain object-left"
+              width={634}
+              height={174}
+              className="h-12 w-auto rounded-[4px] object-contain object-left"
             />
             <p className="mt-3 max-w-xs text-sm text-ink-soft">
               Inmuebles seleccionados en Getafe y Madrid sur, con datos completos y un equipo de agentes dedicado a
