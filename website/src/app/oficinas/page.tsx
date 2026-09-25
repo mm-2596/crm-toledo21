@@ -55,9 +55,32 @@ const OFFICES: Office[] = [
   },
 ];
 
+function OfficeCard({ office }: { office: Office }) {
+  return (
+    <div className="rounded-2xl border border-line bg-paper p-6">
+      <p className="text-xs font-medium uppercase tracking-wider text-gold">{office.services}</p>
+      <h3 className="mt-1.5 font-display text-lg text-ink">{office.name}</h3>
+      <p className="text-sm text-ink-soft">{office.city}</p>
+      <p className="mt-3 flex items-start gap-2 text-sm text-ink">
+        <MapPin size={15} className="mt-0.5 shrink-0 text-gold" /> {office.address}
+      </p>
+      {office.phone && <p className="mt-1 text-sm text-ink-soft">{office.phone}</p>}
+      <a
+        href={office.mapsUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline"
+      >
+        <Navigation size={13} /> Cómo llegar
+      </a>
+    </div>
+  );
+}
+
 export default function OfficesPage() {
   const featured = OFFICES.find((o) => o.featured)!;
-  const rest = OFFICES.filter((o) => !o.featured);
+  const realEstate = OFFICES.filter((o) => !o.featured && o.services.startsWith("Inmobiliaria"));
+  const gestorias = OFFICES.filter((o) => o.services === "Gestoría");
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-16 pt-28">
@@ -91,27 +114,24 @@ export default function OfficesPage() {
         </a>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {rest.map((office) => (
-          <div key={office.mapsUrl} className="rounded-2xl border border-line bg-paper p-6">
-            <p className="text-xs font-medium uppercase tracking-wider text-gold">{office.services}</p>
-            <h3 className="mt-1.5 font-display text-lg text-ink">{office.name}</h3>
-            <p className="text-sm text-ink-soft">{office.city}</p>
-            <p className="mt-3 flex items-start gap-2 text-sm text-ink">
-              <MapPin size={15} className="mt-0.5 shrink-0 text-gold" /> {office.address}
-            </p>
-            {office.phone && <p className="mt-1 text-sm text-ink-soft">{office.phone}</p>}
-            <a
-              href={office.mapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline"
-            >
-              <Navigation size={13} /> Cómo llegar
-            </a>
-          </div>
-        ))}
-      </div>
+      <section className="mt-14">
+        <h2 className="font-display text-2xl text-ink">Inmobiliarias</h2>
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {realEstate.map((office) => (
+            <OfficeCard key={office.mapsUrl} office={office} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="font-display text-2xl text-ink">Gestorías</h2>
+        <p className="mt-2 text-sm text-ink-soft">La oficina de Leganés también ofrece servicios de gestoría.</p>
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {gestorias.map((office) => (
+            <OfficeCard key={office.mapsUrl} office={office} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
