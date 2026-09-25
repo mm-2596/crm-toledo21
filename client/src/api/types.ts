@@ -18,7 +18,7 @@ export type HeatingType = "NINGUNA" | "INDIVIDUAL" | "CENTRAL";
 export type ListingType = "VENTA" | "ALQUILER";
 export type PropertyStatus = "DISPONIBLE" | "RESERVADO" | "VENDIDO" | "ALQUILADO" | "RETIRADO";
 export type ContactSource = "WEB_HOUZEZ" | "MANUAL" | "WHATSAPP" | "EMAIL" | "PHONE" | "REFERRAL" | "OTHER";
-export type ActivityType = "LLAMADA" | "EMAIL" | "WHATSAPP" | "VISITA" | "NOTA" | "TAREA";
+export type ActivityType = "LLAMADA" | "EMAIL" | "WHATSAPP" | "VISITA" | "REUNION" | "NOTA" | "TAREA";
 export type DealStatus = "ABIERTO" | "GANADO" | "PERDIDO";
 export type ContactPriority = "ALTA" | "MEDIA" | "BAJA";
 
@@ -205,6 +205,7 @@ export interface Activity {
   type: ActivityType;
   description: string;
   dueDate?: string | null;
+  hasTime?: boolean;
   completed: boolean;
   contactId?: string | null;
   dealId?: string | null;
@@ -231,4 +232,22 @@ export interface DashboardSummary {
   wonDeals: number;
   pendingActivities: number;
   dealsByStage: { id: string; name: string; _count: { deals: number } }[];
+}
+
+export type NotificationState = "overdue" | "soon" | "today" | "upcoming";
+
+export interface NotificationItem {
+  id: string;
+  type: ActivityType;
+  description: string;
+  dueDate: string;
+  hasTime: boolean;
+  state: NotificationState;
+  unassigned: boolean;
+  contact: { id: string; name: string } | null;
+}
+
+export interface NotificationsResponse {
+  count: number;
+  items: NotificationItem[];
 }

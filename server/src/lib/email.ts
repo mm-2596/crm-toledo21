@@ -222,3 +222,79 @@ export async function sendCampaignBatch(
     return { ok: false, error: err instanceof Error ? err.message : "Error desconocido" };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Avisos a los agentes: recordatorio de una tarea y resumen de la agenda del día
+// ---------------------------------------------------------------------------
+
+export const ACTIVITY_LABELS: Record<string, string> = {
+  LLAMADA: "Llamada",
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  VISITA: "Visita",
+  REUNION: "Reunión",
+  TAREA: "Tarea",
+  NOTA: "Nota",
+};
+
+function agentMailShell(title: string, inner: string, crmUrl: string) {
+  return `
+  <div style="background:#f1ede4;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:520px;margin:0 auto;background:#faf8f4;border-radius:16px;border:1px solid #e4ddd0;padding:28px 32px;">
+      <h1 style="margin:0 0 16px 0;font-size:19px;color:#14110f;">${escapeHtml(title)}</h1>
+      ${inner}
+      ${crmUrl ? `<a href="${escapeHtml(crmUrl)}" style="display:inline-block;margin-top:18px;background:#14110f;color:#faf8f4;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:999px;">Abrir el CRM</a>` : ""}
+    </div>
+  </div>`;
+}
+
+export interface AgendaLine {
+  type: string;
+  description: string;
+  when: string;
+  contactName?: string | null;
+}
+
+function agendaRows(lines: AgendaLine[]) {
+  return lines
+    .map(
+      (l) => `<tr>
+        <td style="padding:8px 14px 8px 0;font-size:13px;color:#8a8378;white-space:nowrap;vertical-align:top;">${escapeHtml(l.when)}</td>
+        <td style="padding:8px 0;font-size:14px;color:#14110f;"><strong>${escapeHtml(ACTIVITY_LABELS[l.type] ?? l.type)}</strong>: ${escapeHtml(l.description)}${l.contactName ? `<br /><span style="color:#8a8378;font-size:13px;">${escapeHtml(l.contactName)}</span>` : ""}</td>
+      </tr>`,
+    )
+    .join("");
+}
+
+async function sendAgentMail(to: string[], subject: string, html: string) {
+  if (to.length === 0) return false;
+  if (!resend) {
+    console.warn("RESEND_API_KEY no configurada: no se envió el aviso a los agentes.");
+    return false;
+  }
+  try {
+    const { error } = await resend.emails.send({ from: FROM_EMAIL, to, subject, html });
+    if (error) console.error("Error enviando aviso a agentes:", error.message);
+    return !error;
+  } catch (err) {
+    console.error("Error enviando aviso a agentes:", err);
+    return false;
+  }
+}
+
+export function sendReminderEmail(to: string[], line: AgendaLine, crmUrl: string) {
+  const html = agentMailShell(
+    `Dentro de poco: ${ACTIVITY_LABELS[line.type] ?? line.type}`,
+    `<table role="presentation" style="border-collapse:collapse;">${agendaRows([line])}</table>`,
+    crmUrl,
+  );
+  return sendAgentMail(to, `${ACTIVITY_LABELS[line.type] ?? "Aviso"} ${line.when.split(", ").pop()}: ${line.description}`.slice(0, 150), html);
+}
+
+export function sendDigestEmail(to: string[], name: string, today: AgendaLine[], overdue: AgendaLine[], crmUrl: string) {
+  const first = escapeHtml(name.trim().split(/\s+/)[0] || "");
+  const inner = `
+    ${today.length ? `<p style="margin:0 0 6px 0;font-size:14px;color:#4a443d;">Esto es lo que tienes hoy, ${first}:</p><table role="presentation" style="border-collapse:collapse;">${agendaRows(today)}</table>` : `<p style="margin:0;font-size:14px;color:#4a443d;">Hoy no tienes nada con fecha, ${first}.</p>`}
+    ${overdue.length ? `<p style="margin:18px 0 6px 0;font-size:14px;color:#b45309;">Pendientes de días anteriores (${overdue.length}):</p><table role="presentation" style="border-collapse:collapse;">${agendaRows(overdue.slice(0, 8))}</table>` : ""}`;
+  return sendAgentMail(to, `Tu agenda de hoy (${today.length} ${today.length === 1 ? "tarea" : "tareas"})`, agentMailShell("Tu agenda de hoy", inner, crmUrl));
+}

@@ -10,6 +10,12 @@ export function formatDate(value?: string | null) {
   return new Intl.DateTimeFormat("es-ES", { dateStyle: "medium" }).format(new Date(value));
 }
 
+export function formatDateTime(value?: string | null, hasTime?: boolean) {
+  if (!value) return "-";
+  if (!hasTime) return formatDate(value);
+  return new Intl.DateTimeFormat("es-ES", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
 export const propertyTypeLabels: Record<string, string> = {
   PISO: "Piso",
   CASA: "Casa",
@@ -111,6 +117,7 @@ export const activityTypeLabels: Record<string, string> = {
   EMAIL: "Email",
   WHATSAPP: "WhatsApp",
   VISITA: "Visita",
+  REUNION: "Reunión",
   NOTA: "Nota",
   TAREA: "Tarea",
 };

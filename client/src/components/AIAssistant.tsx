@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bot, LayoutList, Search, Send, Sparkles, X } from "lucide-react";
 import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/endpoints";
-import { formatCurrency, formatDate } from "../lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
 import type { QueryClient } from "@tanstack/react-query";
 
 interface Message {
@@ -135,6 +135,32 @@ function extractDate(text: string): { date: Date | null; rest: string } {
   return { date: null, rest: text };
 }
 
+/** Hora en lenguaje natural: "20h", "a las 20:30", "17:00", "a las 5". Solo se llama con el texto de la tarea (nunca con teléfonos). */
+function extractTime(text: string): { hours: number; minutes: number; rest: string } | null {
+  const patterns: { re: RegExp; parse: (m: RegExpMatchArray) => [number, number] }[] = [
+    { re: /\b(?:a\s+las\s+)?([01]?\d|2[0-3])[:.]([0-5]\d)\b(?!\s*\/)/i, parse: (m) => [Number(m[1]), Number(m[2])] },
+    { re: /\b(?:a\s+las\s+)?([01]?\d|2[0-3])\s*(?:h|hs|horas)\b/i, parse: (m) => [Number(m[1]), 0] },
+    { re: /\ba\s+las\s+([01]?\d|2[0-3])\b/i, parse: (m) => [Number(m[1]), 0] },
+  ];
+  for (const { re, parse } of patterns) {
+    const match = text.match(re);
+    if (match) {
+      const [hours, minutes] = parse(match);
+      return { hours, minutes, rest: text.replace(match[0], "").replace(/\s+/g, " ").trim() };
+    }
+  }
+  return null;
+}
+
+/** Combina el día (o hoy si solo hay hora) con la hora en la zona del navegador; sin hora, cuenta solo el día. */
+function buildDue(date: Date | null, time: { hours: number; minutes: number } | null): { dueDate: string | null; hasTime: boolean } {
+  if (!date && !time) return { dueDate: null, hasTime: false };
+  const base = date ? new Date(date) : new Date();
+  if (!time) return { dueDate: base.toISOString(), hasTime: false };
+  base.setHours(time.hours, time.minutes, 0, 0);
+  return { dueDate: base.toISOString(), hasTime: true };
+}
+
 async function answer(input: string, queryClient: QueryClient): Promise<string> {
   const q = input.toLowerCase().trim();
 
@@ -171,7 +197,8 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
 
     if (taskPart && /\b(cita|tarea|agenda|recordatorio)\b/i.test(taskPart)) {
       const { date, rest: withoutDate } = extractDate(taskPart);
-      let description = withoutDate
+      const time = extractTime(withoutDate);
+      let description = (time?.rest ?? withoutDate)
         .replace(/^\s*y\b/i, "")
         .replace(/\b(adem[aá]s)\b/gi, "")
         .replace(/\b(ponle|pon(me)?|agenda(le|me)?|cr[eé]a(?:le|me)?|añade(le)?)\b/gi, "")
@@ -188,11 +215,13 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
         type: "TAREA",
         description,
         contactId: contact.id,
-        dueDate: date ? date.toISOString() : null,
+        ...buildDue(date, time),
       });
       queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
-      reply += `\nTambién le creé una tarea${date ? ` para ${formatDate(date.toISOString())}` : ""}: "${description}".`;
+      const due = buildDue(date, time);
+      reply += `\nTambién le creé una tarea${due.dueDate ? ` para ${formatDateTime(due.dueDate, due.hasTime)}` : ""}: "${description}".${due.hasTime ? " Te avisaré 30 minutos antes." : ""}`;
     }
 
     return reply;
@@ -203,7 +232,8 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
   if (NEW_TASK_TRIGGER.test(q)) {
     let rest = input.replace(NEW_TASK_TRIGGER, "").trim();
     const { date, rest: withoutDate } = extractDate(rest);
-    rest = withoutDate;
+    const time = extractTime(withoutDate);
+    rest = time?.rest ?? withoutDate;
 
     // Se busca la ÚLTIMA aparición de "para" (no la primera), porque la propia
     // descripción de la tarea puede contener esa palabra de forma natural
@@ -234,12 +264,14 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
       type: "TAREA",
       description,
       contactId,
-      dueDate: date ? date.toISOString() : null,
+      ...buildDue(date, time),
     });
     queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
     if (contactId) queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
-    return `Hecho ✅ Tarea creada${contactNote}${date ? ` · ${formatDate(date.toISOString())}` : ""}: "${description}".`;
+    const due = buildDue(date, time);
+    return `Hecho ✅ Tarea creada${contactNote}${due.dueDate ? ` · ${formatDateTime(due.dueDate, due.hasTime)}` : ""}: "${description}".${due.hasTime ? " Te avisaré 30 minutos antes." : ""}`;
   }
 
   if (q.includes("agenda") || q.includes("cita")) {
@@ -249,7 +281,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
       return d;
     })() : new Date();
 
-    const activities = await ActivitiesApi.list(true);
+    const activities = await ActivitiesApi.list(true, true);
     const dayActivities = activities.filter((a) => a.dueDate && isSameDay(new Date(a.dueDate), targetDate));
     if (dayActivities.length === 0)
       return `No tienes citas ni tareas para ${isSameDay(targetDate, new Date()) ? "hoy" : "mañana"}. 🎉`;
@@ -260,7 +292,7 @@ async function answer(input: string, queryClient: QueryClient): Promise<string> 
   }
 
   if (q.includes("tarea") || q.includes("pendiente")) {
-    const activities = await ActivitiesApi.list(true);
+    const activities = await ActivitiesApi.list(true, true);
     if (activities.length === 0) return "No tienes tareas pendientes con fecha. 🎉";
     return (
       "Tareas pendientes:\n" +

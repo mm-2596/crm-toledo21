@@ -2,17 +2,25 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { Sparkles, Wand2 } from "lucide-react";
-import { ActivitiesApi, ContactsApi } from "../api/endpoints";
+import { ActivitiesApi, ContactsApi, UsersApi } from "../api/endpoints";
 import {
   activityTypeLabels,
   contactSourceLabels,
   formatCurrency,
   formatDate,
+  formatDateTime,
   priorityBadgeClasses,
   priorityLabels,
 } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
 import { useToast } from "../components/Toast";
+
+/** Con hora, se interpreta en la zona horaria del navegador (la del agente); sin hora, cuenta solo el día. */
+function dueDateFields(date: string, time: string): { dueDate: string | null; hasTime: boolean } {
+  if (!date) return { dueDate: null, hasTime: false };
+  if (time) return { dueDate: new Date(`${date}T${time}`).toISOString(), hasTime: true };
+  return { dueDate: new Date(date).toISOString(), hasTime: false };
+}
 
 export function ContactDetail() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +40,8 @@ export function ContactDetail() {
     queryFn: () => ContactsApi.matches(id as string),
     enabled: Boolean(id) && hasPreferences,
   });
+
+  const { data: agents } = useQuery({ queryKey: ["assignable-users"], queryFn: UsersApi.assignable });
 
   const toggleConsent = useMutation({
     mutationFn: (value: boolean) => ContactsApi.update(id as string, { marketingConsent: value }),
@@ -65,7 +75,8 @@ export function ContactDetail() {
       contactId: id,
       type: String(form.get("type")) as never,
       description: String(form.get("description")),
-      dueDate: form.get("dueDate") ? new Date(String(form.get("dueDate"))).toISOString() : null,
+      ...dueDateFields(String(form.get("dueDate") || ""), String(form.get("dueTime") || "")),
+      agentId: String(form.get("agentId") || "") || undefined,
     });
     e.currentTarget.reset();
   }
@@ -205,6 +216,14 @@ export function ContactDetail() {
           </select>
           <input name="description" required placeholder="Descripción" className="col-span-2 rounded-lg border border-slate-300 px-2 py-2 text-sm" />
           <input name="dueDate" type="date" className="rounded-lg border border-slate-300 px-2 py-2 text-sm" />
+          <input name="dueTime" type="time" title="Hora (opcional): con hora, el agente recibe un aviso antes" className="rounded-lg border border-slate-300 px-2 py-2 text-sm" />
+          <select name="agentId" defaultValue="" className="col-span-2 rounded-lg border border-slate-300 px-2 py-2 text-sm">
+            <option value="">Responsable: yo</option>
+            {(agents ?? []).map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+          <p className="col-span-4 text-xs text-slate-400">Pon fecha y hora para que el responsable reciba un aviso 30 minutos antes.</p>
           <button
             type="submit"
             className="col-span-4 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
@@ -226,7 +245,7 @@ export function ContactDetail() {
                   {activityTypeLabels[activity.type]}
                 </span>
                 {activity.description}
-                {activity.dueDate && <span className="ml-2 text-xs text-slate-400">({formatDate(activity.dueDate)})</span>}
+                {activity.dueDate && <span className="ml-2 text-xs text-slate-400">({formatDateTime(activity.dueDate, activity.hasTime)})</span>}
               </div>
               {!activity.completed && (
                 <button

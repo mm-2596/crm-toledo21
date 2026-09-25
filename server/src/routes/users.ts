@@ -32,6 +32,19 @@ usersRouter.get(
   }),
 );
 
+// Para elegir responsable de una tarea: solo nombre e id, sin emails ni datos de contacto.
+usersRouter.get(
+  "/assignable",
+  asyncHandler(async (_req, res) => {
+    const users = await prisma.user.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
+    res.json(users);
+  }),
+);
+
 usersRouter.get(
   "/invite-code",
   requireAdmin,

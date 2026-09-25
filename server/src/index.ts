@@ -14,6 +14,8 @@ import { dashboardRouter } from "./routes/dashboard.js";
 import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
 import { campaignsRouter } from "./routes/campaigns.js";
+import { notificationsRouter } from "./routes/notifications.js";
+import { startReminderScheduler } from "./lib/reminders.js";
 import { feedRouter } from "./routes/feed.js";
 import { publicRouter } from "./routes/public.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
@@ -47,6 +49,7 @@ app.use("/api/dashboard", requireAuth, dashboardRouter);
 app.use("/api/users", requireAuth, usersRouter);
 app.use("/api/valuations", requireAuth, valuationsRouter);
 app.use("/api/campaigns", requireAuth, requireAdmin, campaignsRouter);
+app.use("/api/notifications", requireAuth, notificationsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
 app.use("/api", notFound);
@@ -66,6 +69,7 @@ app.use(errorHandler);
 const port = Number(process.env.PORT) || 4000;
 app.listen(port, () => {
   console.log(`CRM Toledo21 API escuchando en http://localhost:${port}`);
+  startReminderScheduler();
   // Sin un volumen persistente montado exactamente en esta ruta, las fotos
   // subidas se pierden en el proximo despliegue (el disco del contenedor
   // se recrea desde cero). Comprobar en los logs de arranque de Railway.

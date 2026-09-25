@@ -3,6 +3,7 @@ import type {
   Activity,
   AudienceInfo,
   Campaign,
+  NotificationsResponse,
   CampaignInput,
   CampaignSegment,
   AgentReview,
@@ -75,8 +76,10 @@ export const PipelineApi = {
 };
 
 export const ActivitiesApi = {
-  list: (pending?: boolean) =>
-    api.get<Activity[]>("/activities", { params: { pending } }).then((r) => r.data),
+  list: (pending?: boolean, mine?: boolean) =>
+    api.get<Activity[]>("/activities", { params: { pending, mine: mine || undefined } }).then((r) => r.data),
+  assign: (id: string, agentId: string | null) =>
+    api.patch<Activity>(`/activities/${id}/assign`, { agentId }).then((r) => r.data),
   create: (data: Partial<Activity>) => api.post<Activity>("/activities", data).then((r) => r.data),
   complete: (id: string) => api.patch<Activity>(`/activities/${id}/complete`).then((r) => r.data),
   remove: (id: string) => api.delete(`/activities/${id}`),
@@ -87,6 +90,7 @@ export const DashboardApi = {
 };
 
 export const UsersApi = {
+  assignable: () => api.get<{ id: string; name: string }[]>("/users/assignable").then((r) => r.data),
   list: () => api.get<TeamMember[]>("/users").then((r) => r.data),
   get: (id: string) => api.get<TeamMember>(`/users/${id}`).then((r) => r.data),
   inviteCode: () => api.get<{ inviteCode: string | null }>("/users/invite-code").then((r) => r.data),
@@ -131,4 +135,8 @@ export const CampaignsApi = {
     api.post<AudienceInfo>("/campaigns/audience", { segment }).then((r) => r.data),
   sendTest: (id: string, email: string) => api.post(`/campaigns/${id}/test`, { email }),
   send: (id: string) => api.post<{ ok: true; recipients: number }>(`/campaigns/${id}/send`).then((r) => r.data),
+};
+
+export const NotificationsApi = {
+  list: () => api.get<NotificationsResponse>("/notifications").then((r) => r.data),
 };

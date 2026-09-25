@@ -72,6 +72,7 @@ enum ActivityType {
   VISITA
   NOTA
   TAREA
+  REUNION
 }
 
 enum DealStatus {
@@ -98,6 +99,8 @@ model User {
   bio          String?  @db.Text
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
+  /// Último día (Madrid, AAAA-MM-DD) en que se le envió el resumen de agenda matinal.
+  lastDigestOn String?
 
   deals      Deal[]
   activities Activity[]
@@ -260,15 +263,18 @@ model Deal {
 }
 
 model Activity {
-  id          String       @id @default(cuid())
-  type        ActivityType
-  description String       @db.Text
-  dueDate     DateTime?
-  completed   Boolean      @default(false)
-  contactId   String?
-  dealId      String?
-  agentId     String?
-  createdAt   DateTime     @default(now())
+  id             String       @id @default(cuid())
+  type           ActivityType
+  description    String       @db.Text
+  dueDate        DateTime?
+  /// true si dueDate incluye una hora concreta; si no, solo cuenta el día.
+  hasTime        Boolean      @default(false)
+  reminderSentAt DateTime?
+  completed      Boolean      @default(false)
+  contactId      String?
+  dealId         String?
+  agentId        String?
+  createdAt      DateTime     @default(now())
 
   contact Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
   deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)

@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { AIAssistant } from "./AIAssistant";
+import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../auth/AuthContext";
 
 const links = [
@@ -46,6 +47,7 @@ export function Layout() {
             <div className="border-l border-slate-200 pl-2">
               <div className="text-xs text-slate-500">Gestión inmobiliaria</div>
             </div>
+            <NotificationBell />
           </div>
           <nav className="flex flex-col gap-1">
             {visibleLinks.map((link) => (
