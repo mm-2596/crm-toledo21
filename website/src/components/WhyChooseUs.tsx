@@ -1,4 +1,5 @@
 import { Award, Banknote, FileCheck, ScrollText, Scale } from "lucide-react";
+import { YearsBanner } from "./YearsBanner";
 
 const REASONS = [
   {
@@ -54,12 +55,7 @@ export function WhyChooseUs() {
         ))}
       </div>
 
-      <div className="mt-14 flex flex-col items-center gap-2 rounded-3xl bg-ink px-8 py-10 text-center sm:px-12">
-        <p className="font-display text-4xl text-gold sm:text-5xl">+25 años</p>
-        <p className="max-w-md text-sm text-paper/70">
-          Desde 1997 en el sector, entre las agencias más serias y cualificadas de Getafe y Madrid sur.
-        </p>
-      </div>
+      <YearsBanner />
     </section>
   );
 }
