@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { UserPlus, Users } from "lucide-react";
+import { Download, UserPlus, Users } from "lucide-react";
 import { ContactsApi } from "../api/endpoints";
 import { contactSourceLabels, priorityBadgeClasses, priorityLabels } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
+import { useAuth } from "../auth/AuthContext";
 import type { Contact } from "../api/types";
 
 export function Contacts() {
@@ -13,6 +14,26 @@ export function Contacts() {
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport(consentOnly: boolean) {
+    setExporting(true);
+    try {
+      const blob = await ContactsApi.exportCsv(consentOnly);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `contactos-toledo21${consentOnly ? "-con-consentimiento" : ""}-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast("Exportación descargada");
+    } catch {
+      showToast("No se pudo exportar los contactos");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["contacts", q],
@@ -46,13 +67,35 @@ export function Contacts() {
     <div>
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Contactos</h1>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
-        >
-          <UserPlus size={16} />
-          {showForm ? "Cancelar" : "Nuevo contacto"}
-        </button>
+        <div className="flex items-center gap-2">
+          {user?.role === "ADMIN" && (
+            <>
+              <button
+                onClick={() => handleExport(false)}
+                disabled={exporting}
+                title="Descarga todos los contactos en CSV (se abre en Excel)"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Download size={15} /> Exportar a Excel
+              </button>
+              <button
+                onClick={() => handleExport(true)}
+                disabled={exporting}
+                title="Solo contactos con email que aceptan comunicaciones: listo para importar en Brevo u otra herramienta de email"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                <Download size={15} /> Para email marketing
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
+          >
+            <UserPlus size={16} />
+            {showForm ? "Cancelar" : "Nuevo contacto"}
+          </button>
+        </div>
       </div>
       <p className="mb-6 text-sm text-slate-500">
         Cada persona interesada en comprar, vender o alquilar un inmueble. Da de alta un lead en cuanto contacte contigo.

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { requireAdmin } from "../lib/auth.js";
+import { csvCell } from "../lib/csv.js";
 
 export const contactsRouter = Router();
 
@@ -53,6 +55,44 @@ contactsRouter.get(
       include: { deals: { include: { stage: true } } },
     });
     res.json(contacts);
+  }),
+);
+
+// Solo administradores: es la base de clientes completa. Debe ir antes de "/:id".
+contactsRouter.get(
+  "/export",
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const onlyConsent = req.query.consent === "1";
+    const contacts = await prisma.contact.findMany({
+      where: onlyConsent
+        ? { marketingConsent: true, unsubscribedAt: null, email: { not: null }, NOT: { email: "" } }
+        : undefined,
+      orderBy: { createdAt: "desc" },
+      select: { name: true, email: true, phone: true, source: true, preferredZone: true, createdAt: true, marketingConsent: true, unsubscribedAt: true },
+    });
+
+    const sourceLabels: Record<string, string> = {
+      WEB_HOUZEZ: "Web", MANUAL: "Manual", WHATSAPP: "WhatsApp", EMAIL: "Email", PHONE: "Teléfono", REFERRAL: "Referido", OTHER: "Otro",
+    };
+    const header = ["Nombre", "Email", "Teléfono", "Origen", "Zona", "Fecha de alta", "Acepta emails", "Baja"];
+    const rows = contacts.map((c) => [
+      c.name,
+      c.email,
+      c.phone,
+      sourceLabels[c.source] ?? c.source,
+      c.preferredZone,
+      c.createdAt.toISOString().slice(0, 10),
+      c.marketingConsent ? "Sí" : "No",
+      c.unsubscribedAt ? "Sí" : "No",
+    ]);
+    const csv = "\uFEFF" + [header, ...rows].map((r) => r.map(csvCell).join(";")).join("\r\n") + "\r\n";
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="contactos-toledo21${onlyConsent ? "-con-consentimiento" : ""}-${stamp}.csv"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.send(csv);
   }),
 );
 

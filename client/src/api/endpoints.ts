@@ -34,6 +34,8 @@ export const ContactsApi = {
     api.put<Contact>(`/contacts/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/contacts/${id}`),
   matches: (id: string) => api.get<Property[]>(`/contacts/${id}/matches`).then((r) => r.data),
+  exportCsv: (consentOnly: boolean) =>
+    api.get<Blob>("/contacts/export", { params: consentOnly ? { consent: 1 } : undefined, responseType: "blob" }).then((r) => r.data),
 };
 
 export const PropertiesApi = {
