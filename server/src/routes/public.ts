@@ -78,9 +78,23 @@ function withAbsoluteMedia<T extends { images: { url: string }[]; videos: { url:
   };
 }
 
+// Cada consulta de propiedades encadena varias idas y vueltas a la base de datos
+// (propiedades, fotos, vídeos, agente y recuento) y tardaba ~2 s. Con 30 s de
+// memoria, casi todas las visitas responden al instante; los cambios hechos en
+// el CRM se ven en menos de medio minuto.
+const LIST_CACHE_TTL_MS = 30_000;
+const LIST_CACHE_MAX_ENTRIES = 100;
+const listCache = new Map<string, { at: number; body: unknown }>();
+
 publicRouter.get(
   "/properties",
   asyncHandler(async (req, res) => {
+    const cacheKey = `${req.get("host")}${req.originalUrl}`;
+    const cached = listCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < LIST_CACHE_TTL_MS) {
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=120");
+      return res.json(cached.body);
+    }
     const { type, listingType, city, bedroomsMin, priceMin, priceMax, q, page, pageSize } = req.query;
     const take = Math.min(Number(pageSize) || 12, 48);
     const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
@@ -115,7 +129,11 @@ publicRouter.get(
     const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
     const propertiesWithMedia = properties.map((p) => withAbsoluteMedia(p, baseUrl));
 
-    res.json({ total, page: Number(page) || 1, pageSize: take, properties: propertiesWithMedia });
+    const body = { total, page: Number(page) || 1, pageSize: take, properties: propertiesWithMedia };
+    if (listCache.size >= LIST_CACHE_MAX_ENTRIES) listCache.delete(listCache.keys().next().value as string);
+    listCache.set(cacheKey, { at: Date.now(), body });
+    res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=120");
+    res.json(body);
   }),
 );
 

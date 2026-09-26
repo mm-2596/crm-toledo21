@@ -9,10 +9,15 @@ import type {
 
 const API_URL = process.env.CRM_API_URL || "http://localhost:4000";
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+// Las lecturas públicas (listados y fichas) se guardan 60 s: el CRM tarda ~2 s en
+// responderlas y, sin caché, cada visita a la portada esperaba ese tiempo entero
+// antes de recibir nada. Todo lo demás (login, envíos) sigue sin caché.
+const PUBLIC_READ_REVALIDATE_SECONDS = 60;
+
+async function apiFetch<T>(path: string, init?: RequestInit, options?: { revalidate?: number }): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
-    cache: "no-store",
+    ...(options?.revalidate !== undefined ? { next: { revalidate: options.revalidate } } : { cache: "no-store" as const }),
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
   if (!res.ok) {
@@ -28,11 +33,15 @@ export function getProperties(filters: PropertyFilters = {}): Promise<PropertyLi
     if (value) params.set(key, value);
   });
   const qs = params.toString();
-  return apiFetch<PropertyListResponse>(`/api/public/properties${qs ? `?${qs}` : ""}`);
+  return apiFetch<PropertyListResponse>(`/api/public/properties${qs ? `?${qs}` : ""}`, undefined, {
+    revalidate: PUBLIC_READ_REVALIDATE_SECONDS,
+  });
 }
 
 export function getProperty(id: string): Promise<PropertyDetailResponse> {
-  return apiFetch<PropertyDetailResponse>(`/api/public/properties/${id}`);
+  return apiFetch<PropertyDetailResponse>(`/api/public/properties/${id}`, undefined, {
+    revalidate: PUBLIC_READ_REVALIDATE_SECONDS,
+  });
 }
 
 export function submitLead(data: { name: string; email?: string; phone?: string; message?: string; propertyId?: string; marketingConsent?: boolean }) {
