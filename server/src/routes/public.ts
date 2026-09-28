@@ -175,6 +175,40 @@ const leadInput = z.object({
   marketingConsent: z.boolean().optional(),
 });
 
+const newsletterInput = z.object({
+  email: z.string().email(),
+  consent: z.literal(true),
+});
+
+publicRouter.post(
+  "/newsletter",
+  asyncHandler(async (req, res) => {
+    const data = newsletterInput.parse(req.body);
+    const email = data.email.trim().toLowerCase();
+    const existing = await prisma.contact.findFirst({ where: { email } });
+
+    if (existing) {
+      await prisma.contact.update({
+        where: { id: existing.id },
+        data: { marketingConsent: true, marketingConsentAt: new Date(), unsubscribedAt: null },
+      });
+    } else {
+      await prisma.contact.create({
+        data: {
+          name: email.split("@")[0],
+          email,
+          source: "OTHER",
+          marketingConsent: true,
+          marketingConsentAt: new Date(),
+          notes: "Suscrito a la newsletter desde la web.",
+        },
+      });
+    }
+
+    res.status(201).json({ ok: true });
+  }),
+);
+
 publicRouter.post(
   "/leads",
   asyncHandler(async (req, res) => {

@@ -51,6 +51,13 @@ export function submitLead(data: { name: string; email?: string; phone?: string;
   });
 }
 
+export function subscribeNewsletter(data: { email: string; consent: true }) {
+  return apiFetch<{ ok: true }>(`/api/public/newsletter`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function agentLogin(email: string, password: string) {
   return apiFetch<{ token: string; agent: { id: string; name: string; email: string; role: string } }>(
     `/api/public/agent-login`,
