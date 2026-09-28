@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <Link
                 key={r.slug}
                 href={`/blog/${r.slug}`}
-                className="group overflow-hidden rounded-xl border border-line hover:border-gold/50"
+                className="group flex flex-col overflow-hidden rounded-xl border border-line hover:border-gold/50"
               >
                 <div className="relative aspect-[4/3]">
                   <Image

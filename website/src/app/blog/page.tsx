@@ -28,7 +28,7 @@ export default function BlogPage() {
       <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Link
           href={`/blog/${featured.slug}`}
-          className="group relative row-span-2 overflow-hidden rounded-3xl border border-line lg:min-h-[520px]"
+          className="group relative row-span-2 aspect-[4/5] overflow-hidden rounded-3xl border border-line sm:aspect-[16/10] lg:aspect-auto lg:min-h-[520px]"
         >
           <Image
             src={featured.image}
