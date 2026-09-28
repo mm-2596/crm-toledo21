@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Search } from "lucide-react";
 import { AnimatedCounter } from "./AnimatedCounter";
 import { propertyTypeLabels } from "@/lib/format";
@@ -99,40 +99,44 @@ export function HeroSearchPanel() {
           </button>
         </motion.form>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mx-auto mt-12 grid w-full max-w-2xl grid-cols-2 gap-6 border-t border-line pt-8 text-ink sm:grid-cols-4"
-        >
-          <Stat prefix="+" value={25} suffix=" años" label="En Getafe y Madrid sur" />
-          <Stat prefix="+" value={150} label="Propiedades gestionadas" />
-          <Stat value={98} suffix="%" label="Clientes satisfechos" />
-          <Stat value={24} suffix="h" label="Respuesta media" />
-        </motion.div>
+        <div className="mx-auto mt-12 grid w-full max-w-2xl grid-cols-2 gap-6 border-t border-line pt-8 text-ink sm:grid-cols-4">
+          <Stat index={0} prefix="+" value={25} suffix=" años" label="En Getafe y Madrid sur" />
+          <Stat index={1} prefix="+" value={150} label="Propiedades gestionadas" />
+          <Stat index={2} value={98} suffix="%" label="Clientes satisfechos" />
+          <Stat index={3} value={24} suffix="h" label="Respuesta media" />
+        </div>
       </div>
     </section>
   );
 }
 
+// Cada cifra sube y aparece por su cuenta, en cascada (no las 4 a la vez),
+// para que el efecto se note incluso si el bloque ya está casi a la vista.
 function Stat({
+  index,
   value,
   prefix,
   suffix,
   label,
 }: {
+  index: number;
   value: number;
   prefix?: string;
   suffix?: string;
   label: string;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <div>
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ type: "spring", bounce: 0.35, duration: 0.7, delay: index * 0.12 }}
+    >
       <div className="font-display text-2xl text-ink sm:text-3xl">
         <AnimatedCounter value={value} prefix={prefix} suffix={suffix} />
       </div>
       <div className="mt-1 text-xs text-ink-soft">{label}</div>
-    </div>
+    </motion.div>
   );
 }
