@@ -77,6 +77,32 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/10 to-transparent" />
       </div>
 
+      {/* En escritorio hay hueco de sobra a la derecha de la foto (ya no hay
+          nada del render con lo que chocar), así que la ficha destacada vuelve
+          arriba a la derecha, como al principio. En móvil no cabe al lado del
+          titular, así que se queda debajo del texto, en el flujo normal. */}
+      {slides.length > 0 && (
+        <div className="pointer-events-none absolute inset-x-6 top-24 hidden justify-end lg:inset-x-10 lg:top-28 lg:flex">
+          <div className="pointer-events-auto flex flex-col items-end gap-3">
+            <SpotlightCard property={current.property} />
+            {slides.length > 1 && (
+              <div className="flex gap-1.5 pr-1">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setActive(i)}
+                    aria-label={`Ver ${s.property.title}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === active ? "w-6 bg-gold" : "w-1.5 bg-paper/30 hover:bg-paper/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="relative flex min-h-[640px] flex-col px-6 py-16 sm:min-h-[720px] sm:px-10 sm:py-20">
         <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center">
           <motion.div
@@ -112,58 +138,10 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
         </div>
 
         {slides.length > 0 && (
-          <div className="mx-auto mt-10 flex w-full max-w-7xl flex-col items-start justify-between gap-5 sm:mt-12 sm:flex-row sm:items-end">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current.id}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                className="w-full max-w-sm rounded-2xl border border-paper/15 bg-ink/50 p-4 text-paper shadow-2xl shadow-black/40 backdrop-blur-xl"
-              >
-                <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-gold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                  Destacado · {listingTypeLabels[current.property.listingType]}
-                </div>
-                <h3 className="mt-1.5 font-display text-base leading-tight text-paper sm:text-lg">
-                  {current.property.title}
-                </h3>
-                <p className="mt-1 text-xs text-paper/60">{current.property.zone || current.property.city}</p>
-
-                <div className="mt-3 flex items-center gap-3 text-xs text-paper/70">
-                  {current.property.bedrooms != null && (
-                    <span className="flex items-center gap-1">
-                      <BedDouble size={13} /> {current.property.bedrooms}
-                    </span>
-                  )}
-                  {current.property.bathrooms != null && (
-                    <span className="flex items-center gap-1">
-                      <Bath size={13} /> {current.property.bathrooms}
-                    </span>
-                  )}
-                  {current.property.areaM2 != null && (
-                    <span className="flex items-center gap-1">
-                      <Maximize size={13} /> {current.property.areaM2} m²
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-3 flex items-center justify-between border-t border-paper/10 pt-3">
-                  <p className="font-display text-lg text-paper">{formatCurrency(current.property.price)}</p>
-                  <Link
-                    href={`/propiedades/${current.property.id}`}
-                    className="group flex items-center gap-1 text-xs font-medium text-gold"
-                  >
-                    Ver ficha
-                    <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
+          <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-5 lg:hidden">
+            <SpotlightCard property={current.property} className="w-full max-w-sm" />
             {slides.length > 1 && (
-              <div className="flex shrink-0 gap-1.5 self-center sm:self-end sm:pb-1">
+              <div className="flex gap-1.5 self-center">
                 {slides.map((s, i) => (
                   <button
                     key={s.id}
@@ -180,5 +158,56 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
         )}
       </div>
     </section>
+  );
+}
+
+function SpotlightCard({ property, className = "" }: { property: PublicProperty; className?: string }) {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={property.id}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        className={`w-full max-w-xs rounded-2xl border border-paper/15 bg-ink/50 p-4 text-paper shadow-2xl shadow-black/40 backdrop-blur-xl ${className}`}
+      >
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-gold">
+          <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+          Destacado · {listingTypeLabels[property.listingType]}
+        </div>
+        <h3 className="mt-1.5 font-display text-base leading-tight text-paper sm:text-lg">{property.title}</h3>
+        <p className="mt-1 text-xs text-paper/60">{property.zone || property.city}</p>
+
+        <div className="mt-3 flex items-center gap-3 text-xs text-paper/70">
+          {property.bedrooms != null && (
+            <span className="flex items-center gap-1">
+              <BedDouble size={13} /> {property.bedrooms}
+            </span>
+          )}
+          {property.bathrooms != null && (
+            <span className="flex items-center gap-1">
+              <Bath size={13} /> {property.bathrooms}
+            </span>
+          )}
+          {property.areaM2 != null && (
+            <span className="flex items-center gap-1">
+              <Maximize size={13} /> {property.areaM2} m²
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-paper/10 pt-3">
+          <p className="font-display text-lg text-paper">{formatCurrency(property.price)}</p>
+          <Link
+            href={`/propiedades/${property.id}`}
+            className="group flex items-center gap-1 text-xs font-medium text-gold"
+          >
+            Ver ficha
+            <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
