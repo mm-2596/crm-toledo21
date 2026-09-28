@@ -4,6 +4,7 @@ import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { ValuationBanner } from "@/components/ValuationBanner";
 import { InfiniteMarquee } from "@/components/InfiniteMarquee";
 import { ProcessShowcase } from "@/components/ProcessShowcase";
+import { LifestyleVideoSection } from "@/components/LifestyleVideoSection";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { NewsletterSection } from "@/components/NewsletterSection";
@@ -40,6 +41,8 @@ export default async function Home() {
         </div>
       </section>
       <ProcessShowcase />
+
+      <LifestyleVideoSection />
 
       <WhyChooseUs />
 
