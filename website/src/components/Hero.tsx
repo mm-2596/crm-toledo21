@@ -1,40 +1,84 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
-import { HeroBackground } from "./HeroBackground";
-import { ApartmentScene } from "@/components/toledo-render";
-import { HeroComposition } from "./toledo21-home-v2/hero-composition";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ShieldCheck, BedDouble, Bath, Maximize, ArrowRight } from "lucide-react";
 import { RotatingWord } from "./RotatingWord";
-import { FeaturedSpotlight } from "./FeaturedSpotlight";
+import { formatCurrency, listingTypeLabels } from "@/lib/format";
 import type { PublicProperty } from "@/lib/types";
 
 const SLIDE_DURATION = 6000;
 
-// El render conceptual (ApartmentScene) es una ilustración interactiva con su
-// propia altura natural (imagen + estancias + panel + controles): no lleva
-// sticky, no depende del scroll y no debe forzarse a una altura de pantalla
-// fija. Por eso el hero vive en flujo normal, sin el sticky "cinematográfico"
-// que tenía la versión 3D anterior.
+interface Slide {
+  id: string;
+  image: string;
+  property: PublicProperty;
+}
+
+// Fondo a pantalla completa con fotos reales de la cartera (no un render
+// genérico): cada inmueble con foto entra en el carrusel, con un zoom lento
+// tipo "Ken Burns" para que el hero se sienta vivo sin ser un vídeo de stock.
 export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
+  const slides: Slide[] = useMemo(
+    () =>
+      properties
+        .filter((p) => p.images[0]?.url)
+        .map((p) => ({ id: p.id, image: p.images[0].url, property: p })),
+    [properties],
+  );
+
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (properties.length < 2 || reduceMotion) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % properties.length), SLIDE_DURATION);
+    if (slides.length < 2 || reduceMotion) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % slides.length), SLIDE_DURATION);
     return () => clearInterval(id);
-  }, [properties.length, reduceMotion]);
+  }, [slides.length, reduceMotion]);
+
+  const current = slides[active];
 
   return (
-    <section className="relative overflow-hidden bg-ink px-6 py-16 sm:px-10 sm:py-20">
-      <HeroBackground />
+    <section id="hero" className="relative min-h-[640px] overflow-hidden bg-ink sm:min-h-[720px]">
+      <div className="absolute inset-0">
+        {slides.length > 0 ? (
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={current.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.1, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <motion.div
+                initial={{ scale: 1 }}
+                animate={{ scale: reduceMotion ? 1 : 1.09 }}
+                transition={{ duration: (SLIDE_DURATION * 1.4) / 1000, ease: "linear" }}
+                className="absolute inset-0"
+              >
+                <Image
+                  src={current.image}
+                  alt={current.property.title}
+                  fill
+                  sizes="100vw"
+                  priority
+                  className="object-cover"
+                />
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-ink via-[#1c1815] to-ink" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/10 to-transparent" />
+      </div>
 
-      {properties[active] && <FeaturedSpotlight property={properties[active]} />}
-
-      <div className="relative w-full">
-        <HeroComposition visual={<ApartmentScene />}>
+      <div className="relative flex min-h-[640px] flex-col px-6 py-16 sm:min-h-[720px] sm:px-10 sm:py-20">
+        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -51,7 +95,7 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", bounce: 0, duration: 0.6, delay: 0.08 }}
-            className="mt-5 font-display leading-[1.03] text-paper"
+            className="mt-5 max-w-2xl font-display text-4xl leading-[1.05] text-paper sm:text-6xl"
           >
             Encuentra <RotatingWord /> que de verdad encaja contigo
           </motion.h1>
@@ -65,7 +109,75 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
             Pisos, casas y chalets en Getafe y Madrid sur con fichas completas, comparador y agentes reales
             listos para ayudarte en cada paso.
           </motion.p>
-        </HeroComposition>
+        </div>
+
+        {slides.length > 0 && (
+          <div className="mx-auto mt-10 flex w-full max-w-7xl flex-col items-start justify-between gap-5 sm:mt-12 sm:flex-row sm:items-end">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current.id}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                className="w-full max-w-sm rounded-2xl border border-paper/15 bg-ink/50 p-4 text-paper shadow-2xl shadow-black/40 backdrop-blur-xl"
+              >
+                <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-gold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+                  Destacado · {listingTypeLabels[current.property.listingType]}
+                </div>
+                <h3 className="mt-1.5 font-display text-base leading-tight text-paper sm:text-lg">
+                  {current.property.title}
+                </h3>
+                <p className="mt-1 text-xs text-paper/60">{current.property.zone || current.property.city}</p>
+
+                <div className="mt-3 flex items-center gap-3 text-xs text-paper/70">
+                  {current.property.bedrooms != null && (
+                    <span className="flex items-center gap-1">
+                      <BedDouble size={13} /> {current.property.bedrooms}
+                    </span>
+                  )}
+                  {current.property.bathrooms != null && (
+                    <span className="flex items-center gap-1">
+                      <Bath size={13} /> {current.property.bathrooms}
+                    </span>
+                  )}
+                  {current.property.areaM2 != null && (
+                    <span className="flex items-center gap-1">
+                      <Maximize size={13} /> {current.property.areaM2} m²
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 flex items-center justify-between border-t border-paper/10 pt-3">
+                  <p className="font-display text-lg text-paper">{formatCurrency(current.property.price)}</p>
+                  <Link
+                    href={`/propiedades/${current.property.id}`}
+                    className="group flex items-center gap-1 text-xs font-medium text-gold"
+                  >
+                    Ver ficha
+                    <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {slides.length > 1 && (
+              <div className="flex shrink-0 gap-1.5 self-center sm:self-end sm:pb-1">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setActive(i)}
+                    aria-label={`Ver ${s.property.title}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === active ? "w-6 bg-gold" : "w-1.5 bg-paper/30 hover:bg-paper/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
