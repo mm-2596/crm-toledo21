@@ -1,38 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useMotionValue,
-  animate,
-  type PanInfo,
-} from "framer-motion";
-import { Search, Calculator, Handshake, TrendingUp, type LucideIcon } from "lucide-react";
+import Image from "next/image";
+import { AnimatePresence, motion, useReducedMotion, animate, useMotionValue, type PanInfo } from "framer-motion";
 
-const STEPS: { icon: LucideIcon; title: string; text: string }[] = [
+const STEPS = [
   {
-    icon: Search,
     title: "Búsqueda personalizada",
-    text: "Te ayudamos a encontrar la propiedad que encaja con lo que buscas de verdad, filtrando por zona, presupuesto y características reales — no solo por precio.",
+    text: "Filtramos por zona, presupuesto y lo que de verdad te importa.",
+    image: "/images/process/busqueda.jpg",
+    alt: "Una agente enseña opciones de vivienda en una tablet a dos clientes",
   },
   {
-    icon: Calculator,
     title: "Tasación de tu vivienda",
-    text: "Valoración gratuita y sin compromiso, basada en datos reales del mercado en Getafe y Madrid sur, no en estimaciones genéricas.",
+    text: "Gratuita y con datos reales del mercado en Getafe y Madrid sur.",
+    image: "/images/process/tasacion.jpg",
+    alt: "Una agente inmobiliaria evalúa una vivienda con una carpeta en mano",
   },
   {
-    icon: Handshake,
     title: "Acompañamiento en la compraventa",
-    text: "Gestionamos visitas, papeleo y negociación de principio a fin, con un agente Toledo21 asignado a tu caso en todo momento.",
+    text: "Visitas, papeleo y negociación con un agente asignado a tu caso.",
+    image: "/images/process/acompanamiento.jpg",
+    alt: "Un agente entrega las llaves a una pareja de clientes tras firmar",
   },
   {
-    icon: TrendingUp,
     title: "Asesoría de inversión",
-    text: "Identificamos oportunidades de alquiler o reventa con el mejor recorrido en la zona, apoyándonos en el histórico real de nuestra cartera.",
+    text: "Oportunidades de alquiler o reventa con mejor recorrido en la zona.",
+    image: "/images/process/inversion.jpg",
+    alt: "Una mano coloca monedas junto a maquetas de casas de madera",
   },
 ];
 
@@ -45,125 +40,83 @@ export function ProcessShowcase() {
   );
 }
 
-// En pantallas anchas: barra de pestañas anclada + progreso de scroll.
-// Confinado a lg+ porque en columna única (móvil) el texto y el panel
-// visual apilados necesitan más alto de lo que cabe en el contenedor
-// "sticky", y el sobrante se desbordaba encima de la siguiente sección.
+// En pantallas anchas: pestañas + foto grande, cambio al pulsar (sin scroll
+// encadenado — la versión anterior exigía 340vh de scroll para ver los 4
+// pasos, lo que se sentía lento y escondía contenido).
 function ProcessShowcaseDesktop() {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
-
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    const idx = Math.min(STEPS.length - 1, Math.max(0, Math.floor(v * STEPS.length)));
-    setActive(idx);
-  });
-
-  function goTo(i: number) {
-    const el = containerRef.current;
-    if (!el) return;
-    const segment = el.offsetHeight / STEPS.length;
-    const top = el.offsetTop + segment * i + 8;
-    window.scrollTo({ top, behavior: reduceMotion ? "auto" : "smooth" });
-  }
-
-  const Icon = STEPS[active].icon;
 
   return (
-    <div ref={containerRef} style={{ height: `${STEPS.length * 85}vh` }} className="relative hidden lg:block">
-      <div className="sticky top-28 mx-auto flex max-w-5xl flex-col px-6" style={{ height: "min(560px, 78vh)" }}>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-line pb-4">
-          {STEPS.map((step, i) => (
-            <button
-              key={step.title}
-              onClick={() => goTo(i)}
-              className={`text-left text-sm font-medium transition-colors ${
-                i === active ? "text-ink" : "text-ink-soft hover:text-ink"
-              }`}
-            >
-              {step.title}
-            </button>
-          ))}
-        </div>
+    <div className="mx-auto hidden max-w-5xl px-6 lg:block">
+      <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-line pb-4">
+        {STEPS.map((step, i) => (
+          <button
+            key={step.title}
+            onClick={() => setActive(i)}
+            className={`text-left text-sm font-medium transition-colors ${
+              i === active ? "text-ink" : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            {step.title}
+          </button>
+        ))}
+      </div>
 
-        <div className="h-0.5 w-full bg-line">
-          <motion.div className="h-full origin-left bg-gold" style={{ scaleX: scrollYProgress }} />
-        </div>
+      <div className="relative h-0.5 w-full bg-line">
+        <motion.div
+          key={active}
+          className="absolute inset-y-0 left-0 origin-left bg-gold"
+          initial={{ width: "0%" }}
+          animate={{ width: `${((active + 1) / STEPS.length) * 100}%` }}
+          transition={{ duration: reduceMotion ? 0 : 0.4 }}
+        />
+      </div>
 
-        <div className="mt-10 grid flex-1 grid-cols-2 items-center gap-10 overflow-hidden">
+      <div className="mt-10 grid grid-cols-2 items-center gap-10">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: reduceMotion ? 0 : -12 }}
+            transition={{ duration: 0.25 }}
+          >
+            <p className="text-xs font-medium uppercase tracking-wider text-gold">
+              {String(active + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
+            </p>
+            <h3 className="mt-3 font-display text-3xl text-ink">{STEPS[active].title}</h3>
+            <p className="mt-4 max-w-md text-base leading-relaxed text-ink-soft">{STEPS[active].text}</p>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-line">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
-              initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: reduceMotion ? 0 : -16 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0"
             >
-              <p className="text-xs font-medium uppercase tracking-wider text-gold">
-                {String(active + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
-              </p>
-              <h3 className="mt-3 font-display text-3xl text-ink">{STEPS[active].title}</h3>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-ink-soft">{STEPS[active].text}</p>
+              <Image
+                src={STEPS[active].image}
+                alt={STEPS[active].alt}
+                fill
+                sizes="(max-width: 1024px) 0px, 45vw"
+                className="object-cover"
+                priority={active === 0}
+              />
             </motion.div>
           </AnimatePresence>
-
-          <div className="relative flex aspect-[4/3] max-h-full items-center justify-center overflow-hidden rounded-3xl border border-line bg-gradient-to-br from-paper-dim to-paper">
-            {/* Número fantasma: da escala y profundidad al fondo, sin competir con el icono. */}
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={active}
-                initial={{ opacity: 0, x: reduceMotion ? 0 : 14 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: reduceMotion ? 0 : -14 }}
-                transition={{ duration: 0.5 }}
-                className="pointer-events-none absolute -right-6 -top-10 select-none font-display text-[220px] leading-none text-ink/[0.04]"
-              >
-                {String(active + 1).padStart(2, "0")}
-              </motion.span>
-            </AnimatePresence>
-
-            {!reduceMotion && (
-              <>
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute h-44 w-44 rounded-full border border-gold/25"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 46, repeat: Infinity, ease: "linear" }}
-                />
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute h-64 w-64 rounded-full border border-dashed border-gold/15"
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 64, repeat: Infinity, ease: "linear" }}
-                />
-              </>
-            )}
-            <div aria-hidden="true" className="absolute h-32 w-32 rounded-full bg-gold/25 blur-3xl" />
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.8, rotate: reduceMotion ? 0 : -10 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.8, rotate: reduceMotion ? 0 : 10 }}
-                transition={{ type: "spring", bounce: 0.35, duration: 0.55 }}
-                className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-paper shadow-lg shadow-black/10"
-              >
-                <Icon size={40} className="text-gold" strokeWidth={1.4} />
-              </motion.div>
-            </AnimatePresence>
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// En móvil/tablet: carrusel deslizable con el dedo (en vez del scroll
-// anclado de escritorio, que no cabe en una sola columna). Mismo patrón
-// de arrastre que la galería de fotos, para que se sienta nativo y con
-// movimiento real, sin el riesgo de desbordamiento del "sticky".
+// En móvil/tablet: carrusel deslizable con el dedo.
 function ProcessShowcaseMobile() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -214,29 +167,20 @@ function ProcessShowcaseMobile() {
             dragMomentum={false}
             onDragEnd={handleDragEnd}
           >
-            {STEPS.map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <div
-                  key={s.title}
-                  style={{ width: cardWidth }}
-                  className="shrink-0 rounded-3xl border border-line bg-paper p-6"
-                >
-                  <motion.div
-                    animate={{ y: reduceMotion ? 0 : [0, -6, 0] }}
-                    transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-paper-dim text-gold"
-                  >
-                    <Icon size={22} strokeWidth={1.4} />
-                  </motion.div>
-                  <p className="mt-5 text-xs font-medium uppercase tracking-wider text-gold">
+            {STEPS.map((s, i) => (
+              <div key={s.title} style={{ width: cardWidth }} className="shrink-0 overflow-hidden rounded-3xl border border-line bg-paper">
+                <div className="relative aspect-[4/3]">
+                  <Image src={s.image} alt={s.alt} fill sizes="86vw" className="object-cover" />
+                </div>
+                <div className="p-6">
+                  <p className="text-xs font-medium uppercase tracking-wider text-gold">
                     {String(i + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
                   </p>
                   <h3 className="mt-1 font-display text-lg text-ink">{s.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{s.text}</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </motion.div>
         )}
       </div>
