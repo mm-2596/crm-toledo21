@@ -7,6 +7,7 @@ import { ProcessShowcase } from "@/components/ProcessShowcase";
 import { FeaturedPropertiesSection } from "@/components/FeaturedPropertiesSection";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { NewsletterSection } from "@/components/NewsletterSection";
+import { BlogSection } from "@/components/BlogSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { HomeContactForm } from "@/components/HomeContactForm";
 
@@ -43,6 +44,8 @@ export default async function Home() {
       <WhyChooseUs />
 
       <NewsletterSection />
+
+      <BlogSection />
 
       <TestimonialsSection />
 
