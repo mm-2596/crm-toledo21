@@ -13,12 +13,20 @@ export function LifestyleVideoSection() {
   const reduceMotion = useReducedMotion();
   const [playing, setPlaying] = useState(!reduceMotion);
 
-  // El atributo autoPlay no siempre arranca por sí solo (varía según
+  // La fuente se decide en el cliente (no en el JSX) para no descargar de
+  // entrada la pesada en móvil: por debajo de 640px se sirve la copia
+  // ligera (960x506, de sobra para el ancho real de una pantalla de móvil),
+  // y a partir de ahí la de calidad completa (2048x1080), donde el vídeo
+  // ocupa todo el ancho y la versión pequeña se veía borrosa.
+  // El atributo autoPlay tampoco arranca siempre por sí solo (varía según
   // navegador y momento de la hidratación); pedirlo explícitamente en
-  // cuanto el vídeo existe es lo que de verdad garantiza el autoplay.
+  // cuanto el vídeo tiene fuente es lo que de verdad garantiza el autoplay.
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.src = window.matchMedia("(min-width: 640px)").matches ? "/video/lifestyle-hd.mp4" : "/video/lifestyle.mp4";
     if (reduceMotion) return;
-    videoRef.current?.play().catch(() => setPlaying(false));
+    video.play().catch(() => setPlaying(false));
   }, [reduceMotion]);
 
   function toggle() {
@@ -38,8 +46,6 @@ export function LifestyleVideoSection() {
       <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-ink sm:aspect-[21/9]">
         <video
           ref={videoRef}
-          src="/video/lifestyle.mp4"
-          autoPlay={!reduceMotion}
           muted
           loop
           playsInline
