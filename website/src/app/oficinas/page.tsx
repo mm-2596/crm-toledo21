@@ -4,7 +4,7 @@ import { MapPin, Navigation, Star } from "lucide-react";
 export const metadata: Metadata = {
   title: "Nuestras oficinas",
   description:
-    "Toledo21 - Somos Tu Inmobiliaria, con oficinas en Getafe, Leganés y Puerto de Sagunto (Valencia). Ven a visitarnos.",
+    "Toledo21 - Somos Tu Inmobiliaria, con oficinas en Getafe, Leganés, Las Rozas y Puerto de Sagunto (Valencia). Ven a visitarnos.",
 };
 
 interface Office {
@@ -44,6 +44,13 @@ const OFFICES: Office[] = [
     phone: "910 08 21 21",
     mapsUrl:
       "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Leganés,+Av.+Rey+Juan+Carlos+I,+26,+28915+Leganés,+Madrid/@40.33408,-3.75375,15z",
+  },
+  {
+    name: "Gestoría Las Rozas",
+    city: "Las Rozas, Madrid",
+    address: "C. Esperanza, 2, Local 4, Las Rozas de Madrid",
+    services: "Gestoría",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("C. Esperanza, 2, Local 4, Las Rozas de Madrid"),
   },
   {
     name: "Toledo21 · Somos Tu Inmobiliaria",
