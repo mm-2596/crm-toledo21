@@ -15,6 +15,7 @@ import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
 import { campaignsRouter } from "./routes/campaigns.js";
 import { notificationsRouter } from "./routes/notifications.js";
+import { buildingsRouter, dwellingsRouter } from "./routes/buildings.js";
 import { startReminderScheduler } from "./lib/reminders.js";
 import { feedRouter } from "./routes/feed.js";
 import { publicRouter } from "./routes/public.js";
@@ -50,6 +51,8 @@ app.use("/api/users", requireAuth, usersRouter);
 app.use("/api/valuations", requireAuth, valuationsRouter);
 app.use("/api/campaigns", requireAuth, requireAdmin, campaignsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);
+app.use("/api/buildings", requireAuth, buildingsRouter);
+app.use("/api/dwellings", requireAuth, dwellingsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
 app.use("/api", notFound);

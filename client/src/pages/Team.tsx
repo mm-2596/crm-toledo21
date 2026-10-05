@@ -3,10 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, ShieldCheck, UserX, UserCheck, Star, X } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
-import { formatDate } from "../lib/format";
+import { formatDate, officeLabels } from "../lib/format";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
-import type { AgentReview, TeamMember } from "../api/types";
+import type { AgentReview, Office, TeamMember } from "../api/types";
 
 function RoleBadge({ role }: { role: TeamMember["role"] }) {
   return (
@@ -143,7 +143,7 @@ export function Team() {
   const { data, isLoading } = useQuery({ queryKey: ["team"], queryFn: UsersApi.list });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { role?: "ADMIN" | "AGENT"; active?: boolean } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null } }) =>
       UsersApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
@@ -171,6 +171,7 @@ export function Team() {
               <tr>
                 <th className="px-4 py-3">Empleado</th>
                 <th className="px-4 py-3">Rol</th>
+                <th className="px-4 py-3">Oficina</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Alta</th>
                 <th className="px-4 py-3" />
@@ -197,6 +198,23 @@ export function Team() {
                     </td>
                     <td className="px-4 py-3">
                       <RoleBadge role={member.role} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={member.office ?? ""}
+                        onChange={(e) =>
+                          updateMutation.mutate({ id: member.id, data: { office: (e.target.value || null) as Office | null } })
+                        }
+                        aria-label={`Oficina de ${member.name}`}
+                        className={`rounded-lg border px-2 py-1 text-xs ${
+                          member.office || member.role === "ADMIN" ? "border-slate-300 text-slate-700" : "border-amber-300 bg-amber-50 text-amber-800"
+                        }`}
+                      >
+                        <option value="">{member.role === "ADMIN" ? "Todas" : "Sin asignar"}</option>
+                        {Object.entries(officeLabels).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-4 py-3">
                       <span

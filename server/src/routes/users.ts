@@ -17,6 +17,7 @@ const userSelect = {
   jobTitle: true,
   bio: true,
   active: true,
+  office: true,
   createdAt: true,
 } as const;
 
@@ -70,6 +71,7 @@ usersRouter.get(
 const updateInput = z.object({
   role: z.enum(["ADMIN", "AGENT"]).optional(),
   active: z.boolean().optional(),
+  office: z.enum(["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"]).nullable().optional(),
 });
 
 usersRouter.patch(

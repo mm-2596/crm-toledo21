@@ -31,6 +31,7 @@ export interface User {
   photoUrl?: string | null;
   jobTitle?: string | null;
   bio?: string | null;
+  office?: Office | null;
 }
 
 export interface TeamMember extends User {
@@ -250,4 +251,46 @@ export interface NotificationItem {
 export interface NotificationsResponse {
   count: number;
   items: NotificationItem[];
+}
+
+export type Office = "GETAFE" | "LEGANES" | "LAS_ROZAS" | "PUERTO_SAGUNTO";
+export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA";
+
+export interface Dwelling {
+  id: string;
+  buildingId: string;
+  floor?: string | null;
+  door?: string | null;
+  status: DwellingStatus;
+  contactId?: string | null;
+  contact?: { id: string; name: string } | null;
+  notes?: string | null;
+}
+
+export interface Building {
+  id: string;
+  name: string;
+  address: string;
+  city?: string | null;
+  office: Office;
+  latitude: number;
+  longitude: number;
+  dwellings: Dwelling[];
+}
+
+export interface BuildingInput {
+  name: string;
+  address: string;
+  city?: string | null;
+  office: Office;
+  latitude: number;
+  longitude: number;
+}
+
+export interface DwellingInput {
+  floor?: string | null;
+  door?: string | null;
+  status?: DwellingStatus;
+  contactId?: string | null;
+  notes?: string | null;
 }

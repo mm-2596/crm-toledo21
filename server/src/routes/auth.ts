@@ -49,7 +49,7 @@ authRouter.post(
 
     const token = signToken({ userId: user.id, role: user.role });
     res.cookie(AUTH_COOKIE, token, cookieOptions);
-    res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role });
+    res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, office: user.office });
   }),
 );
 
@@ -74,7 +74,7 @@ authRouter.post(
 
     const token = signToken({ userId: user.id, role: user.role });
     res.cookie(AUTH_COOKIE, token, cookieOptions);
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+    res.json({ id: user.id, name: user.name, email: user.email, role: user.role, office: user.office });
   }),
 );
 
@@ -89,6 +89,6 @@ authRouter.get(
   asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
     if (!user || !user.active) return res.status(401).json({ error: "Sesión inválida" });
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+    res.json({ id: user.id, name: user.name, email: user.email, role: user.role, office: user.office });
   }),
 );

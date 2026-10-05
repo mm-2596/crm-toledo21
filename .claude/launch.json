@@ -8,6 +8,12 @@
       "port": 3000
     },
     {
+      "name": "toledo21-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "server"],
+      "port": 4000
+    },
+    {
       "name": "toledo21-crm",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "client"],

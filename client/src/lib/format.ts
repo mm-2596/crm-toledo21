@@ -121,3 +121,23 @@ export const activityTypeLabels: Record<string, string> = {
   NOTA: "Nota",
   TAREA: "Tarea",
 };
+
+export const officeLabels: Record<string, string> = {
+  GETAFE: "Getafe",
+  LEGANES: "Leganés",
+  LAS_ROZAS: "Las Rozas",
+  PUERTO_SAGUNTO: "Puerto de Sagunto",
+};
+
+export const dwellingStatusLabels: Record<string, string> = {
+  CENSADA: "Censada",
+  A_LA_VENTA: "A la venta",
+  VENDIDA: "Vendida",
+};
+
+// Mismos colores en el mapa, la leyenda y las etiquetas.
+export const dwellingStatusColors: Record<string, string> = {
+  CENSADA: "#64748b",
+  A_LA_VENTA: "#16a34a",
+  VENDIDA: "#dc2626",
+};

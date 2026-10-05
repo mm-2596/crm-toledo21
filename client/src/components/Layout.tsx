@@ -8,6 +8,7 @@ import {
   Users,
   ShieldCheck,
   Megaphone,
+  Map,
   HelpCircle,
   LogOut,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const links = [
   { to: "/", label: "Panel", end: true, icon: LayoutDashboard },
   { to: "/contactos", label: "Contactos", icon: Users },
   { to: "/propiedades", label: "Propiedades", icon: Building2 },
+  { to: "/mapa", label: "Mapa", icon: Map },
   { to: "/pipeline", label: "Pipeline", icon: Kanban },
   { to: "/tareas", label: "Tareas", icon: CheckSquare },
 ];

@@ -10,6 +10,7 @@ import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
 import { Team } from "./pages/Team";
 import { Campaigns } from "./pages/Campaigns";
+import { BuildingsMap } from "./pages/BuildingsMap";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="contactos/:id" element={<ContactDetail />} />
           <Route path="propiedades" element={<Properties />} />
           <Route path="propiedades/:id" element={<PropertyDetail />} />
+          <Route path="mapa" element={<BuildingsMap />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="tareas" element={<Tasks />} />
           <Route path="ayuda" element={<Help />} />

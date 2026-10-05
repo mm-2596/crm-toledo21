@@ -101,6 +101,8 @@ model User {
   createdAt    DateTime @default(now())
   /// Último día (Madrid, AAAA-MM-DD) en que se le envió el resumen de agenda matinal.
   lastDigestOn String?
+  /// Oficina a la que pertenece: un agente solo ve los edificios y viviendas de su oficina.
+  office       Office?
 
   deals      Deal[]
   activities Activity[]
@@ -150,6 +152,7 @@ model Contact {
 
   deals      Deal[]
   activities Activity[]
+  dwellings  Dwelling[]
 
   @@index([email])
   @@index([phone])
@@ -338,5 +341,53 @@ model CampaignSend {
   campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@index([campaignId])
+  @@index([contactId])
+}
+
+enum Office {
+  GETAFE
+  LEGANES
+  LAS_ROZAS
+  PUERTO_SAGUNTO
+}
+
+enum DwellingStatus {
+  CENSADA
+  A_LA_VENTA
+  VENDIDA
+}
+
+/// Edificio censado, con coordenadas para pintarlo en el mapa de su oficina.
+model Building {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  city      String?
+  office    Office
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+
+  dwellings Dwelling[]
+
+  @@index([office])
+}
+
+/// Vivienda dentro de un edificio (haya o no un anuncio publicado).
+model Dwelling {
+  id         String         @id @default(cuid())
+  buildingId String
+  floor      String?
+  door       String?
+  status     DwellingStatus @default(CENSADA)
+  /// Cliente principal (propietario) para poder buscar la vivienda por su nombre.
+  contactId  String?
+  notes      String?        @db.Text
+  createdAt  DateTime       @default(now())
+
+  building Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  contact  Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([buildingId])
   @@index([contactId])
 }

@@ -2,7 +2,12 @@ import { api } from "./client";
 import type {
   Activity,
   AudienceInfo,
+  Building,
+  BuildingInput,
   Campaign,
+  Dwelling,
+  DwellingInput,
+  Office,
   NotificationsResponse,
   CampaignInput,
   CampaignSegment,
@@ -94,7 +99,7 @@ export const UsersApi = {
   list: () => api.get<TeamMember[]>("/users").then((r) => r.data),
   get: (id: string) => api.get<TeamMember>(`/users/${id}`).then((r) => r.data),
   inviteCode: () => api.get<{ inviteCode: string | null }>("/users/invite-code").then((r) => r.data),
-  update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean }) =>
+  update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null }) =>
     api.patch<TeamMember>(`/users/${id}`, data).then((r) => r.data),
   updateProfile: (id: string, data: { jobTitle?: string | null; bio?: string | null; phone?: string | null }) =>
     api.patch<TeamMember>(`/users/${id}/profile`, data).then((r) => r.data),
@@ -139,4 +144,18 @@ export const CampaignsApi = {
 
 export const NotificationsApi = {
   list: () => api.get<NotificationsResponse>("/notifications").then((r) => r.data),
+};
+
+export const BuildingsApi = {
+  list: (params?: { q?: string; office?: Office }) =>
+    api.get<{ buildings: Building[]; noOffice: boolean }>("/buildings", { params }).then((r) => r.data),
+  create: (data: BuildingInput) => api.post<Building>("/buildings", data).then((r) => r.data),
+  update: (id: string, data: BuildingInput) => api.put<Building>(`/buildings/${id}`, data).then((r) => r.data),
+  remove: (id: string) => api.delete(`/buildings/${id}`),
+};
+
+export const DwellingsApi = {
+  create: (data: DwellingInput & { buildingId: string }) => api.post<Dwelling>("/dwellings", data).then((r) => r.data),
+  update: (id: string, data: DwellingInput) => api.put<Dwelling>(`/dwellings/${id}`, data).then((r) => r.data),
+  remove: (id: string) => api.delete(`/dwellings/${id}`),
 };
