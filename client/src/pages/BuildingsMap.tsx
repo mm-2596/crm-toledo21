@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Building2, MapPin, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Plus, Search } from "lucide-react";
 import { BuildingsApi, ContactsApi, DwellingsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
-import { dwellingStatusColors, dwellingStatusLabels, officeLabels } from "../lib/format";
+import { dwellingStatusColors, dwellingStatusLabels, officeLabels, saleStageLabels } from "../lib/format";
+import { DwellingPanel, dwellingTitle } from "../components/DwellingPanel";
 import { BuildingsMapView } from "../components/BuildingsMapView";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
@@ -31,6 +31,7 @@ export function BuildingsMap() {
   const [office, setOffice] = useState<Office | "">("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<(typeof EMPTY_FORM & { id?: string }) | null>(null);
+  const [dwellingId, setDwellingId] = useState<string | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [dwellingForm, setDwellingForm] = useState({ floor: "", door: "", status: "CENSADA" as DwellingStatus, contactId: "", notes: "" });
 
@@ -45,6 +46,7 @@ export function BuildingsMap() {
   const allBuildings = data?.buildings ?? [];
   const buildings = statusFilter ? allBuildings.filter((b) => b.dwellings.some((d) => d.status === statusFilter)) : allBuildings;
   const selected = buildings.find((b) => b.id === selectedId) ?? null;
+  const selectedDwelling = selected?.dwellings.find((d) => d.id === dwellingId) ?? null;
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["buildings"] });
   const onError = (error: unknown) => showToast(getErrorMessage(error, "No se pudo guardar"), "error");
 
@@ -77,13 +79,6 @@ export function BuildingsMap() {
     },
     onError,
   });
-  const updateDwelling = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: DwellingStatus }) => DwellingsApi.update(id, { status }),
-    onSuccess: refresh,
-    onError,
-  });
-  const removeDwelling = useMutation({ mutationFn: DwellingsApi.remove, onSuccess: refresh, onError });
-
   const draft = form && form.latitude !== "" && form.longitude !== "" && !Number.isNaN(Number(form.latitude)) && !Number.isNaN(Number(form.longitude))
     ? { lat: Number(form.latitude), lng: Number(form.longitude) }
     : null;
@@ -142,7 +137,7 @@ export function BuildingsMap() {
         </button>
       </div>
       <p className="mb-4 text-sm text-slate-500">
-        Edificios y viviendas censadas de tu oficina. Busca por dirección o por el nombre del cliente.
+        Edificios y viviendas censadas de tu oficina. Busca por dirección o por el nombre del cliente o de quien vive en ella.
       </p>
 
       {data?.noOffice && (
@@ -158,7 +153,7 @@ export function BuildingsMap() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Dirección, edificio o nombre del cliente…"
+            placeholder="Dirección, edificio o nombre de una persona…"
             className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm"
           />
         </div>
@@ -201,6 +196,7 @@ export function BuildingsMap() {
             selectedId={selectedId}
             onSelect={(id) => {
               setForm(null);
+              setDwellingId(null);
               setSelectedId(id);
             }}
             draft={draft}
@@ -244,9 +240,22 @@ export function BuildingsMap() {
                 </button>
               </div>
             </form>
+          ) : selected && selectedDwelling ? (
+            <DwellingPanel
+              key={selectedDwelling.id}
+              building={selected}
+              dwelling={selectedDwelling}
+              contacts={contacts ?? []}
+              onBack={() => setDwellingId(null)}
+              onChanged={refresh}
+              onDeleted={() => {
+                setDwellingId(null);
+                refresh();
+              }}
+            />
           ) : selected ? (
             <div className="flex flex-col gap-3">
-              <button onClick={() => setSelectedId(null)} className="flex w-fit items-center gap-1 text-xs text-slate-500 hover:text-slate-700">
+              <button onClick={() => { setSelectedId(null); setDwellingId(null); }} className="flex w-fit items-center gap-1 text-xs text-slate-500 hover:text-slate-700">
                 <ArrowLeft size={13} /> Todos los edificios
               </button>
               <div>
@@ -270,34 +279,28 @@ export function BuildingsMap() {
               {selected.dwellings.length === 0 && <p className="text-xs text-slate-500">Todavía no hay viviendas en este edificio.</p>}
               <ul className="flex flex-col gap-2">
                 {selected.dwellings.map((d) => {
-                  const match = q.trim() && d.contact?.name.toLowerCase().includes(q.trim().toLowerCase());
+                  const match = q.trim() && (d.contact?.name.toLowerCase().includes(q.trim().toLowerCase()) || d.residents.some((r) => r.name.toLowerCase().includes(q.trim().toLowerCase())));
                   return (
-                    <li key={d.id} className={`rounded-lg border p-2.5 text-sm ${match ? "border-amber-300 bg-amber-50" : "border-slate-200"}`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-[#2a241f]">
-                          {[d.floor && `Planta ${d.floor}`, d.door && `Puerta ${d.door}`].filter(Boolean).join(" · ") || "Vivienda"}
-                        </span>
-                        <button onClick={() => window.confirm("¿Eliminar esta vivienda?") && removeDwelling.mutate(d.id)} aria-label="Eliminar vivienda" className="text-slate-400 hover:text-red-600">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                      {d.contact && (
-                        <Link to={`/contactos/${d.contact.id}`} className="text-xs text-slate-600 hover:underline">{d.contact.name}</Link>
-                      )}
-                      {d.notes && <p className="mt-0.5 text-xs text-slate-500">{d.notes}</p>}
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <select
-                          value={d.status}
-                          onChange={(e) => updateDwelling.mutate({ id: d.id, status: e.target.value as DwellingStatus })}
-                          aria-label="Estado de la vivienda"
-                          style={{ background: `${dwellingStatusColors[d.status]}1a`, color: dwellingStatusColors[d.status], borderColor: `${dwellingStatusColors[d.status]}55` }}
-                          className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
-                        >
-                          {Object.entries(dwellingStatusLabels).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </select>
-                      </div>
+                    <li key={d.id}>
+                      <button
+                        onClick={() => setDwellingId(d.id)}
+                        className={`w-full rounded-lg border p-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${match ? "border-amber-300 bg-amber-50" : "border-slate-200"}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-[#2a241f]">{dwellingTitle(d)}</span>
+                          <span
+                            className="rounded-full border px-2 py-0.5 text-[11px] font-medium"
+                            style={{ background: `${dwellingStatusColors[d.status]}1a`, color: dwellingStatusColors[d.status], borderColor: `${dwellingStatusColors[d.status]}55` }}
+                          >
+                            {dwellingStatusLabels[d.status]}
+                          </span>
+                        </div>
+                        {d.contact && <p className="text-xs text-slate-600">{d.contact.name}</p>}
+                        {d.saleStage && <p className="text-xs font-medium text-[#2a241f]">{saleStageLabels[d.saleStage]}</p>}
+                        <p className="mt-0.5 text-xs text-slate-400">
+                          {d.residents.length} {d.residents.length === 1 ? "persona" : "personas"} · {d.files.length} {d.files.length === 1 ? "archivo" : "archivos"}
+                        </p>
+                      </button>
                     </li>
                   );
                 })}

@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { Request } from "express";
 import { z } from "zod";
 import type { Office, Prisma } from "@prisma/client";
+import multer from "multer";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 
@@ -10,6 +11,26 @@ export const dwellingsRouter = Router();
 
 const OFFICES = ["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"] as const;
 const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA"] as const;
+const STAGES = ["ENCARGO_VIGENTE", "RESERVADO", "ARRAS", "PENDIENTE_ESCRITURA", "FIRMADO_NOTARIO"] as const;
+const ROLES = ["PROPIETARIO", "INQUILINO", "HIJO_PROPIETARIO", "FAMILIAR", "OTRO"] as const;
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_FILE_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain",
+]);
+const uploadDwellingFile = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FILE_BYTES, files: 1 },
+  fileFilter: (_req, file, cb) => cb(null, ALLOWED_FILE_TYPES.has(file.mimetype)),
+});
 
 /**
  * Hay datos personales de propietarios y vecinos: los administradores ven todas
@@ -42,12 +63,37 @@ const dwellingInput = z.object({
   status: z.enum(STATUSES).optional(),
   contactId: z.string().optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  saleStage: z.enum(STAGES).optional().nullable(),
 });
+
+const residentInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  role: z.enum(ROLES),
+  phone: z.string().trim().max(40).optional().nullable(),
+  email: z.string().trim().max(120).optional().nullable(),
+  notes: z.string().trim().max(1000).optional().nullable(),
+});
+
+/** El estado del mapa sigue a la fase de venta: poner una fase coge la vivienda a la venta y la firma ante notario la da por vendida. */
+function applySaleStage<T extends { status?: (typeof STATUSES)[number]; saleStage?: (typeof STAGES)[number] | null }>(data: T, current?: { status: string; saleStage: string | null }) {
+  const out: Record<string, unknown> = { ...data };
+  if (data.saleStage === undefined) return out;
+  if (data.saleStage !== (current?.saleStage ?? null)) out.saleStageAt = data.saleStage ? new Date() : null;
+  if (data.saleStage === "FIRMADO_NOTARIO") out.status = "VENDIDA";
+  else if (data.saleStage && (data.status ?? current?.status ?? "CENSADA") === "CENSADA") out.status = "A_LA_VENTA";
+  return out;
+}
+
+const dwellingInclude = {
+  contact: { select: { id: true, name: true } },
+  residents: { orderBy: { createdAt: "asc" as const } },
+  files: { select: { id: true, name: true, mimeType: true, size: true, createdAt: true }, orderBy: { createdAt: "desc" as const } },
+} satisfies Prisma.DwellingInclude;
 
 const withDwellings = {
   dwellings: {
     orderBy: [{ floor: "asc" as const }, { door: "asc" as const }],
-    include: { contact: { select: { id: true, name: true } } },
+    include: dwellingInclude,
   },
 } satisfies Prisma.BuildingInclude;
 
@@ -69,6 +115,7 @@ buildingsRouter.get(
                 { address: { contains: q, mode: "insensitive" } },
                 { dwellings: { some: { contact: { name: { contains: q, mode: "insensitive" } } } } },
                 { dwellings: { some: { notes: { contains: q, mode: "insensitive" } } } },
+                { dwellings: { some: { residents: { some: { name: { contains: q, mode: "insensitive" } } } } } },
               ],
             }
           : {},
@@ -125,8 +172,8 @@ dwellingsRouter.post(
     const building = await prisma.building.findUnique({ where: { id: buildingId } });
     if (!building || !canUse(await officeAccess(req), building.office)) return res.status(404).json({ error: "Edificio no encontrado" });
     const dwelling = await prisma.dwelling.create({
-      data: { ...rest, floor: rest.floor || null, door: rest.door || null, contactId: rest.contactId || null, notes: rest.notes || null, buildingId },
-      include: { contact: { select: { id: true, name: true } } },
+      data: { ...applySaleStage(rest), floor: rest.floor || null, door: rest.door || null, contactId: rest.contactId || null, notes: rest.notes || null, buildingId },
+      include: dwellingInclude,
     });
     res.status(201).json(dwelling);
   }),
@@ -136,13 +183,15 @@ dwellingsRouter.put(
   "/:id",
   asyncHandler(async (req, res) => {
     const id = String(req.params.id);
-    if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
+    const current = await loadDwellingFor(req, id);
+    if (!current) return res.status(404).json({ error: "Vivienda no encontrada" });
     const data = dwellingInput.parse(req.body);
-    const dwelling = await prisma.dwelling.update({
-      where: { id },
-      data: { ...data, floor: data.floor || null, door: data.door || null, contactId: data.contactId || null, notes: data.notes || null },
-      include: { contact: { select: { id: true, name: true } } },
-    });
+    // Solo se tocan los campos que llegan: así cambiar el estado desde el mapa no borra el resto.
+    const patch: Record<string, unknown> = applySaleStage(data, current);
+    for (const key of ["floor", "door", "contactId", "notes"] as const) {
+      if (data[key] !== undefined) patch[key] = data[key] || null;
+    }
+    const dwelling = await prisma.dwelling.update({ where: { id }, data: patch, include: dwellingInclude });
     res.json(dwelling);
   }),
 );
@@ -153,6 +202,105 @@ dwellingsRouter.delete(
     const id = String(req.params.id);
     if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
     await prisma.dwelling.delete({ where: { id } });
+    res.status(204).send();
+  }),
+);
+
+// --- Personas que viven en la vivienda ---
+
+dwellingsRouter.post(
+  "/:id/residents",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
+    const data = residentInput.parse(req.body);
+    const resident = await prisma.dwellingResident.create({
+      data: { ...data, phone: data.phone || null, email: data.email || null, notes: data.notes || null, dwellingId: id },
+    });
+    res.status(201).json(resident);
+  }),
+);
+
+async function loadResidentFor(req: Request, id: string) {
+  const resident = await prisma.dwellingResident.findUnique({ where: { id }, include: { dwelling: { include: { building: true } } } });
+  if (!resident || !canUse(await officeAccess(req), resident.dwelling.building.office)) return null;
+  return resident;
+}
+
+dwellingsRouter.put(
+  "/residents/:rid",
+  asyncHandler(async (req, res) => {
+    const rid = String(req.params.rid);
+    if (!(await loadResidentFor(req, rid))) return res.status(404).json({ error: "Persona no encontrada" });
+    const data = residentInput.parse(req.body);
+    const resident = await prisma.dwellingResident.update({
+      where: { id: rid },
+      data: { ...data, phone: data.phone || null, email: data.email || null, notes: data.notes || null },
+    });
+    res.json(resident);
+  }),
+);
+
+dwellingsRouter.delete(
+  "/residents/:rid",
+  asyncHandler(async (req, res) => {
+    const rid = String(req.params.rid);
+    if (!(await loadResidentFor(req, rid))) return res.status(404).json({ error: "Persona no encontrada" });
+    await prisma.dwellingResident.delete({ where: { id: rid } });
+    res.status(204).send();
+  }),
+);
+
+// --- Archivos adjuntos ---
+
+dwellingsRouter.post(
+  "/:id/files",
+  (req, res, next) =>
+    uploadDwellingFile.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        return res.status(413).json({ error: "El archivo supera los 10 MB" });
+      }
+      next(err);
+    }),
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "Sube un PDF, imagen, Word, Excel o texto de hasta 10 MB" });
+    // Los nombres con tildes llegan en latin1 desde multer.
+    const name = Buffer.from(file.originalname, "latin1").toString("utf8").slice(0, 200);
+    const saved = await prisma.dwellingFile.create({
+      data: { dwellingId: id, name, mimeType: file.mimetype, size: file.size, data: new Uint8Array(file.buffer) },
+      select: { id: true, name: true, mimeType: true, size: true, createdAt: true },
+    });
+    res.status(201).json(saved);
+  }),
+);
+
+async function loadFileFor(req: Request, id: string) {
+  const file = await prisma.dwellingFile.findUnique({ where: { id }, include: { dwelling: { include: { building: true } } } });
+  if (!file || !canUse(await officeAccess(req), file.dwelling.building.office)) return null;
+  return file;
+}
+
+dwellingsRouter.get(
+  "/files/:fid",
+  asyncHandler(async (req, res) => {
+    const file = await loadFileFor(req, String(req.params.fid));
+    if (!file) return res.status(404).json({ error: "Archivo no encontrado" });
+    res.setHeader("Content-Type", file.mimeType);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`);
+    res.send(Buffer.from(file.data));
+  }),
+);
+
+dwellingsRouter.delete(
+  "/files/:fid",
+  asyncHandler(async (req, res) => {
+    const file = await loadFileFor(req, String(req.params.fid));
+    if (!file) return res.status(404).json({ error: "Archivo no encontrado" });
+    await prisma.dwellingFile.delete({ where: { id: file.id } });
     res.status(204).send();
   }),
 );

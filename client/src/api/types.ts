@@ -257,6 +257,35 @@ export interface NotificationsResponse {
 export type Office = "GETAFE" | "LEGANES" | "LAS_ROZAS" | "PUERTO_SAGUNTO";
 export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA";
 
+export type SaleStage = "ENCARGO_VIGENTE" | "RESERVADO" | "ARRAS" | "PENDIENTE_ESCRITURA" | "FIRMADO_NOTARIO";
+export type ResidentRole = "PROPIETARIO" | "INQUILINO" | "HIJO_PROPIETARIO" | "FAMILIAR" | "OTRO";
+
+export interface DwellingResident {
+  id: string;
+  dwellingId: string;
+  name: string;
+  role: ResidentRole;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+}
+
+export interface ResidentInput {
+  name: string;
+  role: ResidentRole;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+}
+
+export interface DwellingFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+}
+
 export interface Dwelling {
   id: string;
   buildingId: string;
@@ -266,6 +295,10 @@ export interface Dwelling {
   contactId?: string | null;
   contact?: { id: string; name: string } | null;
   notes?: string | null;
+  saleStage?: SaleStage | null;
+  saleStageAt?: string | null;
+  residents: DwellingResident[];
+  files: DwellingFile[];
 }
 
 export interface Building {
@@ -294,4 +327,5 @@ export interface DwellingInput {
   status?: DwellingStatus;
   contactId?: string | null;
   notes?: string | null;
+  saleStage?: SaleStage | null;
 }

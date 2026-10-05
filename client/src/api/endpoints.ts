@@ -1,5 +1,8 @@
 import { api } from "./client";
 import type {
+  DwellingFile,
+  DwellingResident,
+  ResidentInput,
   Activity,
   AudienceInfo,
   Building,
@@ -158,4 +161,18 @@ export const DwellingsApi = {
   create: (data: DwellingInput & { buildingId: string }) => api.post<Dwelling>("/dwellings", data).then((r) => r.data),
   update: (id: string, data: DwellingInput) => api.put<Dwelling>(`/dwellings/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/dwellings/${id}`),
+  addResident: (dwellingId: string, data: ResidentInput) =>
+    api.post<DwellingResident>(`/dwellings/${dwellingId}/residents`, data).then((r) => r.data),
+  updateResident: (id: string, data: ResidentInput) =>
+    api.put<DwellingResident>(`/dwellings/residents/${id}`, data).then((r) => r.data),
+  removeResident: (id: string) => api.delete(`/dwellings/residents/${id}`),
+  uploadFile: (dwellingId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return api
+      .post<DwellingFile>(`/dwellings/${dwellingId}/files`, body, { headers: { "Content-Type": "multipart/form-data" } })
+      .then((r) => r.data);
+  },
+  fileUrl: (id: string) => `/api/dwellings/files/${id}`,
+  removeFile: (id: string) => api.delete(`/dwellings/files/${id}`),
 };

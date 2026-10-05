@@ -88,23 +88,23 @@ enum ContactPriority {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(AGENT)
-  phone        String?
-  photoUrl     String?
-  jobTitle     String?
-  bio          String?  @db.Text
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  passwordHash     String
+  role             Role     @default(AGENT)
+  phone            String?
+  photoUrl         String?
+  jobTitle         String?
+  bio              String?  @db.Text
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
   /// Último día (Madrid, AAAA-MM-DD) en que se le envió el resumen de agenda matinal.
-  lastDigestOn String?
+  lastDigestOn     String?
   /// Oficina a la que pertenece: un agente solo ve los edificios y viviendas de su oficina.
-  office       Office?
+  office           Office?
   /// Permiso que concede un administrador para usar el mapa de viviendas (los administradores siempre lo tienen).
-  canViewBuildings Boolean @default(false)
+  canViewBuildings Boolean  @default(false)
 
   deals      Deal[]
   activities Activity[]
@@ -377,19 +377,72 @@ model Building {
 
 /// Vivienda dentro de un edificio (haya o no un anuncio publicado).
 model Dwelling {
-  id         String         @id @default(cuid())
-  buildingId String
-  floor      String?
-  door       String?
-  status     DwellingStatus @default(CENSADA)
+  id          String         @id @default(cuid())
+  buildingId  String
+  floor       String?
+  door        String?
+  status      DwellingStatus @default(CENSADA)
   /// Cliente principal (propietario) para poder buscar la vivienda por su nombre.
-  contactId  String?
-  notes      String?        @db.Text
-  createdAt  DateTime       @default(now())
+  contactId   String?
+  notes       String?        @db.Text
+  /// Fase del seguimiento de venta (solo cuando la vivienda se ha cogido a la venta).
+  saleStage   SaleStage?
+  saleStageAt DateTime?
+  createdAt   DateTime       @default(now())
 
-  building Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-  contact  Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  building  Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  contact   Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  residents DwellingResident[]
+  files     DwellingFile[]
 
   @@index([buildingId])
   @@index([contactId])
+}
+
+enum SaleStage {
+  ENCARGO_VIGENTE
+  RESERVADO
+  ARRAS
+  PENDIENTE_ESCRITURA
+  FIRMADO_NOTARIO
+}
+
+enum ResidentRole {
+  PROPIETARIO
+  INQUILINO
+  HIJO_PROPIETARIO
+  FAMILIAR
+  OTRO
+}
+
+/// Persona que vive en una vivienda (propietario, inquilino, hijo, familiar...).
+model DwellingResident {
+  id         String       @id @default(cuid())
+  dwellingId String
+  name       String
+  role       ResidentRole
+  phone      String?
+  email      String?
+  notes      String?      @db.Text
+  createdAt  DateTime     @default(now())
+
+  dwelling Dwelling @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
+
+  @@index([dwellingId])
+}
+
+/// Documento adjunto a una vivienda. Se guarda en la base de datos (no en el disco del
+/// servidor, que se borra en cada despliegue) y solo se sirve a quien tiene acceso a la oficina.
+model DwellingFile {
+  id         String   @id @default(cuid())
+  dwellingId String
+  name       String
+  mimeType   String
+  size       Int
+  data       Bytes
+  createdAt  DateTime @default(now())
+
+  dwelling Dwelling @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
+
+  @@index([dwellingId])
 }

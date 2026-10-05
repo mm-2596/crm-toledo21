@@ -141,3 +141,27 @@ export const dwellingStatusColors: Record<string, string> = {
   A_LA_VENTA: "#16a34a",
   VENDIDA: "#dc2626",
 };
+
+// Fases del seguimiento de venta, en orden.
+export const saleStages = ["ENCARGO_VIGENTE", "RESERVADO", "ARRAS", "PENDIENTE_ESCRITURA", "FIRMADO_NOTARIO"] as const;
+
+export const saleStageLabels: Record<string, string> = {
+  ENCARGO_VIGENTE: "Encargo vigente",
+  RESERVADO: "Reservado",
+  ARRAS: "Firmado contrato de arras",
+  PENDIENTE_ESCRITURA: "Pendiente de escrituración",
+  FIRMADO_NOTARIO: "Firmado ante notario",
+};
+
+export const residentRoleLabels: Record<string, string> = {
+  PROPIETARIO: "Propietario",
+  INQUILINO: "Inquilino",
+  HIJO_PROPIETARIO: "Hijo/a de propietario",
+  FAMILIAR: "Familiar",
+  OTRO: "Otro",
+};
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
