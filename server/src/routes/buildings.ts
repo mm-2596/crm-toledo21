@@ -304,3 +304,53 @@ dwellingsRouter.delete(
     res.status(204).send();
   }),
 );
+
+// --- Diario de la vivienda: lo hablado cada día y la siguiente acción programada ---
+
+const ACTIVITY_TYPES = ["LLAMADA", "EMAIL", "WHATSAPP", "VISITA", "REUNION", "NOTA", "TAREA"] as const;
+const dwellingActivityInput = z.object({
+  type: z.enum(ACTIVITY_TYPES),
+  description: z.string().trim().min(1).max(3000),
+  dueDate: z.string().datetime().optional().nullable(),
+  hasTime: z.boolean().optional(),
+});
+
+dwellingsRouter.get(
+  "/:id/activities",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
+    const activities = await prisma.activity.findMany({
+      where: { dwellingId: id },
+      orderBy: { createdAt: "desc" },
+      take: 300,
+      include: { agent: { select: { id: true, name: true } } },
+    });
+    res.json(activities);
+  }),
+);
+
+dwellingsRouter.post(
+  "/:id/activities",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await loadDwellingFor(req, id))) return res.status(404).json({ error: "Vivienda no encontrada" });
+    const data = dwellingActivityInput.parse(req.body);
+    const dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    // Lo anotado sin fecha es lo ya hablado o hecho; lo programado queda pendiente hasta completarlo.
+    const isLogged = !dueDate;
+    const activity = await prisma.activity.create({
+      data: {
+        type: data.type,
+        description: data.description,
+        dueDate,
+        hasTime: Boolean(dueDate && data.hasTime),
+        completed: isLogged,
+        dwellingId: id,
+        agentId: req.user!.userId,
+      },
+      include: { agent: { select: { id: true, name: true } } },
+    });
+    res.status(201).json(activity);
+  }),
+);

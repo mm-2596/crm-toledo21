@@ -1,7 +1,7 @@
 import { prisma } from "./prisma.js";
 import { formatMadrid, madridDate, madridHour, taskDay } from "./madrid.js";
 import { sendDigestEmail, sendReminderEmail, type AgendaLine } from "./email.js";
-import { classify, ownedBy } from "./notifications.js";
+import { classify, dwellingActivityInclude, dwellingLabel, ownedBy } from "./notifications.js";
 
 const REMIND_BEFORE_MS = 30 * 60 * 1000;
 // Margen por si el servidor estuvo reiniciándose justo en el momento del aviso.
@@ -29,7 +29,7 @@ async function sendDueReminders(now: Date) {
       type: { not: "NOTA" },
       dueDate: { gte: new Date(now.getTime() - LATE_GRACE_MS), lte: new Date(now.getTime() + REMIND_BEFORE_MS) },
     },
-    include: { agent: { select: { email: true, active: true } }, contact: { select: { name: true } } },
+    include: { agent: { select: { email: true, active: true } }, contact: { select: { name: true } }, dwelling: dwellingActivityInclude },
   });
 
   for (const activity of due) {
@@ -39,8 +39,8 @@ async function sendDueReminders(now: Date) {
     const to = await recipientsFor(activity.agent);
     await sendReminderEmail(
       to,
-      { type: activity.type, description: activity.description, when: formatMadrid(activity.dueDate!, true), contactName: activity.contact?.name },
-      crmUrl(activity.contactId ? `/contactos/${activity.contactId}` : "/tareas"),
+      { type: activity.type, description: activity.description, when: formatMadrid(activity.dueDate!, true), contactName: activity.contact?.name ?? (activity.dwelling ? dwellingLabel(activity.dwelling) : null) },
+      crmUrl(activity.dwellingId ? `/mapa?vivienda=${activity.dwellingId}` : activity.contactId ? `/contactos/${activity.contactId}` : "/tareas"),
     );
   }
 }
@@ -65,14 +65,14 @@ async function sendMorningDigests(now: Date) {
     const activities = await prisma.activity.findMany({
       where: { AND: [ownedBy({ userId: user.id, role: user.role }), { completed: false, type: { not: "NOTA" }, dueDate: { not: null, lte: new Date(now.getTime() + 36 * 3600 * 1000) } }] },
       orderBy: { dueDate: "asc" },
-      include: { contact: { select: { name: true } } },
+      include: { contact: { select: { name: true } }, dwelling: dwellingActivityInclude },
     });
 
     const todayLines: AgendaLine[] = [];
     const overdueLines: AgendaLine[] = [];
     for (const a of activities) {
       const state = classify(a.dueDate!, a.hasTime, now);
-      const line = { type: a.type, description: a.description, when: formatMadrid(a.dueDate!, a.hasTime), contactName: a.contact?.name };
+      const line = { type: a.type, description: a.description, when: formatMadrid(a.dueDate!, a.hasTime), contactName: a.contact?.name ?? (a.dwelling ? dwellingLabel(a.dwelling) : null) };
       if (taskDay(a.dueDate!, a.hasTime) === today && state !== "overdue") todayLines.push(line);
       else if (state === "overdue") overdueLines.push(line);
     }

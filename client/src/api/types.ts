@@ -215,6 +215,7 @@ export interface Activity {
   contact?: Contact | null;
   deal?: Deal | null;
   agent?: User | null;
+  dwelling?: { id: string; buildingId: string; label: string } | null;
   createdAt: string;
 }
 
@@ -247,6 +248,7 @@ export interface NotificationItem {
   state: NotificationState;
   unassigned: boolean;
   contact: { id: string; name: string } | null;
+  dwelling: { id: string; buildingId: string; label: string } | null;
 }
 
 export interface NotificationsResponse {

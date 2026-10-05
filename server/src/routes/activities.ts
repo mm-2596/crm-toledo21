@@ -1,7 +1,9 @@
 import { Router } from "express";
+import type { Request } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
 
 export const activitiesRouter = Router();
 
@@ -23,11 +25,13 @@ activitiesRouter.get(
       where: {
         ...(pending === "true" ? { completed: false, dueDate: { not: null } } : {}),
         ...(mine === "true" ? { agentId: req.user!.userId } : {}),
+        // Lo anotado en una vivienda solo lo ve su responsable (o un administrador); el diario completo está en la vivienda, con control de oficina.
+        ...(req.user!.role === "ADMIN" ? {} : { OR: [{ dwellingId: null }, { agentId: req.user!.userId }] }),
       },
       orderBy: { dueDate: "asc" },
-      include: { contact: true, deal: true, agent: true },
+      include: { contact: true, deal: true, agent: true, dwelling: dwellingActivityInclude },
     });
-    res.json(activities);
+    res.json(activities.map(({ dwelling, ...a }) => ({ ...a, dwelling: dwelling ? { id: dwelling.id, buildingId: dwelling.buildingId, label: dwellingLabel(dwelling) } : null })));
   }),
 );
 
@@ -47,9 +51,16 @@ activitiesRouter.post(
   }),
 );
 
+/** Las tareas de una vivienda solo las toca su responsable o un administrador. */
+async function ownsDwellingActivity(req: Request, id: string): Promise<boolean> {
+  const existing = await prisma.activity.findUnique({ where: { id }, select: { dwellingId: true, agentId: true } });
+  return !existing?.dwellingId || req.user!.role === "ADMIN" || existing.agentId === req.user!.userId;
+}
+
 activitiesRouter.patch(
   "/:id/complete",
   asyncHandler(async (req, res) => {
+    if (!(await ownsDwellingActivity(req, String(req.params.id)))) return res.status(403).json({ error: "Esa tarea es de otra persona" });
     const activity = await prisma.activity.update({
       where: { id: String(req.params.id) },
       data: { completed: true },
@@ -74,6 +85,7 @@ activitiesRouter.patch(
 activitiesRouter.delete(
   "/:id",
   asyncHandler(async (req, res) => {
+    if (!(await ownsDwellingActivity(req, String(req.params.id)))) return res.status(403).json({ error: "Esa tarea es de otra persona" });
     await prisma.activity.delete({ where: { id: String(req.params.id) } });
     res.status(204).send();
   }),

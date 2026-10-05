@@ -279,13 +279,17 @@ model Activity {
   contactId      String?
   dealId         String?
   agentId        String?
+  /// Vivienda a la que pertenece la anotación del diario o la tarea programada.
+  dwellingId     String?
   createdAt      DateTime     @default(now())
 
-  contact Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  agent   User?    @relation(fields: [agentId], references: [id])
+  contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  deal     Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  agent    User?     @relation(fields: [agentId], references: [id])
+  dwelling Dwelling? @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
 
   @@index([contactId])
+  @@index([dwellingId])
   @@index([dealId])
   @@index([dueDate])
 }
@@ -394,6 +398,7 @@ model Dwelling {
   contact   Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
   residents DwellingResident[]
   files     DwellingFile[]
+  activities Activity[]
 
   @@index([buildingId])
   @@index([contactId])

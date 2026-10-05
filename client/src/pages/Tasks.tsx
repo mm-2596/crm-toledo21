@@ -76,7 +76,7 @@ export function Tasks() {
                 <th className="px-4 py-3">Fecha</th>
                 <th className="px-4 py-3">Tipo</th>
                 <th className="px-4 py-3">Descripción</th>
-                <th className="px-4 py-3">Contacto</th>
+                <th className="px-4 py-3">Contacto / vivienda</th>
                 <th className="px-4 py-3">Responsable</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -91,6 +91,10 @@ export function Tasks() {
                     {activity.contact ? (
                       <Link to={`/contactos/${activity.contact.id}`} className="text-[#2a241f] hover:underline">
                         {activity.contact.name}
+                      </Link>
+                    ) : activity.dwelling ? (
+                      <Link to={`/mapa?vivienda=${activity.dwelling.id}`} className="text-[#2a241f] hover:underline">
+                        {activity.dwelling.label}
                       </Link>
                     ) : (
                       "-"

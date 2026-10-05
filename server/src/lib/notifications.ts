@@ -13,7 +13,17 @@ export interface NotificationItem {
   state: NotificationState;
   unassigned: boolean;
   contact: { id: string; name: string } | null;
+  dwelling: { id: string; buildingId: string; label: string } | null;
 }
+
+/** «Edificio · Planta 2 · Puerta B», para saber de qué vivienda habla una tarea. */
+export function dwellingLabel(d: { floor: string | null; door: string | null; building: { name: string } }): string {
+  return [d.building.name, d.floor && `Planta ${d.floor}`, d.door && `Puerta ${d.door}`].filter(Boolean).join(" · ");
+}
+
+export const dwellingActivityInclude = {
+  select: { id: true, buildingId: true, floor: true, door: true, building: { select: { name: true } } },
+} as const;
 
 const SOON_MS = 60 * 60 * 1000;
 
@@ -39,7 +49,7 @@ export async function notificationsFor(user: { userId: string; role: string }, n
     where: { AND: [ownedBy(user), { completed: false, type: { not: "NOTA" }, dueDate: { not: null, lte: horizon } }] },
     orderBy: { dueDate: "asc" },
     take: 60,
-    include: { contact: { select: { id: true, name: true } } },
+    include: { contact: { select: { id: true, name: true } }, dwelling: dwellingActivityInclude },
   });
 
   const items: NotificationItem[] = activities.map((a) => ({
@@ -51,6 +61,7 @@ export async function notificationsFor(user: { userId: string; role: string }, n
     state: classify(a.dueDate!, a.hasTime, now),
     unassigned: a.agentId === null,
     contact: a.contact,
+    dwelling: a.dwelling ? { id: a.dwelling.id, buildingId: a.dwelling.buildingId, label: dwellingLabel(a.dwelling) } : null,
   }));
   const count = items.filter((i) => i.state !== "upcoming").length;
   return { count, items };

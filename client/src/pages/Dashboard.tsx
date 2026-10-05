@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Users, Building2, Kanban, Trophy, CheckSquare, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardApi } from "../api/endpoints";
+import { TodayTasks } from "../components/TodayTasks";
 
 function StatCard({
   label,
@@ -41,6 +42,8 @@ export function Dashboard() {
     <div>
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel general</h1>
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
+
+      <TodayTasks />
 
       {isEmpty && (
         <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Building2, MapPin, Plus, Search } from "lucide-react";
 import { BuildingsApi, ContactsApi, DwellingsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
@@ -47,6 +48,20 @@ export function BuildingsMap() {
   const buildings = statusFilter ? allBuildings.filter((b) => b.dwellings.some((d) => d.status === statusFilter)) : allBuildings;
   const selected = buildings.find((b) => b.id === selectedId) ?? null;
   const selectedDwelling = selected?.dwellings.find((d) => d.id === dwellingId) ?? null;
+
+  // Enlace desde las tareas de hoy, los avisos y los correos: /mapa?vivienda=ID abre esa vivienda.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedDwelling = searchParams.get("vivienda");
+  useEffect(() => {
+    if (!linkedDwelling || !data) return;
+    const building = data.buildings.find((b) => b.dwellings.some((d) => d.id === linkedDwelling));
+    if (building) {
+      setForm(null);
+      setSelectedId(building.id);
+      setDwellingId(linkedDwelling);
+    }
+    setSearchParams({}, { replace: true });
+  }, [linkedDwelling, data, setSearchParams]);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["buildings"] });
   const onError = (error: unknown) => showToast(getErrorMessage(error, "No se pudo guardar"), "error");
 

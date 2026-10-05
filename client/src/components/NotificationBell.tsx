@@ -98,7 +98,7 @@ export function NotificationBell() {
               {items.map((item: NotificationItem) => (
                 <li key={item.id}>
                   <Link
-                    to={item.contact ? `/contactos/${item.contact.id}` : "/tareas"}
+                    to={item.dwelling ? `/mapa?vivienda=${item.dwelling.id}` : item.contact ? `/contactos/${item.contact.id}` : "/tareas"}
                     onClick={() => setOpen(false)}
                     className="block px-4 py-2.5 hover:bg-slate-50"
                   >
@@ -113,6 +113,7 @@ export function NotificationBell() {
                     </div>
                     <div className="mt-1 text-sm text-[#2a241f]">{item.description}</div>
                     {item.contact && <div className="text-xs text-slate-500">{item.contact.name}</div>}
+                    {item.dwelling && <div className="text-xs text-slate-500">{item.dwelling.label}</div>}
                   </Link>
                 </li>
               ))}

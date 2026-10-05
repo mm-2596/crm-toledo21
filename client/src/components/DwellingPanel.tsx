@@ -6,6 +6,7 @@ import { DwellingsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { dwellingStatusColors, dwellingStatusLabels, formatDate, formatFileSize, residentRoleLabels, saleStageLabels, saleStages } from "../lib/format";
 import { useToast } from "./Toast";
+import { DwellingDiary } from "./DwellingDiary";
 import type { Building, Contact, Dwelling, DwellingStatus, ResidentInput, ResidentRole, SaleStage } from "../api/types";
 
 const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
@@ -151,6 +152,10 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
             Quitar del seguimiento de venta
           </button>
         )}
+      </Section>
+
+      <Section title="Diario y próximas acciones" hint="Anota lo hablado con el cliente y programa lo siguiente: el día elegido aparece en tus tareas de hoy.">
+        <DwellingDiary dwellingId={dwelling.id} />
       </Section>
 
       <Section title={`Personas en la vivienda (${dwelling.residents.length})`}>

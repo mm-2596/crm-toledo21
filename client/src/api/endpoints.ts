@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  ActivityType,
   DwellingFile,
   DwellingResident,
   ResidentInput,
@@ -173,6 +174,9 @@ export const DwellingsApi = {
       .post<DwellingFile>(`/dwellings/${dwellingId}/files`, body, { headers: { "Content-Type": "multipart/form-data" } })
       .then((r) => r.data);
   },
+  activities: (id: string) => api.get<Activity[]>(`/dwellings/${id}/activities`).then((r) => r.data),
+  addActivity: (id: string, data: { type: ActivityType; description: string; dueDate?: string | null; hasTime?: boolean }) =>
+    api.post<Activity>(`/dwellings/${id}/activities`, data).then((r) => r.data),
   fileUrl: (id: string) => `/api/dwellings/files/${id}`,
   removeFile: (id: string) => api.delete(`/dwellings/files/${id}`),
 };
