@@ -30,10 +30,11 @@ export function Layout() {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { user, logout } = useAuth();
+  const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa");
   const visibleLinks =
     user?.role === "ADMIN"
-      ? [...links, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
-      : links;
+      ? [...baseLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
+      : baseLinks;
 
   async function handleLogout() {
     await logout();

@@ -18,6 +18,7 @@ const userSelect = {
   bio: true,
   active: true,
   office: true,
+  canViewBuildings: true,
   createdAt: true,
 } as const;
 
@@ -71,6 +72,7 @@ usersRouter.get(
 const updateInput = z.object({
   role: z.enum(["ADMIN", "AGENT"]).optional(),
   active: z.boolean().optional(),
+  canViewBuildings: z.boolean().optional(),
   office: z.enum(["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"]).nullable().optional(),
 });
 

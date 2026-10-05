@@ -99,7 +99,7 @@ export const UsersApi = {
   list: () => api.get<TeamMember[]>("/users").then((r) => r.data),
   get: (id: string) => api.get<TeamMember>(`/users/${id}`).then((r) => r.data),
   inviteCode: () => api.get<{ inviteCode: string | null }>("/users/invite-code").then((r) => r.data),
-  update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null }) =>
+  update: (id: string, data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null; canViewBuildings?: boolean }) =>
     api.patch<TeamMember>(`/users/${id}`, data).then((r) => r.data),
   updateProfile: (id: string, data: { jobTitle?: string | null; bio?: string | null; phone?: string | null }) =>
     api.patch<TeamMember>(`/users/${id}/profile`, data).then((r) => r.data),

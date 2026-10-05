@@ -32,6 +32,7 @@ export interface User {
   jobTitle?: string | null;
   bio?: string | null;
   office?: Office | null;
+  canViewBuildings?: boolean;
 }
 
 export interface TeamMember extends User {

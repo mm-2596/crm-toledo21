@@ -13,14 +13,14 @@ const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA"] as const;
 
 /**
  * Hay datos personales de propietarios y vecinos: los administradores ven todas
- * las oficinas y cada agente solo la suya. Un agente sin oficina asignada no ve
+ * las oficinas y cada agente solo la suya. Un agente necesita además el permiso que le da un administrador y una oficina asignada; si no, no ve
  * nada (mejor un aviso que enseñar datos de más). Se mira en la base de datos y
  * no en el token, para que un cambio de oficina surta efecto al instante.
  */
 async function officeAccess(req: Request): Promise<"ALL" | Office | null> {
   if (req.user!.role === "ADMIN") return "ALL";
-  const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { office: true, active: true } });
-  return user?.active && user.office ? user.office : null;
+  const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { office: true, active: true, canViewBuildings: true } });
+  return user?.active && user.canViewBuildings && user.office ? user.office : null;
 }
 
 function canUse(access: "ALL" | Office | null, office: Office): boolean {

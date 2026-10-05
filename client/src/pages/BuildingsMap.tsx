@@ -41,7 +41,9 @@ export function BuildingsMap() {
   });
   const { data: contacts } = useQuery({ queryKey: ["contacts", ""], queryFn: () => ContactsApi.list() });
 
-  const buildings = data?.buildings ?? [];
+  const [statusFilter, setStatusFilter] = useState<DwellingStatus | null>(null);
+  const allBuildings = data?.buildings ?? [];
+  const buildings = statusFilter ? allBuildings.filter((b) => b.dwellings.some((d) => d.status === statusFilter)) : allBuildings;
   const selected = buildings.find((b) => b.id === selectedId) ?? null;
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["buildings"] });
   const onError = (error: unknown) => showToast(getErrorMessage(error, "No se pudo guardar"), "error");
@@ -125,7 +127,7 @@ export function BuildingsMap() {
 
   const totals = (["A_LA_VENTA", "VENDIDA", "CENSADA"] as const).map((status) => ({
     status,
-    count: buildings.reduce((sum, b) => sum + countByStatus(b, status), 0),
+    count: allBuildings.reduce((sum, b) => sum + countByStatus(b, status), 0),
   }));
 
   return (
@@ -145,8 +147,8 @@ export function BuildingsMap() {
 
       {data?.noOffice && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Todavía no tienes una oficina asignada, así que no puedes ver edificios. Pídele a un administrador que te la asigne en
-          la sección Equipo.
+          Todavía no tienes acceso a los edificios: un administrador debe darte permiso y asignarte una oficina en la sección
+          Equipo.
         </div>
       )}
 
@@ -168,17 +170,32 @@ export function BuildingsMap() {
             ))}
           </select>
         )}
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
-          {totals.map((t) => (
-            <span key={t.status} className="flex items-center gap-1.5">
-              <StatusDot status={t.status} /> {dwellingStatusLabels[t.status]}: <strong>{t.count}</strong>
-            </span>
-          ))}
-        </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <div className="h-[520px] overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {totals.map((t) => {
+          const active = statusFilter === t.status;
+          return (
+            <button
+              key={t.status}
+              onClick={() => setStatusFilter(active ? null : t.status)}
+              aria-pressed={active}
+              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-colors hover:bg-slate-50 ${
+                active ? "border-[#1c1815] ring-1 ring-[#1c1815]" : "border-slate-200"
+              }`}
+            >
+              <span className="h-9 w-9 shrink-0 rounded-full" style={{ background: dwellingStatusColors[t.status], boxShadow: `0 0 0 4px ${dwellingStatusColors[t.status]}22` }} />
+              <span>
+                <span className="block text-2xl font-semibold leading-none tabular-nums text-[#1c1815]">{t.count}</span>
+                <span className="mt-1 block text-xs text-slate-500">{dwellingStatusLabels[t.status]}{active ? " · filtrando" : ""}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <div className="h-[60vh] min-h-[420px] overflow-hidden rounded-2xl border border-slate-200 shadow-sm lg:h-[calc(100vh-20rem)] lg:min-h-[520px]">
           <BuildingsMapView
             buildings={buildings}
             selectedId={selectedId}
@@ -191,7 +208,7 @@ export function BuildingsMap() {
           />
         </div>
 
-        <div className="max-h-[520px] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="max-h-[70vh] overflow-y-auto rounded-2xl lg:max-h-[calc(100vh-20rem)] lg:min-h-[520px] border border-slate-200 bg-white p-4 shadow-sm">
           {form ? (
             <form onSubmit={submitBuilding} className="flex flex-col gap-3">
               <h2 className="text-lg font-medium text-[#1c1815]">{form.id ? "Editar edificio" : "Nuevo edificio"}</h2>
@@ -269,12 +286,12 @@ export function BuildingsMap() {
                       )}
                       {d.notes && <p className="mt-0.5 text-xs text-slate-500">{d.notes}</p>}
                       <div className="mt-1.5 flex items-center gap-2">
-                        <StatusDot status={d.status} />
                         <select
                           value={d.status}
                           onChange={(e) => updateDwelling.mutate({ id: d.id, status: e.target.value as DwellingStatus })}
                           aria-label="Estado de la vivienda"
-                          className="rounded border border-slate-300 px-1.5 py-0.5 text-xs"
+                          style={{ background: `${dwellingStatusColors[d.status]}1a`, color: dwellingStatusColors[d.status], borderColor: `${dwellingStatusColors[d.status]}55` }}
+                          className="rounded-full border px-2.5 py-0.5 text-xs font-medium"
                         >
                           {Object.entries(dwellingStatusLabels).map(([value, label]) => (
                             <option key={value} value={value}>{label}</option>
@@ -325,6 +342,13 @@ export function BuildingsMap() {
                   <button onClick={() => setSelectedId(b.id)} className="w-full rounded-lg border border-slate-200 p-3 text-left hover:bg-slate-50">
                     <div className="text-sm font-medium text-[#2a241f]">{b.name}</div>
                     <div className="text-xs text-slate-500">{b.address}</div>
+                    {b.dwellings.length > 0 && (
+                      <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-100">
+                        {(["A_LA_VENTA", "VENDIDA", "CENSADA"] as const).map((status) => (
+                          <span key={status} style={{ width: `${(countByStatus(b, status) / b.dwellings.length) * 100}%`, background: dwellingStatusColors[status] }} />
+                        ))}
+                      </div>
+                    )}
                     <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-600">
                       {(["A_LA_VENTA", "VENDIDA", "CENSADA"] as const).map((status) => (
                         <span key={status} className="flex items-center gap-1" title={dwellingStatusLabels[status]}>

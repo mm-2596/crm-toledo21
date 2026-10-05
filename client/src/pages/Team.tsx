@@ -143,7 +143,7 @@ export function Team() {
   const { data, isLoading } = useQuery({ queryKey: ["team"], queryFn: UsersApi.list });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null; canViewBuildings?: boolean } }) =>
       UsersApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
@@ -172,6 +172,7 @@ export function Team() {
                 <th className="px-4 py-3">Empleado</th>
                 <th className="px-4 py-3">Rol</th>
                 <th className="px-4 py-3">Oficina</th>
+                <th className="px-4 py-3">Mapa</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Alta</th>
                 <th className="px-4 py-3" />
@@ -215,6 +216,22 @@ export function Team() {
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      {member.role === "ADMIN" ? (
+                        <span className="text-xs text-slate-500">Siempre</span>
+                      ) : (
+                        <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={!!member.canViewBuildings}
+                            onChange={(e) => updateMutation.mutate({ id: member.id, data: { canViewBuildings: e.target.checked } })}
+                            aria-label={`Acceso al mapa de viviendas de ${member.name}`}
+                            className="h-4 w-4 accent-[#1c1815]"
+                          />
+                          {member.canViewBuildings ? "Con acceso" : "Sin acceso"}
+                        </label>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span

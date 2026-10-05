@@ -103,6 +103,8 @@ model User {
   lastDigestOn String?
   /// Oficina a la que pertenece: un agente solo ve los edificios y viviendas de su oficina.
   office       Office?
+  /// Permiso que concede un administrador para usar el mapa de viviendas (los administradores siempre lo tienen).
+  canViewBuildings Boolean @default(false)
 
   deals      Deal[]
   activities Activity[]
