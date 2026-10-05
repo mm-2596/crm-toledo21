@@ -1,5 +1,9 @@
 import { api } from "./client";
 import type {
+  ContactSearch,
+  ContactSearchInput,
+  MatchesResponse,
+  Visit,
   ActivityType,
   DwellingFile,
   DwellingResident,
@@ -37,12 +41,16 @@ export const AuthApi = {
 };
 
 export const ContactsApi = {
-  list: (q?: string) => api.get<Contact[]>("/contacts", { params: { q } }).then((r) => r.data),
+  list: (q?: string, filters?: { segment?: string; type?: string }) =>
+    api.get<Contact[]>("/contacts", { params: { q, segment: filters?.segment || undefined, type: filters?.type || undefined } }).then((r) => r.data),
   get: (id: string) => api.get<Contact>(`/contacts/${id}`).then((r) => r.data),
   create: (data: Partial<Contact>) => api.post<Contact>("/contacts", data).then((r) => r.data),
   update: (id: string, data: Partial<Contact>) =>
     api.put<Contact>(`/contacts/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/contacts/${id}`),
+  addSearch: (id: string, data: ContactSearchInput) => api.post<ContactSearch>(`/contacts/${id}/searches`, data).then((r) => r.data),
+  updateSearch: (sid: string, data: ContactSearchInput) => api.put<ContactSearch>(`/contacts/searches/${sid}`, data).then((r) => r.data),
+  removeSearch: (sid: string) => api.delete(`/contacts/searches/${sid}`),
   matches: (id: string) => api.get<Property[]>(`/contacts/${id}/matches`).then((r) => r.data),
   exportCsv: (consentOnly: boolean) =>
     api.get<Blob>("/contacts/export", { params: consentOnly ? { consent: 1 } : undefined, responseType: "blob" }).then((r) => r.data),
@@ -179,4 +187,15 @@ export const DwellingsApi = {
     api.post<Activity>(`/dwellings/${id}/activities`, data).then((r) => r.data),
   fileUrl: (id: string) => `/api/dwellings/files/${id}`,
   removeFile: (id: string) => api.delete(`/dwellings/files/${id}`),
+};
+
+export const MatchesApi = {
+  forProperty: (id: string) => api.get<MatchesResponse>(`/matches/property/${id}`).then((r) => r.data),
+  forDwelling: (id: string) => api.get<MatchesResponse>(`/matches/dwelling/${id}`).then((r) => r.data),
+};
+
+export const VisitsApi = {
+  list: (mine?: boolean) => api.get<Visit[]>("/visits", { params: { mine: mine ? 1 : undefined } }).then((r) => r.data),
+  create: (data: { contactId: string; propertyId?: string; dwellingId?: string; when: string; location?: string | null; notes?: string | null }) =>
+    api.post<Visit>("/visits", data).then((r) => r.data),
 };

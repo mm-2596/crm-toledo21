@@ -70,14 +70,76 @@ export interface Contact {
   listingType?: ListingType | null;
   bedroomsMin?: number | null;
   needsFinancing?: boolean | null;
+  segment?: ClientSegment | null;
+  savings?: number | null;
+  monthlyIncome?: number | null;
+  monthlyDebts?: number | null;
   priority?: ContactPriority | null;
   notes?: string | null;
   marketingConsent?: boolean;
   marketingConsentAt?: string | null;
   unsubscribedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
   deals?: Deal[];
   activities?: Activity[];
+  searches?: ContactSearch[];
+  affordability?: { maxPrice: number | null; note: string; listingType: ListingType };
+}
+
+export type ClientSegment = "BUSCA_COMPRAR" | "BUSCA_ALQUILER" | "HA_COMPRADO";
+
+export interface ContactSearch {
+  id: string;
+  contactId?: string;
+  propertyType: PropertyType;
+  listingType: ListingType;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  zones?: string | null;
+  bedroomsMin?: number | null;
+  bathroomsMin?: number | null;
+  areaMin?: number | null;
+  notes?: string | null;
+  active: boolean;
+}
+
+export type ContactSearchInput = Omit<ContactSearch, "id" | "contactId" | "active"> & { active?: boolean };
+
+export type PriceBand = "OK" | "NARANJA" | "ROJO" | "SIN_PRESUPUESTO";
+export type Viability = "VIABLE" | "JUSTO" | "NO_VIABLE" | "SIN_DATOS";
+
+export interface MatchItem {
+  contactId: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  priority: string | null;
+  band: PriceBand;
+  deviationPct: number;
+  budget: string;
+  search: string;
+  viability: Viability;
+  viabilityDetail: string;
+  warnings: string[];
+}
+
+export interface MatchesResponse {
+  price: number | null;
+  listingType: ListingType;
+  needsPrice?: boolean;
+  matches: MatchItem[];
+}
+
+export interface Visit {
+  id: string;
+  description: string;
+  dueDate: string;
+  location?: string | null;
+  contact?: { id: string; name: string; phone?: string | null } | null;
+  agent?: { id: string; name: string } | null;
+  property?: { id: string; reference: string; title: string } | null;
+  dwelling?: { id: string; buildingId: string; label: string } | null;
 }
 
 export type CampaignStatus = "BORRADOR" | "ENVIANDO" | "ENVIADA";
@@ -301,6 +363,11 @@ export interface Dwelling {
   saleStageAt?: string | null;
   residents: DwellingResident[];
   files: DwellingFile[];
+  price?: number | null;
+  propertyType?: PropertyType | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  areaM2?: number | null;
 }
 
 export interface Building {
@@ -330,4 +397,9 @@ export interface DwellingInput {
   contactId?: string | null;
   notes?: string | null;
   saleStage?: SaleStage | null;
+  price?: number | null;
+  propertyType?: PropertyType | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  areaM2?: number | null;
 }

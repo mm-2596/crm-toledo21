@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, UserPlus, Users } from "lucide-react";
 import { ContactsApi } from "../api/endpoints";
-import { contactSourceLabels, priorityBadgeClasses, priorityLabels } from "../lib/format";
+import { priorityBadgeClasses, priorityLabels, propertyTypeLabels, segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
@@ -11,6 +11,8 @@ import type { Contact } from "../api/types";
 
 export function Contacts() {
   const [q, setQ] = useState("");
+  const [segment, setSegment] = useState("");
+  const [type, setType] = useState("");
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -36,8 +38,8 @@ export function Contacts() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["contacts", q],
-    queryFn: () => ContactsApi.list(q || undefined),
+    queryKey: ["contacts", q, segment, type],
+    queryFn: () => ContactsApi.list(q || undefined, { segment, type }),
   });
 
   const createMutation = useMutation({
@@ -57,6 +59,7 @@ export function Contacts() {
       email: String(form.get("email") || "") || null,
       phone: String(form.get("phone") || "") || null,
       preferredZone: String(form.get("preferredZone") || "") || null,
+      segment: (String(form.get("segment") || "") || null) as Contact["segment"],
       notes: String(form.get("notes") || "") || null,
       marketingConsent: form.get("marketingConsent") === "on",
     });
@@ -107,6 +110,12 @@ export function Contacts() {
           <input name="email" type="email" placeholder="Email" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="phone" placeholder="Teléfono" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="preferredZone" placeholder="Zona de interés" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <select name="segment" defaultValue="" aria-label="Tipo de cliente" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tipo de cliente (sin clasificar)</option>
+            {Object.entries(segmentLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
           <textarea name="notes" placeholder="Notas" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <label className="col-span-2 flex items-start gap-2 text-xs text-slate-500">
             <input type="checkbox" name="marketingConsent" className="mt-0.5" />
@@ -122,12 +131,32 @@ export function Contacts() {
         </form>
       )}
 
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Buscar por nombre, email o teléfono…"
-        className="mb-4 w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
-      />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por nombre, email o teléfono…"
+          className="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+        <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Filtrar por lo que busca" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="">Busca de todo</option>
+          {Object.entries(propertyTypeLabels).map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo de cliente">
+        {[["", "Todos"], ...Object.entries(segmentLabels)].map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => setSegment(value)}
+            aria-pressed={segment === value}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${segment === value ? "border-[#1c1815] bg-[#1c1815] text-white" : "border-slate-300 text-slate-600 hover:bg-slate-50"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {isLoading ? (
         <p className="text-slate-500">Cargando…</p>
@@ -139,12 +168,13 @@ export function Contacts() {
         />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
               <tr>
                 <th className="px-4 py-3">Nombre</th>
                 <th className="px-4 py-3">Contacto</th>
-                <th className="px-4 py-3">Origen</th>
+                <th className="px-4 py-3">Tipo</th>
+                <th className="px-4 py-3">Busca</th>
                 <th className="px-4 py-3">Zona</th>
                 <th className="px-4 py-3">Prioridad</th>
                 <th className="px-4 py-3">Oportunidades</th>
@@ -167,7 +197,20 @@ export function Contacts() {
                       <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">Baja</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{contactSourceLabels[contact.source]}</td>
+                  <td className="px-4 py-3">
+                    {contact.segment ? (
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${segmentBadgeClasses[contact.segment]}`}>{segmentLabels[contact.segment]}</span>
+                    ) : (
+                      <span className="text-slate-300">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-600">
+                    {(contact.searches ?? []).length > 0
+                      ? [...new Set((contact.searches ?? []).map((s) => `${propertyTypeLabels[s.propertyType]}${s.listingType === "ALQUILER" ? " (alq.)" : ""}`))].join(", ")
+                      : contact.propertyType
+                        ? propertyTypeLabels[contact.propertyType]
+                        : "-"}
+                  </td>
                   <td className="px-4 py-3 text-slate-600">{contact.preferredZone || "-"}</td>
                   <td className="px-4 py-3">
                     {contact.priority ? (

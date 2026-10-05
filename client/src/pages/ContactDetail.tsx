@@ -12,6 +12,8 @@ import {
   priorityBadgeClasses,
   priorityLabels,
 } from "../lib/format";
+import { ContactProfile } from "../components/ContactProfile";
+import { segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
 import { useToast } from "../components/Toast";
 
@@ -96,6 +98,9 @@ export function ContactDetail() {
             {contact.email || "Sin email"} · {contact.phone || "Sin teléfono"} · Origen: {contactSourceLabels[contact.source]}
           </p>
         </div>
+        {contact.segment && (
+          <span className={`mr-2 rounded-full px-3 py-1 text-xs font-semibold ${segmentBadgeClasses[contact.segment]}`}>{segmentLabels[contact.segment]}</span>
+        )}
         {contact.priority && (
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${priorityBadgeClasses[contact.priority]}`}>
             Prioridad {priorityLabels[contact.priority].toLowerCase()}
@@ -155,6 +160,8 @@ export function ContactDetail() {
           )}
         </div>
       </div>
+
+      <ContactProfile key={`${contact.id}-${contact.updatedAt ?? ""}-${(contact.searches ?? []).length}`} contact={contact} />
 
       {hasPreferences && (matches ?? []).length > 0 && (
         <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">

@@ -6,6 +6,7 @@ import { ContactDetail } from "./pages/ContactDetail";
 import { Properties } from "./pages/Properties";
 import { PropertyDetail } from "./pages/PropertyDetail";
 import { Pipeline } from "./pages/Pipeline";
+import { Visits } from "./pages/Visits";
 import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
 import { Team } from "./pages/Team";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="mapa" element={<BuildingsMap />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="tareas" element={<Tasks />} />
+          <Route path="visitas" element={<Visits />} />
           <Route path="ayuda" element={<Help />} />
           <Route path="perfil" element={<Profile />} />
           <Route element={<AdminRoute />}>

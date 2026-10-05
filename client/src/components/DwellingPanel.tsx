@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check, FileText, Paperclip, Pencil, Trash2, UserPlus } from "lucide-react";
 import { DwellingsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
-import { dwellingStatusColors, dwellingStatusLabels, formatDate, formatFileSize, residentRoleLabels, saleStageLabels, saleStages } from "../lib/format";
+import { propertyTypeLabels, dwellingStatusColors, dwellingStatusLabels, formatDate, formatFileSize, residentRoleLabels, saleStageLabels, saleStages } from "../lib/format";
 import { useToast } from "./Toast";
 import { DwellingDiary } from "./DwellingDiary";
-import type { Building, Contact, Dwelling, DwellingStatus, ResidentInput, ResidentRole, SaleStage } from "../api/types";
+import { MatchesPanel } from "./MatchesPanel";
+import type { Building, Contact, Dwelling, DwellingStatus, PropertyType, ResidentInput, ResidentRole, SaleStage } from "../api/types";
 
 const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const EMPTY_RESIDENT: ResidentInput = { name: "", role: "PROPIETARIO", phone: "", email: "", notes: "" };
@@ -37,6 +38,7 @@ interface Props {
 
 export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged, onDeleted }: Props) {
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
   const onError = (error: unknown) => showToast(getErrorMessage(error, "No se pudo guardar"), "error");
 
@@ -46,13 +48,23 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
     contactId: dwelling.contactId ?? "",
     status: dwelling.status as DwellingStatus,
     notes: dwelling.notes ?? "",
+    price: dwelling.price != null ? String(dwelling.price) : "",
+    propertyType: (dwelling.propertyType ?? "PISO") as PropertyType,
+    bedrooms: dwelling.bedrooms != null ? String(dwelling.bedrooms) : "",
+    bathrooms: dwelling.bathrooms != null ? String(dwelling.bathrooms) : "",
+    areaM2: dwelling.areaM2 != null ? String(dwelling.areaM2) : "",
   });
   const [resident, setResident] = useState<(ResidentInput & { id?: string }) | null>(null);
 
   const saveData = useMutation({
-    mutationFn: () => DwellingsApi.update(dwelling.id, { ...data, contactId: data.contactId || null }),
+    mutationFn: () => {
+      const num = (v: string) => (v.trim() === "" ? null : Number(v));
+      const { price, bedrooms, bathrooms, areaM2, ...rest } = data;
+      return DwellingsApi.update(dwelling.id, { ...rest, contactId: data.contactId || null, price: num(price), bedrooms: num(bedrooms), bathrooms: num(bathrooms), areaM2: num(areaM2) });
+    },
     onSuccess: () => {
       onChanged();
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
       showToast("Vivienda guardada");
     },
     onError,
@@ -153,6 +165,12 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
           </button>
         )}
       </Section>
+
+      {dwelling.status === "A_LA_VENTA" && (
+        <Section title="Clientes que buscan esta vivienda" hint="Cruce con lo que busca cada cliente. Agenda aquí la visita.">
+          <MatchesPanel kind="dwelling" id={dwelling.id} address={[building.address, building.city].filter(Boolean).join(", ")} compact />
+        </Section>
+      )}
 
       <Section title="Diario y próximas acciones" hint="Anota lo hablado con el cliente y programa lo siguiente: el día elegido aparece en tus tareas de hoy.">
         <DwellingDiary dwellingId={dwelling.id} />
@@ -293,6 +311,15 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          <select value={data.propertyType} onChange={(e) => setData({ ...data, propertyType: e.target.value as PropertyType })} aria-label="Tipo de inmueble" className={`${inputClass} col-span-2`}>
+            {Object.entries(propertyTypeLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <input type="number" min={0} value={data.price} onChange={(e) => setData({ ...data, price: e.target.value })} placeholder="Precio de venta (€)" aria-label="Precio de venta" className={`${inputClass} col-span-2`} />
+          <input type="number" min={0} value={data.bedrooms} onChange={(e) => setData({ ...data, bedrooms: e.target.value })} placeholder="Habitaciones" aria-label="Habitaciones" className={inputClass} />
+          <input type="number" min={0} value={data.bathrooms} onChange={(e) => setData({ ...data, bathrooms: e.target.value })} placeholder="Baños" aria-label="Baños" className={inputClass} />
+          <input type="number" min={0} value={data.areaM2} onChange={(e) => setData({ ...data, areaM2: e.target.value })} placeholder="Metros cuadrados" aria-label="Metros cuadrados" className={`${inputClass} col-span-2`} />
           <textarea value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value })} rows={2} placeholder="Notas" aria-label="Notas" className={`${inputClass} col-span-2`} />
           <button type="submit" disabled={saveData.isPending} className="col-span-2 rounded-lg bg-[#1c1815] px-3 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50">
             Guardar datos

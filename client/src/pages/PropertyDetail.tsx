@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { Download, MapPin, Sparkles, Wand2 } from "lucide-react";
+import { Download, MapPin, Sparkles, Users, Wand2 } from "lucide-react";
 import { PropertiesApi, ValuationsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { formatCurrency, formatDate, listingTypeLabels, propertyStatusLabels, propertyTypeLabels, statusBadgeClasses } from "../lib/format";
@@ -11,6 +11,7 @@ import { PropertyGallery } from "../components/PropertyGallery";
 import { PropertyVideos } from "../components/PropertyVideos";
 import { PropertyForm, emptyPropertyForm, fromProperty, toPropertyPayload } from "../components/PropertyForm";
 import { WEBSITE_URL } from "../lib/config";
+import { MatchesPanel } from "../components/MatchesPanel";
 
 export function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -147,6 +148,14 @@ export function PropertyDetail() {
           ))}
           {(valuations ?? []).length === 0 && <p className="text-sm text-slate-400">Aún no se ha estimado ningún precio.</p>}
         </ul>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-1.5 text-lg font-medium text-[#1c1815]">
+          <Users size={17} /> Clientes que buscan esto
+        </h2>
+        <p className="mb-3 text-xs text-slate-400">Cruce con lo que busca cada cliente. Llama o agenda la visita directamente desde aquí.</p>
+        <MatchesPanel kind="property" id={property.id} address={[property.address, property.zone, property.city].filter(Boolean).join(", ")} />
       </div>
 
       <div className="mt-6">

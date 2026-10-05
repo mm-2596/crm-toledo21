@@ -27,7 +27,7 @@ export const propertyTypeLabels: Record<string, string> = {
   OFICINA: "Oficina",
   GARAJE: "Garaje",
   TERRENO: "Terreno",
-  NAVE_INDUSTRIAL: "Nave industrial",
+  NAVE_INDUSTRIAL: "Nave / almacén",
   TRASTERO: "Trastero",
   OTRO: "Otro",
 };
@@ -165,3 +165,30 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export const segmentLabels: Record<string, string> = {
+  BUSCA_COMPRAR: "Busca comprar",
+  BUSCA_ALQUILER: "Busca alquilar",
+  HA_COMPRADO: "Ya ha comprado",
+};
+
+export const segmentBadgeClasses: Record<string, string> = {
+  BUSCA_COMPRAR: "bg-sky-50 text-sky-700",
+  BUSCA_ALQUILER: "bg-violet-50 text-violet-700",
+  HA_COMPRADO: "bg-emerald-50 text-emerald-700",
+};
+
+// Leyenda del cruce demanda: los mismos colores y textos en el panel y en su leyenda.
+export const bandInfo: Record<string, { label: string; short: string; dot: string; badge: string }> = {
+  OK: { label: "Dentro del presupuesto", short: "Encaja", dot: "#16a34a", badge: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  NARANJA: { label: "Hasta un 20 % fuera del presupuesto", short: "Cerca", dot: "#f97316", badge: "bg-orange-50 text-orange-800 border-orange-200" },
+  ROJO: { label: "Entre un 20 % y un 40 % fuera", short: "Lejos", dot: "#dc2626", badge: "bg-red-50 text-red-800 border-red-200" },
+  SIN_PRESUPUESTO: { label: "Sin presupuesto indicado", short: "Sin presupuesto", dot: "#94a3b8", badge: "bg-slate-50 text-slate-700 border-slate-200" },
+};
+
+export const viabilityInfo: Record<string, { label: string; className: string }> = {
+  VIABLE: { label: "Viable", className: "bg-emerald-50 text-emerald-700" },
+  JUSTO: { label: "Justo", className: "bg-amber-50 text-amber-700" },
+  NO_VIABLE: { label: "No viable", className: "bg-red-50 text-red-700" },
+  SIN_DATOS: { label: "Sin datos", className: "bg-slate-100 text-slate-500" },
+};

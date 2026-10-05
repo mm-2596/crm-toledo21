@@ -14,6 +14,8 @@ const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA"] as const;
 const STAGES = ["ENCARGO_VIGENTE", "RESERVADO", "ARRAS", "PENDIENTE_ESCRITURA", "FIRMADO_NOTARIO"] as const;
 const ROLES = ["PROPIETARIO", "INQUILINO", "HIJO_PROPIETARIO", "FAMILIAR", "OTRO"] as const;
 
+export const PROPERTY_TYPES = ["PISO", "CASA", "CHALET", "ATICO", "DUPLEX", "ESTUDIO", "LOCAL", "OFICINA", "GARAJE", "TERRENO", "NAVE_INDUSTRIAL", "TRASTERO", "OTRO"] as const;
+
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Set([
   "application/pdf",
@@ -64,6 +66,11 @@ const dwellingInput = z.object({
   contactId: z.string().optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
   saleStage: z.enum(STAGES).optional().nullable(),
+  price: z.number().int().min(0).max(100_000_000).optional().nullable(),
+  propertyType: z.enum(PROPERTY_TYPES).optional().nullable(),
+  bedrooms: z.number().int().min(0).max(50).optional().nullable(),
+  bathrooms: z.number().int().min(0).max(50).optional().nullable(),
+  areaM2: z.number().int().min(0).max(100_000).optional().nullable(),
 });
 
 const residentInput = z.object({
@@ -159,7 +166,7 @@ buildingsRouter.delete(
   }),
 );
 
-async function loadDwellingFor(req: Request, id: string) {
+export async function loadDwellingFor(req: Request, id: string) {
   const dwelling = await prisma.dwelling.findUnique({ where: { id }, include: { building: true } });
   if (!dwelling || !canUse(await officeAccess(req), dwelling.building.office)) return null;
   return dwelling;
@@ -190,6 +197,10 @@ dwellingsRouter.put(
     const patch: Record<string, unknown> = applySaleStage(data, current);
     for (const key of ["floor", "door", "contactId", "notes"] as const) {
       if (data[key] !== undefined) patch[key] = data[key] || null;
+    }
+    // Estos números pueden valer 0 (p. ej. un estudio sin habitaciones): no se convierten en vacío.
+    for (const key of ["price", "propertyType", "bedrooms", "bathrooms", "areaM2"] as const) {
+      if (data[key] !== undefined) patch[key] = data[key];
     }
     const dwelling = await prisma.dwelling.update({ where: { id }, data: patch, include: dwellingInclude });
     res.json(dwelling);

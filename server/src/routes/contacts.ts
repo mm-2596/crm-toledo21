@@ -4,6 +4,21 @@ import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { requireAdmin } from "../lib/auth.js";
 import { csvCell } from "../lib/csv.js";
+import { affordability } from "../lib/matching.js";
+import { PROPERTY_TYPES } from "./buildings.js";
+
+const searchInput = z.object({
+  propertyType: z.enum(PROPERTY_TYPES),
+  listingType: z.enum(["VENTA", "ALQUILER"]),
+  budgetMin: z.number().int().min(0).optional().nullable(),
+  budgetMax: z.number().int().min(0).optional().nullable(),
+  zones: z.string().trim().max(200).optional().nullable(),
+  bedroomsMin: z.number().int().min(0).max(50).optional().nullable(),
+  bathroomsMin: z.number().int().min(0).max(50).optional().nullable(),
+  areaMin: z.number().int().min(0).max(100_000).optional().nullable(),
+  notes: z.string().trim().max(1000).optional().nullable(),
+  active: z.boolean().optional(),
+});
 
 export const contactsRouter = Router();
 
@@ -17,10 +32,11 @@ const contactInput = z.object({
   budgetMin: z.number().int().optional().nullable(),
   budgetMax: z.number().int().optional().nullable(),
   preferredZone: z.string().optional().nullable(),
-  propertyType: z
-    .enum(["PISO", "CASA", "CHALET", "ATICO", "LOCAL", "OFICINA", "GARAJE", "TERRENO", "OTRO"])
-    .optional()
-    .nullable(),
+  propertyType: z.enum(PROPERTY_TYPES).optional().nullable(),
+  segment: z.enum(["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO"]).optional().nullable(),
+  savings: z.number().int().min(0).max(1_000_000_000).optional().nullable(),
+  monthlyIncome: z.number().int().min(0).max(10_000_000).optional().nullable(),
+  monthlyDebts: z.number().int().min(0).max(10_000_000).optional().nullable(),
   listingType: z.enum(["VENTA", "ALQUILER"]).optional().nullable(),
   bedroomsMin: z.number().int().optional().nullable(),
   needsFinancing: z.boolean().optional().nullable(),
@@ -40,19 +56,25 @@ function withConsentDates<T extends { marketingConsent?: boolean }>(data: T) {
 contactsRouter.get(
   "/",
   asyncHandler(async (req, res) => {
-    const { q } = req.query;
+    const { q, segment, type } = req.query;
     const contacts = await prisma.contact.findMany({
-      where: q
-        ? {
-            OR: [
-              { name: { contains: String(q) } },
-              { email: { contains: String(q) } },
-              { phone: { contains: String(q) } },
-            ],
-          }
-        : undefined,
+      where: {
+        AND: [
+          q
+            ? {
+                OR: [
+                  { name: { contains: String(q), mode: "insensitive" } },
+                  { email: { contains: String(q), mode: "insensitive" } },
+                  { phone: { contains: String(q) } },
+                ],
+              }
+            : {},
+          ["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO"].includes(String(segment)) ? { segment: segment as "BUSCA_COMPRAR" } : {},
+          PROPERTY_TYPES.some((t) => t === type) ? { OR: [{ searches: { some: { propertyType: type as "PISO", active: true } } }, { searches: { none: {} }, propertyType: type as "PISO" }] } : {},
+        ],
+      },
       orderBy: { createdAt: "desc" },
-      include: { deals: { include: { stage: true } } },
+      include: { deals: { include: { stage: true } }, searches: { where: { active: true }, select: { id: true, propertyType: true, listingType: true } } },
     });
     res.json(contacts);
   }),
@@ -104,10 +126,13 @@ contactsRouter.get(
       include: {
         deals: { include: { stage: true, property: true } },
         activities: { orderBy: { createdAt: "desc" } },
+        searches: { orderBy: { createdAt: "asc" } },
       },
     });
     if (!contact) return res.status(404).json({ error: "Contacto no encontrado" });
-    res.json(contact);
+    // Lo que podría permitirse, para la primera búsqueda de compra (o alquiler si solo busca alquilar).
+    const listing = contact.segment === "BUSCA_ALQUILER" || (contact.searches[0]?.listingType === "ALQUILER" && contact.segment !== "BUSCA_COMPRAR") ? "ALQUILER" : "VENTA";
+    res.json({ ...contact, affordability: { ...affordability(contact, listing), listingType: listing } });
   }),
 );
 
@@ -149,6 +174,34 @@ contactsRouter.get(
       : properties;
 
     res.json(sorted.slice(0, 3));
+  }),
+);
+
+contactsRouter.post(
+  "/:id/searches",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await prisma.contact.findUnique({ where: { id }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
+    const data = searchInput.parse(req.body);
+    res.status(201).json(await prisma.contactSearch.create({ data: { ...data, zones: data.zones || null, notes: data.notes || null, contactId: id } }));
+  }),
+);
+
+contactsRouter.put(
+  "/searches/:sid",
+  asyncHandler(async (req, res) => {
+    const data = searchInput.parse(req.body);
+    const sid = String(req.params.sid);
+    if (!(await prisma.contactSearch.findUnique({ where: { id: sid }, select: { id: true } }))) return res.status(404).json({ error: "Búsqueda no encontrada" });
+    res.json(await prisma.contactSearch.update({ where: { id: sid }, data: { ...data, zones: data.zones || null, notes: data.notes || null } }));
+  }),
+);
+
+contactsRouter.delete(
+  "/searches/:sid",
+  asyncHandler(async (req, res) => {
+    await prisma.contactSearch.deleteMany({ where: { id: String(req.params.sid) } });
+    res.status(204).send();
   }),
 );
 

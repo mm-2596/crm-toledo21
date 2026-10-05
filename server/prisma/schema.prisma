@@ -140,6 +140,12 @@ model Contact {
   listingType    ListingType?
   bedroomsMin    Int?
   needsFinancing Boolean?
+  /// Qué es para nosotros: busca comprar, busca alquilar o ya ha comprado.
+  segment        ClientSegment?
+  /// Datos económicos para estimar si puede permitirse lo que busca (orientativo).
+  savings        Int?
+  monthlyIncome  Int?
+  monthlyDebts   Int?
   priority       ContactPriority?
   notes          String?          @db.Text
   createdAt      DateTime         @default(now())
@@ -155,6 +161,7 @@ model Contact {
   deals      Deal[]
   activities Activity[]
   dwellings  Dwelling[]
+  searches   ContactSearch[]
 
   @@index([email])
   @@index([phone])
@@ -207,6 +214,7 @@ model Property {
   valuations Valuation[]
   images     PropertyImage[]
   videos     PropertyVideo[]
+  activities Activity[]
 
   @@index([city])
   @@index([status])
@@ -281,12 +289,17 @@ model Activity {
   agentId        String?
   /// Vivienda a la que pertenece la anotación del diario o la tarea programada.
   dwellingId     String?
+  /// Inmueble de la lista de Propiedades al que se refiere (p. ej. una visita agendada).
+  propertyId     String?
+  /// Dónde se queda (visitas): por defecto la dirección del inmueble.
+  location       String?
   createdAt      DateTime     @default(now())
 
   contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   deal     Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
   agent    User?     @relation(fields: [agentId], references: [id])
   dwelling Dwelling? @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([contactId])
   @@index([dwellingId])
@@ -381,23 +394,29 @@ model Building {
 
 /// Vivienda dentro de un edificio (haya o no un anuncio publicado).
 model Dwelling {
-  id          String         @id @default(cuid())
-  buildingId  String
-  floor       String?
-  door        String?
-  status      DwellingStatus @default(CENSADA)
+  id           String         @id @default(cuid())
+  buildingId   String
+  floor        String?
+  door         String?
+  status       DwellingStatus @default(CENSADA)
   /// Cliente principal (propietario) para poder buscar la vivienda por su nombre.
-  contactId   String?
-  notes       String?        @db.Text
+  contactId    String?
+  notes        String?        @db.Text
   /// Fase del seguimiento de venta (solo cuando la vivienda se ha cogido a la venta).
-  saleStage   SaleStage?
-  saleStageAt DateTime?
-  createdAt   DateTime       @default(now())
+  saleStage    SaleStage?
+  saleStageAt  DateTime?
+  /// Características para poder cruzarla con lo que buscan los clientes.
+  price        Int?
+  propertyType PropertyType?
+  bedrooms     Int?
+  bathrooms    Int?
+  areaM2       Int?
+  createdAt    DateTime       @default(now())
 
-  building  Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
-  contact   Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  residents DwellingResident[]
-  files     DwellingFile[]
+  building   Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  contact    Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  residents  DwellingResident[]
+  files      DwellingFile[]
   activities Activity[]
 
   @@index([buildingId])
@@ -450,4 +469,32 @@ model DwellingFile {
   dwelling Dwelling @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
 
   @@index([dwellingId])
+}
+
+enum ClientSegment {
+  BUSCA_COMPRAR
+  BUSCA_ALQUILER
+  HA_COMPRADO
+}
+
+/// Una cosa concreta que busca un cliente (puede buscar varias: un piso y un garaje, por ejemplo).
+model ContactSearch {
+  id           String       @id @default(cuid())
+  contactId    String
+  propertyType PropertyType
+  listingType  ListingType  @default(VENTA)
+  budgetMin    Int?
+  budgetMax    Int?
+  /// Zonas o ciudades separadas por comas.
+  zones        String?
+  bedroomsMin  Int?
+  bathroomsMin Int?
+  areaMin      Int?
+  notes        String?      @db.Text
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
 }
