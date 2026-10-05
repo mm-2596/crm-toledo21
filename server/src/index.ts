@@ -15,6 +15,8 @@ import { usersRouter } from "./routes/users.js";
 import { valuationsRouter } from "./routes/valuations.js";
 import { campaignsRouter } from "./routes/campaigns.js";
 import { notificationsRouter } from "./routes/notifications.js";
+import { leasesRouter } from "./routes/leases.js";
+import { teamRouter } from "./routes/team.js";
 import { matchesRouter } from "./routes/matching.js";
 import { visitsRouter } from "./routes/visits.js";
 import { buildingsRouter, dwellingsRouter } from "./routes/buildings.js";
@@ -22,7 +24,7 @@ import { startReminderScheduler } from "./lib/reminders.js";
 import { feedRouter } from "./routes/feed.js";
 import { publicRouter } from "./routes/public.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
-import { requireAdmin, requireAuth } from "./lib/auth.js";
+import { denyAdministracion, requireAdmin, requireAuth, requireRentals } from "./lib/auth.js";
 import { UPLOADS_ROOT } from "./lib/upload.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -45,18 +47,20 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // requireAuth (en vez de un app.use(requireAuth) global) para que no se
 // "arrastre" por error a rutas registradas despues, como el frontend.
 app.use("/api/contacts", requireAuth, contactsRouter);
-app.use("/api/properties", requireAuth, propertiesRouter);
-app.use("/api/pipeline", requireAuth, pipelineRouter);
+app.use("/api/properties", requireAuth, denyAdministracion, propertiesRouter);
+app.use("/api/pipeline", requireAuth, denyAdministracion, pipelineRouter);
 app.use("/api/activities", requireAuth, activitiesRouter);
-app.use("/api/dashboard", requireAuth, dashboardRouter);
+app.use("/api/dashboard", requireAuth, denyAdministracion, dashboardRouter);
 app.use("/api/users", requireAuth, usersRouter);
-app.use("/api/valuations", requireAuth, valuationsRouter);
+app.use("/api/valuations", requireAuth, denyAdministracion, valuationsRouter);
 app.use("/api/campaigns", requireAuth, requireAdmin, campaignsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);
 app.use("/api/buildings", requireAuth, buildingsRouter);
 app.use("/api/dwellings", requireAuth, dwellingsRouter);
-app.use("/api/matches", requireAuth, matchesRouter);
-app.use("/api/visits", requireAuth, visitsRouter);
+app.use("/api/matches", requireAuth, denyAdministracion, matchesRouter);
+app.use("/api/leases", requireAuth, requireRentals, leasesRouter);
+app.use("/api/team", requireAuth, requireRentals, teamRouter);
+app.use("/api/visits", requireAuth, denyAdministracion, visitsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
 app.use("/api", notFound);

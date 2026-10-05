@@ -10,7 +10,7 @@ export const buildingsRouter = Router();
 export const dwellingsRouter = Router();
 
 const OFFICES = ["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"] as const;
-const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA"] as const;
+const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA", "ALQUILADA"] as const;
 const STAGES = ["ENCARGO_VIGENTE", "RESERVADO", "ARRAS", "PENDIENTE_ESCRITURA", "FIRMADO_NOTARIO"] as const;
 const ROLES = ["PROPIETARIO", "INQUILINO", "HIJO_PROPIETARIO", "FAMILIAR", "OTRO"] as const;
 
@@ -28,7 +28,7 @@ const ALLOWED_FILE_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "text/plain",
 ]);
-const uploadDwellingFile = multer({
+export const uploadDwellingFile = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_FILE_BYTES, files: 1 },
   fileFilter: (_req, file, cb) => cb(null, ALLOWED_FILE_TYPES.has(file.mimetype)),
@@ -40,13 +40,15 @@ const uploadDwellingFile = multer({
  * nada (mejor un aviso que enseñar datos de más). Se mira en la base de datos y
  * no en el token, para que un cambio de oficina surta efecto al instante.
  */
-async function officeAccess(req: Request): Promise<"ALL" | Office | null> {
+export async function officeAccess(req: Request): Promise<"ALL" | Office | null> {
   if (req.user!.role === "ADMIN") return "ALL";
   const user = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { office: true, active: true, canViewBuildings: true } });
+  // Administración ve su oficina (o todas si no tiene una asignada) sin necesitar el permiso del mapa.
+  if (req.user!.role === "ADMINISTRACION") return user?.active ? (user.office ?? "ALL") : null;
   return user?.active && user.canViewBuildings && user.office ? user.office : null;
 }
 
-function canUse(access: "ALL" | Office | null, office: Office): boolean {
+export function canUse(access: "ALL" | Office | null, office: Office): boolean {
   return access === "ALL" || access === office;
 }
 
@@ -94,6 +96,7 @@ function applySaleStage<T extends { status?: (typeof STATUSES)[number]; saleStag
 const dwellingInclude = {
   contact: { select: { id: true, name: true } },
   residents: { orderBy: { createdAt: "asc" as const } },
+  leases: { select: { id: true, status: true, monthlyRent: true, endDate: true, tenant: { select: { name: true } } }, orderBy: { createdAt: "desc" as const } },
   files: { select: { id: true, name: true, mimeType: true, size: true, createdAt: true }, orderBy: { createdAt: "desc" as const } },
 } satisfies Prisma.DwellingInclude;
 

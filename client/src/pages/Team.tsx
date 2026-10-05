@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ShieldCheck, UserX, UserCheck, Star, X } from "lucide-react";
+import { Check, Copy, UserX, UserCheck, Star, X } from "lucide-react";
 import { UsersApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
-import { formatDate, officeLabels } from "../lib/format";
+import { formatDate, officeLabels, roleLabels } from "../lib/format";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
-import type { AgentReview, Office, TeamMember } from "../api/types";
+import type { AgentReview, Office, Role, TeamMember } from "../api/types";
 
 function RoleBadge({ role }: { role: TeamMember["role"] }) {
   return (
     <span
       className={`rounded px-2 py-0.5 text-xs font-medium ${
-        role === "ADMIN" ? "bg-slate-50 text-[#2a241f]" : "bg-slate-100 text-slate-600"
+        role === "ADMIN" ? "bg-slate-50 text-[#2a241f]" : role === "ADMINISTRACION" ? "bg-amber-50 text-amber-800" : "bg-slate-100 text-slate-600"
       }`}
     >
-      {role === "ADMIN" ? "Administrador" : "Agente"}
+      {roleLabels[role]}
     </span>
   );
 }
@@ -143,7 +143,7 @@ export function Team() {
   const { data, isLoading } = useQuery({ queryKey: ["team"], queryFn: UsersApi.list });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { role?: "ADMIN" | "AGENT"; active?: boolean; office?: Office | null; canViewBuildings?: boolean } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { role?: Role; active?: boolean; office?: Office | null; canViewBuildings?: boolean } }) =>
       UsersApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
@@ -198,7 +198,20 @@ export function Team() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <RoleBadge role={member.role} />
+                      {isSelf ? (
+                        <RoleBadge role={member.role} />
+                      ) : (
+                        <select
+                          value={member.role}
+                          onChange={(e) => updateMutation.mutate({ id: member.id, data: { role: e.target.value as Role } })}
+                          aria-label={`Rol de ${member.name}`}
+                          className="rounded-lg border border-slate-300 px-2 py-1 text-xs text-slate-700"
+                        >
+                          {Object.entries(roleLabels).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -208,17 +221,17 @@ export function Team() {
                         }
                         aria-label={`Oficina de ${member.name}`}
                         className={`rounded-lg border px-2 py-1 text-xs ${
-                          member.office || member.role === "ADMIN" ? "border-slate-300 text-slate-700" : "border-amber-300 bg-amber-50 text-amber-800"
+                          member.office || member.role !== "AGENT" ? "border-slate-300 text-slate-700" : "border-amber-300 bg-amber-50 text-amber-800"
                         }`}
                       >
-                        <option value="">{member.role === "ADMIN" ? "Todas" : "Sin asignar"}</option>
+                        <option value="">{member.role !== "AGENT" ? "Todas" : "Sin asignar"}</option>
                         {Object.entries(officeLabels).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                      {member.role === "ADMIN" ? (
+                      {member.role !== "AGENT" ? (
                         <span className="text-xs text-slate-500">Siempre</span>
                       ) : (
                         <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-700">
@@ -245,19 +258,6 @@ export function Team() {
                     <td className="px-4 py-3 text-slate-500">{formatDate(member.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() =>
-                            updateMutation.mutate({
-                              id: member.id,
-                              data: { role: member.role === "ADMIN" ? "AGENT" : "ADMIN" },
-                            })
-                          }
-                          disabled={isSelf || updateMutation.isPending}
-                          title={member.role === "ADMIN" ? "Quitar permisos de administrador" : "Hacer administrador"}
-                          className="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:border-slate-300 hover:text-[#2a241f] disabled:opacity-30"
-                        >
-                          <ShieldCheck size={15} />
-                        </button>
                         <button
                           onClick={() => updateMutation.mutate({ id: member.id, data: { active: !member.active } })}
                           disabled={isSelf || updateMutation.isPending}

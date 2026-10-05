@@ -14,6 +14,7 @@ export interface NotificationItem {
   unassigned: boolean;
   contact: { id: string; name: string } | null;
   dwelling: { id: string; buildingId: string; label: string } | null;
+  leaseId: string | null;
 }
 
 /** «Edificio · Planta 2 · Puerta B», para saber de qué vivienda habla una tarea. */
@@ -61,6 +62,7 @@ export async function notificationsFor(user: { userId: string; role: string }, n
     state: classify(a.dueDate!, a.hasTime, now),
     unassigned: a.agentId === null,
     contact: a.contact,
+    leaseId: a.leaseId,
     dwelling: a.dwelling ? { id: a.dwelling.id, buildingId: a.dwelling.buildingId, label: dwellingLabel(a.dwelling) } : null,
   }));
   const count = items.filter((i) => i.state !== "upcoming").length;

@@ -17,6 +17,10 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AdminRoute } from "./auth/AdminRoute";
+import { RentalsRoute, SalesRoute } from "./auth/RoleRoute";
+import { Rentals } from "./pages/Rentals";
+import { RentalDetail } from "./pages/RentalDetail";
+import { TeamOverview } from "./pages/TeamOverview";
 
 export default function App() {
   return (
@@ -28,12 +32,19 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="contactos" element={<Contacts />} />
           <Route path="contactos/:id" element={<ContactDetail />} />
-          <Route path="propiedades" element={<Properties />} />
-          <Route path="propiedades/:id" element={<PropertyDetail />} />
+          <Route element={<SalesRoute />}>
+            <Route path="propiedades" element={<Properties />} />
+            <Route path="propiedades/:id" element={<PropertyDetail />} />
+            <Route path="pipeline" element={<Pipeline />} />
+            <Route path="visitas" element={<Visits />} />
+          </Route>
           <Route path="mapa" element={<BuildingsMap />} />
-          <Route path="pipeline" element={<Pipeline />} />
           <Route path="tareas" element={<Tasks />} />
-          <Route path="visitas" element={<Visits />} />
+          <Route element={<RentalsRoute />}>
+            <Route path="alquileres" element={<Rentals />} />
+            <Route path="alquileres/:id" element={<RentalDetail />} />
+            <Route path="mi-equipo" element={<TeamOverview />} />
+          </Route>
           <Route path="ayuda" element={<Help />} />
           <Route path="perfil" element={<Profile />} />
           <Route element={<AdminRoute />}>

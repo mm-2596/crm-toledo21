@@ -16,6 +16,7 @@ import { ContactProfile } from "../components/ContactProfile";
 import { segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
 import { useToast } from "../components/Toast";
+import { useAuth } from "../auth/AuthContext";
 
 /** Con hora, se interpreta en la zona horaria del navegador (la del agente); sin hora, cuenta solo el día. */
 function dueDateFields(date: string, time: string): { dueDate: string | null; hasTime: boolean } {
@@ -28,6 +29,7 @@ export function ContactDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [showQualifier, setShowQualifier] = useState(false);
 
   const { data: contact, isLoading } = useQuery({
@@ -40,7 +42,7 @@ export function ContactDetail() {
   const { data: matches } = useQuery({
     queryKey: ["contact-matches", id],
     queryFn: () => ContactsApi.matches(id as string),
-    enabled: Boolean(id) && hasPreferences,
+    enabled: Boolean(id) && hasPreferences && user?.role !== "ADMINISTRACION",
   });
 
   const { data: agents } = useQuery({ queryKey: ["assignable-users"], queryFn: UsersApi.assignable });

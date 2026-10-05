@@ -11,6 +11,8 @@ datasource db {
 enum Role {
   ADMIN
   AGENT
+  /// Gestión de alquileres de una oficina (o de todas si no tiene oficina asignada).
+  ADMINISTRACION
 }
 
 enum ContactSource {
@@ -158,10 +160,12 @@ model Contact {
   /// Token del enlace de baja de los emails. Se genera al enviar la primera campaña.
   unsubscribeToken   String?   @unique
 
-  deals      Deal[]
-  activities Activity[]
-  dwellings  Dwelling[]
-  searches   ContactSearch[]
+  deals        Deal[]
+  activities   Activity[]
+  dwellings    Dwelling[]
+  searches     ContactSearch[]
+  ownerLeases  Lease[]         @relation("LeaseOwner")
+  tenantLeases Lease[]         @relation("LeaseTenant")
 
   @@index([email])
   @@index([phone])
@@ -293,6 +297,9 @@ model Activity {
   propertyId     String?
   /// Dónde se queda (visitas): por defecto la dirección del inmueble.
   location       String?
+  leaseId        String?
+  /// Marca los recordatorios que crea el CRM solo (p. ej. fin de contrato) para poder recalcularlos.
+  autoKind       String?
   createdAt      DateTime     @default(now())
 
   contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
@@ -300,10 +307,12 @@ model Activity {
   agent    User?     @relation(fields: [agentId], references: [id])
   dwelling Dwelling? @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
   property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  lease    Lease?    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
 
   @@index([contactId])
   @@index([dwellingId])
   @@index([dealId])
+  @@index([leaseId])
   @@index([dueDate])
 }
 
@@ -374,6 +383,7 @@ enum DwellingStatus {
   CENSADA
   A_LA_VENTA
   VENDIDA
+  ALQUILADA
 }
 
 /// Edificio censado, con coordenadas para pintarlo en el mapa de su oficina.
@@ -418,6 +428,7 @@ model Dwelling {
   residents  DwellingResident[]
   files      DwellingFile[]
   activities Activity[]
+  leases     Lease[]
 
   @@index([buildingId])
   @@index([contactId])
@@ -475,6 +486,8 @@ enum ClientSegment {
   BUSCA_COMPRAR
   BUSCA_ALQUILER
   HA_COMPRADO
+  PROPIETARIO
+  INQUILINO
 }
 
 /// Una cosa concreta que busca un cliente (puede buscar varias: un piso y un garaje, por ejemplo).
@@ -497,4 +510,51 @@ model ContactSearch {
   contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
   @@index([contactId])
+}
+
+enum LeaseStatus {
+  VIGENTE
+  FINALIZADO
+}
+
+/// Contrato de alquiler de una vivienda: propietario, arrendatario, renta, fechas y documentos.
+model Lease {
+  id          String      @id @default(cuid())
+  dwellingId  String
+  ownerId     String?
+  tenantId    String?
+  monthlyRent Int
+  deposit     Int?
+  startDate   DateTime
+  endDate     DateTime?
+  status      LeaseStatus @default(VIGENTE)
+  notes       String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  dwelling   Dwelling    @relation(fields: [dwellingId], references: [id], onDelete: Cascade)
+  owner      Contact?    @relation("LeaseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant     Contact?    @relation("LeaseTenant", fields: [tenantId], references: [id], onDelete: SetNull)
+  files      LeaseFile[]
+  activities Activity[]
+
+  @@index([dwellingId])
+  @@index([ownerId])
+  @@index([tenantId])
+  @@index([status])
+}
+
+/// Documento de un alquiler (contrato, DNI, seguro…). Se guarda en la base de datos, como los de las viviendas.
+model LeaseFile {
+  id        String   @id @default(cuid())
+  leaseId   String
+  name      String
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@index([leaseId])
 }

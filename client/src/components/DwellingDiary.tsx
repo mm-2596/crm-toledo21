@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, Check } from "lucide-react";
-import { ActivitiesApi, DwellingsApi } from "../api/endpoints";
+import { ActivitiesApi, DwellingsApi, LeasesApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { activityTypeLabels, formatDate, formatDateTime } from "../lib/format";
 import { useToast } from "./Toast";
@@ -18,25 +18,28 @@ function dueDateFields(date: string, time: string): { dueDate: string | null; ha
   return { dueDate: new Date(date).toISOString(), hasTime: false };
 }
 
-/** Diario de una vivienda: lo hablado cada día y la siguiente acción, que avisa al responsable en su fecha. */
-export function DwellingDiary({ dwellingId }: { dwellingId: string }) {
+/** Diario de una vivienda o de un alquiler: lo hablado cada día y la siguiente acción, que avisa al responsable en su fecha. */
+export function DwellingDiary({ dwellingId, leaseId }: { dwellingId?: string; leaseId?: string }) {
+  const id = (leaseId ?? dwellingId) as string;
+  const keyName = leaseId ? "lease-activities" : "dwelling-activities";
+  const api = leaseId ? LeasesApi : DwellingsApi;
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { user } = useAuth();
   const [log, setLog] = useState({ type: "LLAMADA" as ActivityType, description: "" });
   const [next, setNext] = useState({ type: "LLAMADA" as ActivityType, description: "", date: "", time: "" });
 
-  const { data: entries = [] } = useQuery({ queryKey: ["dwelling-activities", dwellingId], queryFn: () => DwellingsApi.activities(dwellingId) });
+  const { data: entries = [] } = useQuery({ queryKey: [keyName, id], queryFn: () => api.activities(id) });
   const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["dwelling-activities", dwellingId] });
+    queryClient.invalidateQueries({ queryKey: [keyName, id] });
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   };
 
   const save = useMutation({
     mutationFn: async () => {
-      if (log.description.trim()) await DwellingsApi.addActivity(dwellingId, { type: log.type, description: log.description.trim() });
+      if (log.description.trim()) await api.addActivity(id, { type: log.type, description: log.description.trim() });
       if (next.date) {
-        await DwellingsApi.addActivity(dwellingId, {
+        await api.addActivity(id, {
           type: next.type,
           description: next.description.trim() || `${activityTypeLabels[next.type]} pendiente`,
           ...dueDateFields(next.date, next.time),

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Download, UserPlus, Users } from "lucide-react";
 import { ContactsApi } from "../api/endpoints";
-import { priorityBadgeClasses, priorityLabels, propertyTypeLabels, segmentBadgeClasses, segmentLabels } from "../lib/format";
+import { rentalSegments, priorityBadgeClasses, priorityLabels, propertyTypeLabels, segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
@@ -17,6 +17,7 @@ export function Contacts() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const segmentEntries = Object.entries(segmentLabels).filter(([value]) => user?.role !== "ADMINISTRACION" || (rentalSegments as readonly string[]).includes(value));
   const [exporting, setExporting] = useState(false);
 
   async function handleExport(consentOnly: boolean) {
@@ -112,7 +113,7 @@ export function Contacts() {
           <input name="preferredZone" placeholder="Zona de interés" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <select name="segment" defaultValue="" aria-label="Tipo de cliente" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Tipo de cliente (sin clasificar)</option>
-            {Object.entries(segmentLabels).map(([value, label]) => (
+            {segmentEntries.map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
@@ -146,7 +147,7 @@ export function Contacts() {
         </select>
       </div>
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo de cliente">
-        {[["", "Todos"], ...Object.entries(segmentLabels)].map(([value, label]) => (
+        {[["", "Todos"], ...segmentEntries].map(([value, label]) => (
           <button
             key={value}
             onClick={() => setSegment(value)}

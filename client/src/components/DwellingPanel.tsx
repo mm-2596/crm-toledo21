@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { ArrowLeft, Check, FileText, Paperclip, Pencil, Trash2, UserPlus } from "lucide-react";
 import { DwellingsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
@@ -39,6 +40,9 @@ interface Props {
 export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged, onDeleted }: Props) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const rentalOnly = user?.role === "ADMINISTRACION";
+  const canManageRentals = user?.role === "ADMIN" || rentalOnly;
   const fileInput = useRef<HTMLInputElement>(null);
   const onError = (error: unknown) => showToast(getErrorMessage(error, "No se pudo guardar"), "error");
 
@@ -126,47 +130,69 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
         )}
       </div>
 
+      {!rentalOnly && (
       <Section title="Seguimiento de venta" hint="Pulsa la fase en la que está. Pasa la vivienda a «A la venta» y, al firmar ante notario, a «Vendida».">
-        <ol className="flex flex-col gap-1.5">
-          {saleStages.map((stage, i) => {
-            const done = i < stageIndex;
-            const current = i === stageIndex;
-            return (
-              <li key={stage}>
-                <button
-                  onClick={() => setStage.mutate(current ? null : stage)}
-                  disabled={setStage.isPending}
-                  aria-pressed={current}
-                  className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                    current
-                      ? "border-[#1c1815] bg-[#1c1815] text-white"
-                      : done
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <span
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                      current ? "bg-white text-[#1c1815]" : done ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"
+          <ol className="flex flex-col gap-1.5">
+            {saleStages.map((stage, i) => {
+              const done = i < stageIndex;
+              const current = i === stageIndex;
+              return (
+                <li key={stage}>
+                  <button
+                    onClick={() => setStage.mutate(current ? null : stage)}
+                    disabled={setStage.isPending}
+                    aria-pressed={current}
+                    className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                      current
+                        ? "border-[#1c1815] bg-[#1c1815] text-white"
+                        : done
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
-                    {done || (current && stage === "FIRMADO_NOTARIO") ? <Check size={12} /> : i + 1}
-                  </span>
-                  <span className="flex-1">{saleStageLabels[stage]}</span>
-                  {current && dwelling.saleStageAt && <span className="text-xs opacity-70">{formatDate(dwelling.saleStageAt)}</span>}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-        {dwelling.saleStage && (
-          <button onClick={() => setStage.mutate(null)} className="mt-2 text-xs text-slate-500 hover:text-red-600 hover:underline">
-            Quitar del seguimiento de venta
-          </button>
-        )}
-      </Section>
+                    <span
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                        current ? "bg-white text-[#1c1815]" : done ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {done || (current && stage === "FIRMADO_NOTARIO") ? <Check size={12} /> : i + 1}
+                    </span>
+                    <span className="flex-1">{saleStageLabels[stage]}</span>
+                    {current && dwelling.saleStageAt && <span className="text-xs opacity-70">{formatDate(dwelling.saleStageAt)}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          {dwelling.saleStage && (
+            <button onClick={() => setStage.mutate(null)} className="mt-2 text-xs text-slate-500 hover:text-red-600 hover:underline">
+              Quitar del seguimiento de venta
+            </button>
+          )}
+        </Section>
+      )}
 
-      {dwelling.status === "A_LA_VENTA" && (
+      {canManageRentals && (
+        <Section title="Alquiler" hint="Contrato, propietario, arrendatario y documentos de esta vivienda.">
+          {(dwelling.leases ?? []).length > 0 ? (
+            <ul className="flex flex-col gap-1.5">
+              {(dwelling.leases ?? []).map((l) => (
+                <li key={l.id}>
+                  <Link to={`/alquileres/${l.id}`} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
+                    <span>{l.tenant?.name ?? "Sin inquilino"} · {l.monthlyRent.toLocaleString("es-ES")} €/mes</span>
+                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${l.status === "VIGENTE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{l.status === "VIGENTE" ? "Vigente" : "Finalizado"}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-slate-500">Esta vivienda no tiene alquileres.</p>
+          )}
+          <Link to={`/alquileres?vivienda=${dwelling.id}`} className="mt-2 inline-block rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">+ Nuevo alquiler</Link>
+        </Section>
+      )}
+
+      {dwelling.status === "A_LA_VENTA" && !rentalOnly && (
         <Section title="Clientes que buscan esta vivienda" hint="Cruce con lo que busca cada cliente. Agenda aquí la visita.">
           <MatchesPanel kind="dwelling" id={dwelling.id} address={[building.address, building.city].filter(Boolean).join(", ")} compact />
         </Section>

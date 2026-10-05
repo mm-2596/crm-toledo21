@@ -1,4 +1,6 @@
 import { Router } from "express";
+import type { Request } from "express";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
@@ -22,6 +24,22 @@ const searchInput = z.object({
 
 export const contactsRouter = Router();
 
+const RENTAL_SEGMENTS = ["BUSCA_ALQUILER", "PROPIETARIO", "INQUILINO"] as const;
+const SEGMENTS = ["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO", "PROPIETARIO", "INQUILINO"] as const;
+
+/** Administración solo ve a la gente del mundo del alquiler: quien busca piso, propietarios e inquilinos. */
+function rentalScope(req: Request): Prisma.ContactWhereInput {
+  if (req.user!.role !== "ADMINISTRACION") return {};
+  return {
+    OR: [
+      { segment: { in: [...RENTAL_SEGMENTS] } },
+      { ownerLeases: { some: {} } },
+      { tenantLeases: { some: {} } },
+      { searches: { some: { listingType: "ALQUILER" } } },
+    ],
+  };
+}
+
 const contactInput = z.object({
   name: z.string().min(1),
   email: z.string().email().optional().nullable(),
@@ -33,7 +51,7 @@ const contactInput = z.object({
   budgetMax: z.number().int().optional().nullable(),
   preferredZone: z.string().optional().nullable(),
   propertyType: z.enum(PROPERTY_TYPES).optional().nullable(),
-  segment: z.enum(["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO"]).optional().nullable(),
+  segment: z.enum(SEGMENTS).optional().nullable(),
   savings: z.number().int().min(0).max(1_000_000_000).optional().nullable(),
   monthlyIncome: z.number().int().min(0).max(10_000_000).optional().nullable(),
   monthlyDebts: z.number().int().min(0).max(10_000_000).optional().nullable(),
@@ -69,7 +87,8 @@ contactsRouter.get(
                 ],
               }
             : {},
-          ["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO"].includes(String(segment)) ? { segment: segment as "BUSCA_COMPRAR" } : {},
+          rentalScope(req),
+          SEGMENTS.some((s) => s === segment) ? { segment: segment as "BUSCA_COMPRAR" } : {},
           PROPERTY_TYPES.some((t) => t === type) ? { OR: [{ searches: { some: { propertyType: type as "PISO", active: true } } }, { searches: { none: {} }, propertyType: type as "PISO" }] } : {},
         ],
       },
@@ -121,8 +140,8 @@ contactsRouter.get(
 contactsRouter.get(
   "/:id",
   asyncHandler(async (req, res) => {
-    const contact = await prisma.contact.findUnique({
-      where: { id: String(req.params.id) },
+    const contact = await prisma.contact.findFirst({
+      where: { AND: [{ id: String(req.params.id) }, rentalScope(req)] },
       include: {
         deals: { include: { stage: true, property: true } },
         activities: { orderBy: { createdAt: "desc" } },
@@ -145,6 +164,7 @@ contactsRouter.get(
 contactsRouter.get(
   "/:id/matches",
   asyncHandler(async (req, res) => {
+    if (req.user!.role === "ADMINISTRACION") return res.status(403).json({ error: "Tu perfil solo gestiona alquileres" });
     const contact = await prisma.contact.findUnique({ where: { id: String(req.params.id) } });
     if (!contact) return res.status(404).json({ error: "Contacto no encontrado" });
 
@@ -181,8 +201,9 @@ contactsRouter.post(
   "/:id/searches",
   asyncHandler(async (req, res) => {
     const id = String(req.params.id);
-    if (!(await prisma.contact.findUnique({ where: { id }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
+    if (!(await prisma.contact.findFirst({ where: { AND: [{ id }, rentalScope(req)] }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
     const data = searchInput.parse(req.body);
+    if (req.user!.role === "ADMINISTRACION" && data.listingType !== "ALQUILER") return res.status(403).json({ error: "Tu perfil solo gestiona búsquedas de alquiler" });
     res.status(201).json(await prisma.contactSearch.create({ data: { ...data, zones: data.zones || null, notes: data.notes || null, contactId: id } }));
   }),
 );
@@ -209,6 +230,8 @@ contactsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = contactInput.parse(req.body);
+    // Lo que da de alta Administración entra en su mundo (alquiler); si no se indica, busca alquilar.
+    if (req.user!.role === "ADMINISTRACION" && !(data.segment && RENTAL_SEGMENTS.some((s) => s === data.segment))) data.segment = "BUSCA_ALQUILER";
     const contact = await prisma.contact.create({ data: withConsentDates(data) });
     res.status(201).json(contact);
   }),
@@ -218,6 +241,8 @@ contactsRouter.put(
   "/:id",
   asyncHandler(async (req, res) => {
     const data = contactInput.partial().parse(req.body);
+    if (!(await prisma.contact.findFirst({ where: { AND: [{ id: String(req.params.id) }, rentalScope(req)] }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
+    if (req.user!.role === "ADMINISTRACION" && data.segment && !RENTAL_SEGMENTS.some((s) => s === data.segment)) return res.status(403).json({ error: "Tu perfil solo gestiona alquileres" });
     const contact = await prisma.contact.update({
       where: { id: String(req.params.id) },
       data: withConsentDates(data),
@@ -229,6 +254,7 @@ contactsRouter.put(
 contactsRouter.delete(
   "/:id",
   asyncHandler(async (req, res) => {
+    if (req.user!.role === "ADMINISTRACION") return res.status(403).json({ error: "Solo un administrador puede borrar contactos" });
     await prisma.contact.delete({ where: { id: String(req.params.id) } });
     res.status(204).send();
   }),

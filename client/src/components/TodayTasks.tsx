@@ -14,6 +14,7 @@ const STATE_STYLES = {
 } as const;
 
 function destination(item: NotificationItem) {
+  if (item.leaseId) return `/alquileres/${item.leaseId}`;
   if (item.dwelling) return `/mapa?vivienda=${item.dwelling.id}`;
   if (item.contact) return `/contactos/${item.contact.id}`;
   return "/tareas";
@@ -30,6 +31,7 @@ export function TodayTasks() {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
       queryClient.invalidateQueries({ queryKey: ["dwelling-activities"] });
+      queryClient.invalidateQueries({ queryKey: ["lease-activities"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
       showToast("Tarea hecha");
     },

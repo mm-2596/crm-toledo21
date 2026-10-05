@@ -70,7 +70,7 @@ usersRouter.get(
 );
 
 const updateInput = z.object({
-  role: z.enum(["ADMIN", "AGENT"]).optional(),
+  role: z.enum(["ADMIN", "AGENT", "ADMINISTRACION"]).optional(),
   active: z.boolean().optional(),
   canViewBuildings: z.boolean().optional(),
   office: z.enum(["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"]).nullable().optional(),
@@ -83,7 +83,7 @@ usersRouter.patch(
     const data = updateInput.parse(req.body);
     const id = String(req.params.id);
 
-    if (id === req.user!.userId && (data.active === false || data.role === "AGENT")) {
+    if (id === req.user!.userId && (data.active === false || (data.role !== undefined && data.role !== "ADMIN"))) {
       return res.status(400).json({ error: "No puedes quitarte a ti mismo el acceso de administrador" });
     }
 

@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Building2,
@@ -9,6 +10,8 @@ import {
   ShieldCheck,
   Megaphone,
   Map,
+  KeyRound,
+  UsersRound,
   CalendarDays,
   HelpCircle,
   LogOut,
@@ -16,6 +19,7 @@ import {
 import { AIAssistant } from "./AIAssistant";
 import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../auth/AuthContext";
+import { roleLabels } from "../lib/format";
 
 const links = [
   { to: "/", label: "Panel", end: true, icon: LayoutDashboard },
@@ -27,16 +31,36 @@ const links = [
   { to: "/tareas", label: "Tareas", icon: CheckSquare },
 ];
 
+interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  end?: boolean;
+}
+
 export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { user, logout } = useAuth();
+  const rentalLinks = [
+    { to: "/alquileres", label: "Alquileres", icon: KeyRound },
+    { to: "/mi-equipo", label: "Equipo hoy", icon: UsersRound },
+  ];
   const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa");
-  const visibleLinks =
+  const visibleLinks: NavItem[] =
     user?.role === "ADMIN"
-      ? [...baseLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
-      : baseLinks;
+      ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
+      : user?.role === "ADMINISTRACION"
+        ? [
+            links[0],
+            rentalLinks[0],
+            links.find((l) => l.to === "/mapa")!,
+            { to: "/contactos", label: "Clientes de alquiler", icon: Users },
+            rentalLinks[1],
+            links.find((l) => l.to === "/tareas")!,
+          ]
+        : baseLinks;
 
   async function handleLogout() {
     await logout();
@@ -108,7 +132,7 @@ export function Layout() {
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-medium text-slate-700">{user.name}</div>
-                  <div className="truncate text-[11px] text-slate-400">{user.role === "ADMIN" ? "Administrador" : "Agente"}</div>
+                  <div className="truncate text-[11px] text-slate-400">{roleLabels[user.role]}</div>
                 </div>
               </NavLink>
               <button
@@ -139,7 +163,7 @@ export function Layout() {
           <Outlet />
         </motion.div>
       </main>
-      <AIAssistant />
+      {user?.role !== "ADMINISTRACION" && <AIAssistant />}
     </div>
   );
 }

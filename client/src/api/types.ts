@@ -22,11 +22,13 @@ export type ActivityType = "LLAMADA" | "EMAIL" | "WHATSAPP" | "VISITA" | "REUNIO
 export type DealStatus = "ABIERTO" | "GANADO" | "PERDIDO";
 export type ContactPriority = "ALTA" | "MEDIA" | "BAJA";
 
+export type Role = "ADMIN" | "AGENT" | "ADMINISTRACION";
+
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "AGENT";
+  role: Role;
   phone?: string | null;
   photoUrl?: string | null;
   jobTitle?: string | null;
@@ -87,7 +89,7 @@ export interface Contact {
   affordability?: { maxPrice: number | null; note: string; listingType: ListingType };
 }
 
-export type ClientSegment = "BUSCA_COMPRAR" | "BUSCA_ALQUILER" | "HA_COMPRADO";
+export type ClientSegment = "BUSCA_COMPRAR" | "BUSCA_ALQUILER" | "HA_COMPRADO" | "PROPIETARIO" | "INQUILINO";
 
 export interface ContactSearch {
   id: string;
@@ -311,6 +313,7 @@ export interface NotificationItem {
   unassigned: boolean;
   contact: { id: string; name: string } | null;
   dwelling: { id: string; buildingId: string; label: string } | null;
+  leaseId?: string | null;
 }
 
 export interface NotificationsResponse {
@@ -319,7 +322,7 @@ export interface NotificationsResponse {
 }
 
 export type Office = "GETAFE" | "LEGANES" | "LAS_ROZAS" | "PUERTO_SAGUNTO";
-export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA";
+export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA" | "ALQUILADA";
 
 export type SaleStage = "ENCARGO_VIGENTE" | "RESERVADO" | "ARRAS" | "PENDIENTE_ESCRITURA" | "FIRMADO_NOTARIO";
 export type ResidentRole = "PROPIETARIO" | "INQUILINO" | "HIJO_PROPIETARIO" | "FAMILIAR" | "OTRO";
@@ -363,6 +366,7 @@ export interface Dwelling {
   saleStageAt?: string | null;
   residents: DwellingResident[];
   files: DwellingFile[];
+  leases?: { id: string; status: LeaseStatus; monthlyRent: number; endDate?: string | null; tenant?: { name: string } | null }[];
   price?: number | null;
   propertyType?: PropertyType | null;
   bedrooms?: number | null;
@@ -402,4 +406,65 @@ export interface DwellingInput {
   bedrooms?: number | null;
   bathrooms?: number | null;
   areaM2?: number | null;
+}
+
+export type LeaseStatus = "VIGENTE" | "FINALIZADO";
+
+export interface LeaseParty {
+  id: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export interface Lease {
+  id: string;
+  dwellingId: string;
+  ownerId?: string | null;
+  tenantId?: string | null;
+  monthlyRent: number;
+  deposit?: number | null;
+  startDate: string;
+  endDate?: string | null;
+  status: LeaseStatus;
+  notes?: string | null;
+  dwelling: { id: string; floor?: string | null; door?: string | null; building: { id: string; name: string; address: string; city?: string | null; office: Office } };
+  owner?: LeaseParty | null;
+  tenant?: LeaseParty | null;
+  files: DwellingFile[];
+}
+
+export interface LeaseInput {
+  ownerId?: string | null;
+  tenantId?: string | null;
+  monthlyRent: number;
+  deposit?: number | null;
+  startDate: string;
+  endDate?: string | null;
+  status?: LeaseStatus;
+  notes?: string | null;
+}
+
+export interface TeamTask {
+  id: string;
+  type: ActivityType;
+  description: string;
+  dueDate: string | null;
+  hasTime: boolean;
+  createdAt: string;
+  state: NotificationState | null;
+  contact: { id: string; name: string } | null;
+  leaseId?: string | null;
+  dwelling: { id: string; buildingId: string; label: string } | null;
+}
+
+export interface TeamOverviewUser {
+  id: string;
+  name: string;
+  role: Role;
+  office?: Office | null;
+  overdue: TeamTask[];
+  today: TeamTask[];
+  upcoming: TeamTask[];
+  recent: TeamTask[];
 }

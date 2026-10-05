@@ -5,6 +5,8 @@ import { ContactsApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { formatCurrency, propertyTypeLabels, segmentLabels } from "../lib/format";
 import { useToast } from "./Toast";
+import { useAuth } from "../auth/AuthContext";
+import { rentalSegments } from "../lib/format";
 import type { ClientSegment, Contact, ContactSearch, ContactSearchInput, ListingType, PropertyType } from "../api/types";
 
 const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
@@ -50,6 +52,8 @@ function describe(s: ContactSearch) {
 export function ContactProfile({ contact }: { contact: Contact }) {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const rentalOnly = user?.role === "ADMINISTRACION";
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
     queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -128,7 +132,7 @@ export function ContactProfile({ contact }: { contact: Contact }) {
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
         >
           <option value="">Sin clasificar</option>
-          {Object.entries(segmentLabels).map(([value, label]) => (
+          {Object.entries(segmentLabels).filter(([value]) => !rentalOnly || (rentalSegments as readonly string[]).includes(value)).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
@@ -188,7 +192,7 @@ export function ContactProfile({ contact }: { contact: Contact }) {
                 ))}
               </select>
               <select value={search.listingType} onChange={(e) => setSearch({ ...search, listingType: e.target.value as ListingType })} aria-label="Compra o alquiler" className={inputClass}>
-                <option value="VENTA">Comprar</option>
+                {!rentalOnly && <option value="VENTA">Comprar</option>}
                 <option value="ALQUILER">Alquilar</option>
               </select>
               <input type="number" min={0} value={search.budgetMin} onChange={(e) => setSearch({ ...search, budgetMin: e.target.value })} placeholder="Presupuesto desde (€)" aria-label="Presupuesto mínimo" className={inputClass} />
@@ -202,7 +206,7 @@ export function ContactProfile({ contact }: { contact: Contact }) {
               <button type="button" onClick={() => setSearch(null)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-white">Cancelar</button>
             </form>
           ) : (
-            <button onClick={() => setSearch({ ...EMPTY_SEARCH })} className="mt-2 flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            <button onClick={() => setSearch({ ...EMPTY_SEARCH, listingType: rentalOnly ? "ALQUILER" : "VENTA" })} className="mt-2 flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
               <Plus size={15} /> Añadir búsqueda
             </button>
           )}

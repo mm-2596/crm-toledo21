@@ -40,7 +40,7 @@ async function sendDueReminders(now: Date) {
     await sendReminderEmail(
       to,
       { type: activity.type, description: activity.description, when: formatMadrid(activity.dueDate!, true), contactName: activity.contact?.name ?? (activity.dwelling ? dwellingLabel(activity.dwelling) : null) },
-      crmUrl(activity.dwellingId ? `/mapa?vivienda=${activity.dwellingId}` : activity.contactId ? `/contactos/${activity.contactId}` : "/tareas"),
+      crmUrl(activity.leaseId ? `/alquileres/${activity.leaseId}` : activity.dwellingId ? `/mapa?vivienda=${activity.dwellingId}` : activity.contactId ? `/contactos/${activity.contactId}` : "/tareas"),
     );
   }
 }

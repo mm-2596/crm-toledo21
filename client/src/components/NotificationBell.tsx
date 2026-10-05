@@ -98,7 +98,7 @@ export function NotificationBell() {
               {items.map((item: NotificationItem) => (
                 <li key={item.id}>
                   <Link
-                    to={item.dwelling ? `/mapa?vivienda=${item.dwelling.id}` : item.contact ? `/contactos/${item.contact.id}` : "/tareas"}
+                    to={item.leaseId ? `/alquileres/${item.leaseId}` : item.dwelling ? `/mapa?vivienda=${item.dwelling.id}` : item.contact ? `/contactos/${item.contact.id}` : "/tareas"}
                     onClick={() => setOpen(false)}
                     className="block px-4 py-2.5 hover:bg-slate-50"
                   >

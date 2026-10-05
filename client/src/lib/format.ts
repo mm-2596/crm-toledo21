@@ -133,6 +133,7 @@ export const dwellingStatusLabels: Record<string, string> = {
   CENSADA: "Censada",
   A_LA_VENTA: "A la venta",
   VENDIDA: "Vendida",
+  ALQUILADA: "Alquilada",
 };
 
 // Mismos colores en el mapa, la leyenda y las etiquetas.
@@ -140,6 +141,7 @@ export const dwellingStatusColors: Record<string, string> = {
   CENSADA: "#64748b",
   A_LA_VENTA: "#16a34a",
   VENDIDA: "#dc2626",
+  ALQUILADA: "#2563eb",
 };
 
 // Fases del seguimiento de venta, en orden.
@@ -170,12 +172,16 @@ export const segmentLabels: Record<string, string> = {
   BUSCA_COMPRAR: "Busca comprar",
   BUSCA_ALQUILER: "Busca alquilar",
   HA_COMPRADO: "Ya ha comprado",
+  PROPIETARIO: "Propietario (alquiler)",
+  INQUILINO: "Inquilino",
 };
 
 export const segmentBadgeClasses: Record<string, string> = {
   BUSCA_COMPRAR: "bg-sky-50 text-sky-700",
   BUSCA_ALQUILER: "bg-violet-50 text-violet-700",
   HA_COMPRADO: "bg-emerald-50 text-emerald-700",
+  PROPIETARIO: "bg-amber-50 text-amber-700",
+  INQUILINO: "bg-teal-50 text-teal-700",
 };
 
 // Leyenda del cruce demanda: los mismos colores y textos en el panel y en su leyenda.
@@ -192,3 +198,17 @@ export const viabilityInfo: Record<string, { label: string; className: string }>
   NO_VIABLE: { label: "No viable", className: "bg-red-50 text-red-700" },
   SIN_DATOS: { label: "Sin datos", className: "bg-slate-100 text-slate-500" },
 };
+
+export const roleLabels: Record<string, string> = {
+  ADMIN: "Administrador",
+  AGENT: "Agente",
+  ADMINISTRACION: "Administración",
+};
+
+export const leaseStatusLabels: Record<string, string> = {
+  VIGENTE: "Vigente",
+  FINALIZADO: "Finalizado",
+};
+
+/** Segmentos que puede elegir quien gestiona alquileres. */
+export const rentalSegments = ["BUSCA_ALQUILER", "PROPIETARIO", "INQUILINO"] as const;
