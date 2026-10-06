@@ -322,7 +322,7 @@ export interface NotificationsResponse {
 }
 
 export type Office = "GETAFE" | "LEGANES" | "LAS_ROZAS" | "PUERTO_SAGUNTO";
-export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA" | "ALQUILADA";
+export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA" | "ALQUILADA" | "A_ALQUILER";
 
 export type SaleStage = "ENCARGO_VIGENTE" | "RESERVADO" | "ARRAS" | "PENDIENTE_ESCRITURA" | "FIRMADO_NOTARIO";
 export type ResidentRole = "PROPIETARIO" | "INQUILINO" | "HIJO_PROPIETARIO" | "FAMILIAR" | "OTRO";
@@ -353,6 +353,25 @@ export interface DwellingFile {
   createdAt: string;
 }
 
+export interface PropertyBrief {
+  id: string;
+  reference: string;
+  title: string;
+  type: PropertyType;
+  listingType: ListingType;
+  status: PropertyStatus;
+  price: number;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  areaM2?: number | null;
+}
+
+export interface ContactLinks {
+  dwellings: { id: string; status: DwellingStatus; label: string }[];
+  leases: { id: string; status: LeaseStatus; monthlyRent: number; role: "PROPIETARIO" | "INQUILINO"; label: string }[];
+  visits: { id: string; dueDate: string; location?: string | null; label: string; property?: { id: string } | null; dwellingId?: string | null }[];
+}
+
 export interface Dwelling {
   id: string;
   buildingId: string;
@@ -366,6 +385,8 @@ export interface Dwelling {
   saleStageAt?: string | null;
   residents: DwellingResident[];
   files: DwellingFile[];
+  property?: PropertyBrief | null;
+  propertyId?: string | null;
   leases?: { id: string; status: LeaseStatus; monthlyRent: number; endDate?: string | null; tenant?: { name: string } | null }[];
   price?: number | null;
   propertyType?: PropertyType | null;
@@ -401,6 +422,7 @@ export interface DwellingInput {
   contactId?: string | null;
   notes?: string | null;
   saleStage?: SaleStage | null;
+  propertyId?: string | null;
   price?: number | null;
   propertyType?: PropertyType | null;
   bedrooms?: number | null;

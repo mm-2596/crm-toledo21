@@ -47,7 +47,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // requireAuth (en vez de un app.use(requireAuth) global) para que no se
 // "arrastre" por error a rutas registradas despues, como el frontend.
 app.use("/api/contacts", requireAuth, contactsRouter);
-app.use("/api/properties", requireAuth, denyAdministracion, propertiesRouter);
+app.use("/api/properties", requireAuth, propertiesRouter);
 app.use("/api/pipeline", requireAuth, denyAdministracion, pipelineRouter);
 app.use("/api/activities", requireAuth, activitiesRouter);
 app.use("/api/dashboard", requireAuth, denyAdministracion, dashboardRouter);
@@ -57,10 +57,10 @@ app.use("/api/campaigns", requireAuth, requireAdmin, campaignsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);
 app.use("/api/buildings", requireAuth, buildingsRouter);
 app.use("/api/dwellings", requireAuth, dwellingsRouter);
-app.use("/api/matches", requireAuth, denyAdministracion, matchesRouter);
+app.use("/api/matches", requireAuth, matchesRouter);
 app.use("/api/leases", requireAuth, requireRentals, leasesRouter);
 app.use("/api/team", requireAuth, requireRentals, teamRouter);
-app.use("/api/visits", requireAuth, denyAdministracion, visitsRouter);
+app.use("/api/visits", requireAuth, visitsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.
 app.use("/api", notFound);

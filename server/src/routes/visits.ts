@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
-import { loadDwellingFor } from "./buildings.js";
+import { canUse, loadDwellingFor, officeAccess } from "./buildings.js";
 
 export const visitsRouter = Router();
 
@@ -23,13 +23,20 @@ visitsRouter.get(
   "/",
   asyncHandler(async (req, res) => {
     const since = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    const rentalVisit = [
+      { property: { listingType: "ALQUILER" as const } },
+      { dwelling: { status: { in: ["A_ALQUILER" as const, "ALQUILADA" as const] } } },
+      { dwelling: { property: { listingType: "ALQUILER" as const } } },
+    ];
     const visits = await prisma.activity.findMany({
       where: {
-        type: "VISITA",
-        completed: false,
-        dueDate: { gte: since },
-        ...(req.user!.role === "ADMIN" ? {} : { OR: [{ dwellingId: null }, { agentId: req.user!.userId }] }),
-        ...(req.query.mine === "1" ? { agentId: req.user!.userId } : {}),
+        AND: [
+          { type: "VISITA", completed: false, dueDate: { gte: since } },
+          req.user!.role === "ADMIN" ? {} : { OR: [{ dwellingId: null }, { agentId: req.user!.userId }] },
+          // Administración solo ve las visitas de alquiler.
+          req.user!.role === "ADMINISTRACION" ? { OR: rentalVisit } : {},
+          req.query.mine === "1" ? { agentId: req.user!.userId } : {},
+        ],
       },
       orderBy: { dueDate: "asc" },
       take: 200,
@@ -53,14 +60,23 @@ visitsRouter.post(
 
     let label: string;
     let address: string;
+    let linkedDwellingId: string | null = null;
+    let linkedPropertyId: string | null = null;
     if (data.propertyId) {
       const property = await prisma.property.findUnique({ where: { id: data.propertyId } });
-      if (!property) return res.status(404).json({ error: "Inmueble no encontrado" });
+      if (!property || (req.user!.role === "ADMINISTRACION" && property.listingType !== "ALQUILER")) return res.status(404).json({ error: "Inmueble no encontrado" });
+      // Si ese piso también está en el mapa, la visita queda además en el diario de su vivienda.
+      const mapped = await prisma.dwelling.findFirst({ where: { propertyId: property.id }, include: { building: true } });
+      if (mapped && canUse(await officeAccess(req), mapped.building.office)) linkedDwellingId = mapped.id;
       label = `${property.reference} · ${property.title}`;
       address = [property.address, property.zone, property.city].filter(Boolean).join(", ") || property.title;
     } else {
       const dwelling = await loadDwellingFor(req, data.dwellingId!);
       if (!dwelling) return res.status(404).json({ error: "Vivienda no encontrada" });
+      const linked = dwelling.propertyId ? await prisma.property.findUnique({ where: { id: dwelling.propertyId }, select: { listingType: true } }) : null;
+      const isRental = linked ? linked.listingType === "ALQUILER" : dwelling.status === "A_ALQUILER" || dwelling.status === "ALQUILADA";
+      if (req.user!.role === "ADMINISTRACION" && !isRental) return res.status(403).json({ error: "Tu perfil solo gestiona alquileres" });
+      linkedPropertyId = dwelling.propertyId;
       label = dwellingLabel(dwelling);
       address = [dwelling.building.address, dwelling.building.city].filter(Boolean).join(", ");
     }
@@ -74,8 +90,8 @@ visitsRouter.post(
         dueDate: new Date(data.when),
         hasTime: true,
         contactId: contact.id,
-        propertyId: data.propertyId || null,
-        dwellingId: data.dwellingId || null,
+        propertyId: data.propertyId || linkedPropertyId,
+        dwellingId: data.dwellingId || linkedDwellingId,
         location,
         agentId: req.user!.userId,
       },

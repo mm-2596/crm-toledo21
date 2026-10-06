@@ -12,11 +12,15 @@ import { PropertyVideos } from "../components/PropertyVideos";
 import { PropertyForm, emptyPropertyForm, fromProperty, toPropertyPayload } from "../components/PropertyForm";
 import { WEBSITE_URL } from "../lib/config";
 import { MatchesPanel } from "../components/MatchesPanel";
+import { PropertyMapLink } from "../components/PropertyMapLink";
+import { useAuth } from "../auth/AuthContext";
 
 export function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const rentalOnly = user?.role === "ADMINISTRACION";
   const [form, setForm] = useState(emptyPropertyForm);
   const [coords, setCoords] = useState({ latitude: "", longitude: "" });
 
@@ -39,7 +43,7 @@ export function PropertyDetail() {
   const { data: valuations } = useQuery({
     queryKey: ["valuations", id],
     queryFn: () => ValuationsApi.forProperty(id as string),
-    enabled: Boolean(id),
+    enabled: Boolean(id) && !rentalOnly,
   });
 
   const estimate = useMutation({
@@ -110,45 +114,49 @@ export function PropertyDetail() {
         <p className="text-2xl font-semibold tracking-tight text-[#2a241f]">{formatCurrency(property.price)}</p>
       </div>
 
+      {!rentalOnly && (
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-1 flex items-center gap-1.5">
-          <Sparkles size={17} className="text-[#1c1815]" />
-          <h2 className="text-lg font-medium text-[#1c1815]">Valoración automática</h2>
-          <button
-            onClick={() => estimate.mutate()}
-            disabled={!canEstimate || estimate.isPending}
-            className="ml-auto rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-40"
-          >
-            {estimate.isPending ? "Calculando…" : "Estimar precio"}
-          </button>
-        </div>
-        <p className="mb-3 text-xs text-slate-400">
-          Precio orientativo por comparables: usa el €/m² de propiedades similares ya cargadas en el CRM.
-        </p>
-
-        {!canEstimate && (
-          <p className="text-sm text-slate-400">
-            Añade ciudad y superficie (m²) a la propiedad para poder estimar su precio por comparables.
+          <div className="mb-1 flex items-center gap-1.5">
+            <Sparkles size={17} className="text-[#1c1815]" />
+            <h2 className="text-lg font-medium text-[#1c1815]">Valoración automática</h2>
+            <button
+              onClick={() => estimate.mutate()}
+              disabled={!canEstimate || estimate.isPending}
+              className="ml-auto rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#2a241f] disabled:opacity-40"
+            >
+              {estimate.isPending ? "Calculando…" : "Estimar precio"}
+            </button>
+          </div>
+          <p className="mb-3 text-xs text-slate-400">
+            Precio orientativo por comparables: usa el €/m² de propiedades similares ya cargadas en el CRM.
           </p>
-        )}
-        {estimate.isError && (
-          <p className="text-sm text-red-600">No hay suficientes propiedades comparables en el CRM todavía para estimar un precio.</p>
-        )}
+  
+          {!canEstimate && (
+            <p className="text-sm text-slate-400">
+              Añade ciudad y superficie (m²) a la propiedad para poder estimar su precio por comparables.
+            </p>
+          )}
+          {estimate.isError && (
+            <p className="text-sm text-red-600">No hay suficientes propiedades comparables en el CRM todavía para estimar un precio.</p>
+          )}
+  
+          <ul className="flex flex-wrap gap-2">
+            {(valuations ?? []).map((v) => (
+              <li key={v.id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
+                <div className="font-medium text-[#2a241f]">{formatCurrency(v.estimatedValue)}</div>
+                <div className="text-xs text-slate-500">
+                  {v.factors ? `${formatCurrency(v.factors.avgPricePerM2)}/m² · ${v.factors.comparablesCount} comparables` : ""}
+                  {" · "}
+                  {formatDate(v.createdAt)}
+                </div>
+              </li>
+            ))}
+            {(valuations ?? []).length === 0 && <p className="text-sm text-slate-400">Aún no se ha estimado ningún precio.</p>}
+          </ul>
+        </div>
+      )}
 
-        <ul className="flex flex-wrap gap-2">
-          {(valuations ?? []).map((v) => (
-            <li key={v.id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
-              <div className="font-medium text-[#2a241f]">{formatCurrency(v.estimatedValue)}</div>
-              <div className="text-xs text-slate-500">
-                {v.factors ? `${formatCurrency(v.factors.avgPricePerM2)}/m² · ${v.factors.comparablesCount} comparables` : ""}
-                {" · "}
-                {formatDate(v.createdAt)}
-              </div>
-            </li>
-          ))}
-          {(valuations ?? []).length === 0 && <p className="text-sm text-slate-400">Aún no se ha estimado ningún precio.</p>}
-        </ul>
-      </div>
+      <PropertyMapLink property={property} />
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-1 flex items-center gap-1.5 text-lg font-medium text-[#1c1815]">

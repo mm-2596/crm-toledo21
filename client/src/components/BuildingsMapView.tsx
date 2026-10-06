@@ -14,7 +14,7 @@ function makeIcon(building: Building, selected: boolean) {
   let ring = "#94a3b8";
   if (total > 0) {
     let from = 0;
-    const stops = (["A_LA_VENTA", "VENDIDA", "ALQUILADA", "CENSADA"] as const).map((status) => {
+    const stops = (["A_LA_VENTA", "A_ALQUILER", "ALQUILADA", "VENDIDA", "CENSADA"] as const).map((status) => {
       const to = from + (count(status) / total) * 100;
       const stop = `${dwellingStatusColors[status]} ${from}% ${to}%`;
       from = to;

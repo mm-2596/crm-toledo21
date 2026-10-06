@@ -3,6 +3,7 @@ import type { Request } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { safeUserSelect } from "../lib/linking.js";
 import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
 
 export const activitiesRouter = Router();
@@ -29,7 +30,7 @@ activitiesRouter.get(
         ...(req.user!.role === "ADMIN" ? {} : { OR: [{ dwellingId: null }, { agentId: req.user!.userId }] }),
       },
       orderBy: { dueDate: "asc" },
-      include: { contact: true, deal: true, agent: true, dwelling: dwellingActivityInclude },
+      include: { contact: true, deal: true, agent: { select: safeUserSelect }, dwelling: dwellingActivityInclude },
     });
     res.json(activities.map(({ dwelling, ...a }) => ({ ...a, dwelling: dwelling ? { id: dwelling.id, buildingId: dwelling.buildingId, label: dwellingLabel(dwelling) } : null })));
   }),

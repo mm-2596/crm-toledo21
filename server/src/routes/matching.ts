@@ -7,12 +7,13 @@ import { loadDwellingFor } from "./buildings.js";
 export const matchesRouter = Router();
 
 const place = (...parts: (string | null | undefined)[]) => parts.filter(Boolean).join(" ").toLowerCase();
+const rentalOnly = (role?: string) => role === "ADMINISTRACION";
 
 matchesRouter.get(
   "/property/:id",
   asyncHandler(async (req, res) => {
     const property = await prisma.property.findUnique({ where: { id: String(req.params.id) } });
-    if (!property) return res.status(404).json({ error: "Inmueble no encontrado" });
+    if (!property || (rentalOnly(req.user?.role) && property.listingType !== "ALQUILER")) return res.status(404).json({ error: "Inmueble no encontrado" });
     const matches = await findMatches({
       type: property.type,
       listingType: property.listingType,
@@ -26,21 +27,27 @@ matchesRouter.get(
   }),
 );
 
+/** Mismo cruce que desde la propiedad: si la vivienda tiene ficha en Propiedades, manda esa ficha (precio, habitaciones…). */
 matchesRouter.get(
   "/dwelling/:id",
   asyncHandler(async (req, res) => {
     const dwelling = await loadDwellingFor(req, String(req.params.id));
     if (!dwelling) return res.status(404).json({ error: "Vivienda no encontrada" });
-    if (!dwelling.price) return res.json({ price: null, listingType: "VENTA", needsPrice: true, matches: [] });
+    const linked = dwelling.propertyId ? await prisma.property.findUnique({ where: { id: dwelling.propertyId } }) : null;
+    const listingType = linked ? linked.listingType : dwelling.status === "A_ALQUILER" || dwelling.status === "ALQUILADA" ? "ALQUILER" : "VENTA";
+    if (rentalOnly(req.user?.role) && listingType !== "ALQUILER") return res.status(403).json({ error: "Tu perfil solo gestiona alquileres" });
+
+    const price = linked ? linked.price : dwelling.price;
+    if (!price) return res.json({ price: null, listingType, needsPrice: true, matches: [] });
     const matches = await findMatches({
-      type: dwelling.propertyType ?? "PISO",
-      listingType: "VENTA",
-      price: dwelling.price,
-      bedrooms: dwelling.bedrooms,
-      bathrooms: dwelling.bathrooms,
-      areaM2: dwelling.areaM2,
-      place: place(dwelling.building.city, dwelling.building.address, dwelling.building.name),
+      type: linked?.type ?? dwelling.propertyType ?? "PISO",
+      listingType,
+      price,
+      bedrooms: linked ? linked.bedrooms : dwelling.bedrooms,
+      bathrooms: linked ? linked.bathrooms : dwelling.bathrooms,
+      areaM2: linked ? linked.areaM2 : dwelling.areaM2,
+      place: place(dwelling.building.city, dwelling.building.address, dwelling.building.name, linked?.city, linked?.zone, linked?.address),
     });
-    res.json({ price: dwelling.price, listingType: "VENTA", needsPrice: false, matches });
+    res.json({ price, listingType, needsPrice: false, matches });
   }),
 );

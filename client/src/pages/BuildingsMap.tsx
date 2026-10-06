@@ -135,7 +135,7 @@ export function BuildingsMap() {
     });
   }
 
-  const totals = (["A_LA_VENTA", "VENDIDA", "ALQUILADA", "CENSADA"] as const).map((status) => ({
+  const totals = (["A_LA_VENTA", "A_ALQUILER", "ALQUILADA", "VENDIDA", "CENSADA"] as const).map((status) => ({
     status,
     count: allBuildings.reduce((sum, b) => sum + countByStatus(b, status), 0),
   }));
@@ -182,7 +182,7 @@ export function BuildingsMap() {
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {totals.map((t) => {
           const active = statusFilter === t.status;
           return (
@@ -362,13 +362,13 @@ export function BuildingsMap() {
                     <div className="text-xs text-slate-500">{b.address}</div>
                     {b.dwellings.length > 0 && (
                       <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        {(["A_LA_VENTA", "VENDIDA", "ALQUILADA", "CENSADA"] as const).map((status) => (
+                        {(["A_LA_VENTA", "A_ALQUILER", "ALQUILADA", "VENDIDA", "CENSADA"] as const).map((status) => (
                           <span key={status} style={{ width: `${(countByStatus(b, status) / b.dwellings.length) * 100}%`, background: dwellingStatusColors[status] }} />
                         ))}
                       </div>
                     )}
                     <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-600">
-                      {(["A_LA_VENTA", "VENDIDA", "ALQUILADA", "CENSADA"] as const).map((status) => (
+                      {(["A_LA_VENTA", "A_ALQUILER", "ALQUILADA", "VENDIDA", "CENSADA"] as const).map((status) => (
                         <span key={status} className="flex items-center gap-1" title={dwellingStatusLabels[status]}>
                           <StatusDot status={status} /> {countByStatus(b, status)}
                         </span>

@@ -32,11 +32,11 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="contactos" element={<Contacts />} />
           <Route path="contactos/:id" element={<ContactDetail />} />
+          <Route path="propiedades" element={<Properties />} />
+          <Route path="propiedades/:id" element={<PropertyDetail />} />
+          <Route path="visitas" element={<Visits />} />
           <Route element={<SalesRoute />}>
-            <Route path="propiedades" element={<Properties />} />
-            <Route path="propiedades/:id" element={<PropertyDetail />} />
             <Route path="pipeline" element={<Pipeline />} />
-            <Route path="visitas" element={<Visits />} />
           </Route>
           <Route path="mapa" element={<BuildingsMap />} />
           <Route path="tareas" element={<Tasks />} />

@@ -219,6 +219,7 @@ model Property {
   images     PropertyImage[]
   videos     PropertyVideo[]
   activities Activity[]
+  dwellings  Dwelling[]
 
   @@index([city])
   @@index([status])
@@ -384,6 +385,7 @@ enum DwellingStatus {
   A_LA_VENTA
   VENDIDA
   ALQUILADA
+  A_ALQUILER
 }
 
 /// Edificio censado, con coordenadas para pintarlo en el mapa de su oficina.
@@ -410,6 +412,8 @@ model Dwelling {
   door         String?
   status       DwellingStatus @default(CENSADA)
   /// Cliente principal (propietario) para poder buscar la vivienda por su nombre.
+  /// Ficha de Propiedades de este mismo piso: una vivienda es una sola cosa, vista desde el mapa o desde el catálogo.
+  propertyId   String?
   contactId    String?
   notes        String?        @db.Text
   /// Fase del seguimiento de venta (solo cuando la vivienda se ha cogido a la venta).
@@ -425,6 +429,7 @@ model Dwelling {
 
   building   Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
   contact    Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  property   Property?          @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   residents  DwellingResident[]
   files      DwellingFile[]
   activities Activity[]
@@ -432,6 +437,7 @@ model Dwelling {
 
   @@index([buildingId])
   @@index([contactId])
+  @@index([propertyId])
 }
 
 enum SaleStage {

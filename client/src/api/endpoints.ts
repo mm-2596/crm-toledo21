@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  ContactLinks,
   Lease,
   LeaseInput,
   Role,
@@ -52,6 +53,7 @@ export const ContactsApi = {
   update: (id: string, data: Partial<Contact>) =>
     api.put<Contact>(`/contacts/${id}`, data).then((r) => r.data),
   remove: (id: string) => api.delete(`/contacts/${id}`),
+  links: (id: string) => api.get<ContactLinks>(`/contacts/${id}/links`).then((r) => r.data),
   addSearch: (id: string, data: ContactSearchInput) => api.post<ContactSearch>(`/contacts/${id}/searches`, data).then((r) => r.data),
   updateSearch: (sid: string, data: ContactSearchInput) => api.put<ContactSearch>(`/contacts/searches/${sid}`, data).then((r) => r.data),
   removeSearch: (sid: string) => api.delete(`/contacts/searches/${sid}`),
@@ -189,6 +191,8 @@ export const DwellingsApi = {
   activities: (id: string) => api.get<Activity[]>(`/dwellings/${id}/activities`).then((r) => r.data),
   addActivity: (id: string, data: { type: ActivityType; description: string; dueDate?: string | null; hasTime?: boolean }) =>
     api.post<Activity>(`/dwellings/${id}/activities`, data).then((r) => r.data),
+  byProperty: (propertyId: string) =>
+    api.get<{ dwelling: (Dwelling & { building: Building }) | null; hidden: boolean }>(`/dwellings/by-property/${propertyId}`).then((r) => r.data),
   fileUrl: (id: string) => `/api/dwellings/files/${id}`,
   removeFile: (id: string) => api.delete(`/dwellings/files/${id}`),
 };

@@ -4,6 +4,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { safeUserSelect, syncDwellingFromProperty } from "../lib/linking.js";
 import { UPLOADS_ROOT, uploadPropertyImage, uploadPropertyVideo } from "../lib/upload.js";
 
 export const propertiesRouter = Router();
@@ -63,6 +64,19 @@ const propertyInput = z.object({
   agentId: z.string().optional().nullable(),
 });
 
+/** Administración solo trabaja con las propiedades en alquiler: el resto no existe para ese perfil. */
+propertiesRouter.param("id", async (req, res, next, id) => {
+  try {
+    if (req.user?.role === "ADMINISTRACION") {
+      const property = await prisma.property.findUnique({ where: { id: String(id) }, select: { listingType: true } });
+      if (!property || property.listingType !== "ALQUILER") return res.status(404).json({ error: "Propiedad no encontrada" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 propertiesRouter.get(
   "/",
   asyncHandler(async (req, res) => {
@@ -82,11 +96,12 @@ propertiesRouter.get(
           status ? { status: String(status) as never } : {},
           city ? { city: String(city) } : {},
           agentId ? { agentId: String(agentId) } : {},
+          req.user!.role === "ADMINISTRACION" ? { listingType: "ALQUILER" } : {},
         ],
       },
       orderBy: { createdAt: "desc" },
       include: {
-        agent: true,
+        agent: { select: safeUserSelect },
         images: { orderBy: { order: "asc" } },
         videos: { orderBy: { order: "asc" } },
       },
@@ -101,9 +116,9 @@ propertiesRouter.get(
     const property = await prisma.property.findUnique({
       where: { id: String(req.params.id) },
       include: {
-        agent: true,
-        deals: { include: { contact: true, stage: true } },
-        valuations: true,
+        agent: { select: safeUserSelect },
+        // Los negocios y valoraciones son de compraventa: Administración no los ve.
+        ...(req.user!.role === "ADMINISTRACION" ? {} : { deals: { include: { contact: true, stage: true } }, valuations: true }),
         images: { orderBy: { order: "asc" } },
         videos: { orderBy: { order: "asc" } },
       },
@@ -117,6 +132,7 @@ propertiesRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = propertyInput.parse(req.body);
+    if (req.user!.role === "ADMINISTRACION") data.listingType = "ALQUILER";
     const property = await prisma.property.create({
       data: { ...data, agentId: data.agentId ?? req.user!.userId },
     });
@@ -128,10 +144,12 @@ propertiesRouter.put(
   "/:id",
   asyncHandler(async (req, res) => {
     const data = propertyInput.partial().parse(req.body);
+    if (req.user!.role === "ADMINISTRACION") delete data.listingType;
     const property = await prisma.property.update({
       where: { id: String(req.params.id) },
       data,
     });
+    await syncDwellingFromProperty(property.id);
     res.json(property);
   }),
 );
@@ -139,6 +157,7 @@ propertiesRouter.put(
 propertiesRouter.delete(
   "/:id",
   asyncHandler(async (req, res) => {
+    if (req.user!.role === "ADMINISTRACION") return res.status(403).json({ error: "Solo un administrador puede borrar propiedades" });
     const property = await prisma.property.findUnique({ where: { id: String(req.params.id) } });
     await prisma.property.delete({ where: { id: String(req.params.id) } });
     if (property) {

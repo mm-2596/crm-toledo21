@@ -134,6 +134,7 @@ export const dwellingStatusLabels: Record<string, string> = {
   A_LA_VENTA: "A la venta",
   VENDIDA: "Vendida",
   ALQUILADA: "Alquilada",
+  A_ALQUILER: "En alquiler",
 };
 
 // Mismos colores en el mapa, la leyenda y las etiquetas.
@@ -142,6 +143,7 @@ export const dwellingStatusColors: Record<string, string> = {
   A_LA_VENTA: "#16a34a",
   VENDIDA: "#dc2626",
   ALQUILADA: "#2563eb",
+  A_ALQUILER: "#7c3aed",
 };
 
 // Fases del seguimiento de venta, en orden.

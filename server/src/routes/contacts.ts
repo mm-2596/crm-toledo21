@@ -1,13 +1,14 @@
 import { Router } from "express";
 import type { Request } from "express";
-import type { Prisma } from "@prisma/client";
+import type { Office, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { requireAdmin } from "../lib/auth.js";
 import { csvCell } from "../lib/csv.js";
 import { affordability } from "../lib/matching.js";
-import { PROPERTY_TYPES } from "./buildings.js";
+import { PROPERTY_TYPES, canUse, officeAccess } from "./buildings.js";
+import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
 
 const searchInput = z.object({
   propertyType: z.enum(PROPERTY_TYPES),
@@ -194,6 +195,54 @@ contactsRouter.get(
       : properties;
 
     res.json(sorted.slice(0, 3));
+  }),
+);
+
+/**
+ * Todo lo que une a esta persona con el resto del CRM: sus viviendas del mapa, sus alquileres (como propietario o
+ * inquilino) y sus próximas visitas. Solo se enseña lo de las oficinas a las que el usuario tiene acceso.
+ */
+contactsRouter.get(
+  "/:id/links",
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    if (!(await prisma.contact.findFirst({ where: { AND: [{ id }, rentalScope(req)] }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
+    const access = await officeAccess(req);
+    const role = req.user!.role;
+    const dwellingSelect = { id: true, buildingId: true, floor: true, door: true, status: true, building: { select: { name: true, office: true } } } as const;
+
+    const [dwellings, leases, visits] = await Promise.all([
+      prisma.dwelling.findMany({ where: { contactId: id }, select: dwellingSelect }),
+      role === "AGENT" ? Promise.resolve([]) : prisma.lease.findMany({ where: { OR: [{ ownerId: id }, { tenantId: id }] }, select: { id: true, status: true, monthlyRent: true, ownerId: true, dwelling: { select: dwellingSelect } }, orderBy: { createdAt: "desc" } }),
+      prisma.activity.findMany({
+        where: {
+          AND: [
+            { contactId: id, type: "VISITA", completed: false, dueDate: { gte: new Date(Date.now() - 12 * 3600_000) } },
+            role === "ADMIN" ? {} : { OR: [{ dwellingId: null }, { agentId: req.user!.userId }] },
+            role === "ADMINISTRACION"
+              ? { OR: [{ property: { listingType: "ALQUILER" } }, { dwelling: { status: { in: ["A_ALQUILER", "ALQUILADA"] } } }, { dwelling: { property: { listingType: "ALQUILER" } } }] }
+              : {},
+          ],
+        },
+        orderBy: { dueDate: "asc" },
+        include: { property: { select: { id: true, reference: true, title: true } }, dwelling: dwellingActivityInclude },
+      }),
+    ]);
+    const visible = (d: { building: { office: Office } }) => canUse(access, d.building.office);
+    res.json({
+      dwellings: dwellings.filter(visible).map((d) => ({ id: d.id, status: d.status, label: dwellingLabel(d) })),
+      leases: leases
+        .filter((l) => visible(l.dwelling))
+        .map((l) => ({ id: l.id, status: l.status, monthlyRent: l.monthlyRent, role: l.ownerId === id ? "PROPIETARIO" : "INQUILINO", label: dwellingLabel(l.dwelling) })),
+      visits: visits.map((v) => ({
+        id: v.id,
+        dueDate: v.dueDate,
+        location: v.location,
+        label: v.property ? `${v.property.reference} · ${v.property.title}` : v.dwelling ? dwellingLabel(v.dwelling) : "Visita",
+        property: v.property,
+        dwellingId: v.dwellingId,
+      })),
+    });
   }),
 );
 

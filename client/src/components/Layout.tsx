@@ -55,6 +55,8 @@ export function Layout() {
         ? [
             links[0],
             rentalLinks[0],
+            { to: "/propiedades", label: "Pisos en alquiler", icon: Building2 },
+            { to: "/visitas", label: "Visitas", icon: CalendarDays },
             links.find((l) => l.to === "/mapa")!,
             { to: "/contactos", label: "Clientes de alquiler", icon: Users },
             rentalLinks[1],

@@ -52,7 +52,7 @@ export function Visits() {
         </div>
       </div>
       <p className="mb-6 text-sm text-slate-500">
-        Las visitas con clientes, con día, hora y sitio. Se agendan desde «Clientes que buscan esto» en cada inmueble o vivienda.
+        Las visitas con clientes, con día, hora y sitio. Se agendan desde «Clientes que buscan esto» en cada inmueble o vivienda (los de Administración, solo de alquiler).
       </p>
 
       {isLoading ? (

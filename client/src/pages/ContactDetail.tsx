@@ -13,6 +13,7 @@ import {
   priorityLabels,
 } from "../lib/format";
 import { ContactProfile } from "../components/ContactProfile";
+import { ContactLinks } from "../components/ContactLinks";
 import { segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
 import { useToast } from "../components/Toast";
@@ -162,6 +163,8 @@ export function ContactDetail() {
           )}
         </div>
       </div>
+
+      <ContactLinks contactId={contact.id} />
 
       <ContactProfile key={`${contact.id}-${contact.updatedAt ?? ""}-${(contact.searches ?? []).length}`} contact={contact} />
 

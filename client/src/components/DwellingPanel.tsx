@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { ArrowLeft, Check, FileText, Paperclip, Pencil, Trash2, UserPlus } from "lucide-react";
-import { DwellingsApi } from "../api/endpoints";
+import { DwellingsApi, PropertiesApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { propertyTypeLabels, dwellingStatusColors, dwellingStatusLabels, formatDate, formatFileSize, residentRoleLabels, saleStageLabels, saleStages } from "../lib/format";
 import { useToast } from "./Toast";
@@ -58,6 +58,8 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
     bathrooms: dwelling.bathrooms != null ? String(dwelling.bathrooms) : "",
     areaM2: dwelling.areaM2 != null ? String(dwelling.areaM2) : "",
   });
+  const [propertyChoice, setPropertyChoice] = useState("");
+  const { data: properties } = useQuery({ queryKey: ["properties", "link-picker"], queryFn: () => PropertiesApi.list(), enabled: !dwelling.property });
   const [resident, setResident] = useState<(ResidentInput & { id?: string }) | null>(null);
 
   const saveData = useMutation({
@@ -101,6 +103,26 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
       showToast("Archivo adjuntado");
     },
     onError: (error) => showToast(getErrorMessage(error, "No se pudo subir el archivo (PDF, imagen, Word, Excel o texto de hasta 10 MB)"), "error"),
+  });
+  const linkProperty = useMutation({
+    mutationFn: (propertyId: string) => DwellingsApi.update(dwelling.id, { propertyId }),
+    onSuccess: () => {
+      setPropertyChoice("");
+      onChanged();
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["property-dwelling"] });
+      showToast("Vivienda vinculada con su ficha en Propiedades");
+    },
+    onError,
+  });
+  const unlinkProperty = useMutation({
+    mutationFn: () => DwellingsApi.update(dwelling.id, { propertyId: null }),
+    onSuccess: () => {
+      onChanged();
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["property-dwelling"] });
+    },
+    onError,
   });
   const removeFile = useMutation({ mutationFn: DwellingsApi.removeFile, onSuccess: onChanged, onError });
   const removeDwelling = useMutation({ mutationFn: () => DwellingsApi.remove(dwelling.id), onSuccess: onDeleted, onError });
@@ -192,7 +214,7 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
         </Section>
       )}
 
-      {dwelling.status === "A_LA_VENTA" && !rentalOnly && (
+      {(dwelling.status === "A_ALQUILER" || (dwelling.status === "A_LA_VENTA" && !rentalOnly)) && (
         <Section title="Clientes que buscan esta vivienda" hint="Cruce con lo que busca cada cliente. Agenda aquí la visita.">
           <MatchesPanel kind="dwelling" id={dwelling.id} address={[building.address, building.city].filter(Boolean).join(", ")} compact />
         </Section>
@@ -316,6 +338,34 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
         </button>
       </Section>
 
+      <Section title="Ficha en Propiedades" hint="El mismo piso en el catálogo: precio, fotos y anuncio.">
+        {dwelling.property ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            <Link to={`/propiedades/${dwelling.property.id}`} className="font-medium text-[#2a241f] hover:underline">
+              {dwelling.property.reference} · {dwelling.property.title}
+            </Link>
+            <button
+              onClick={() => window.confirm("¿Desvincular esta vivienda de su ficha en Propiedades? No se borra nada.") && unlinkProperty.mutate()}
+              className="text-xs text-slate-500 hover:text-red-600 hover:underline"
+            >
+              Desvincular
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <select value={propertyChoice} onChange={(e) => setPropertyChoice(e.target.value)} aria-label="Propiedad a vincular" className={inputClass}>
+              <option value="">Vincular con una propiedad…</option>
+              {(properties ?? []).map((p) => (
+                <option key={p.id} value={p.id}>{p.reference} · {p.title}</option>
+              ))}
+            </select>
+            <button onClick={() => propertyChoice && linkProperty.mutate(propertyChoice)} disabled={!propertyChoice || linkProperty.isPending} className="shrink-0 rounded-lg bg-[#1c1815] px-3 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-40">
+              Vincular
+            </button>
+          </div>
+        )}
+      </Section>
+
       <Section title="Datos de la vivienda">
         <form
           onSubmit={(e) => {
@@ -337,15 +387,26 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          {dwelling.property ? (
+            <p className="col-span-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              Precio, tipo y características se toman de su ficha en Propiedades ({dwelling.property.reference}): {dwelling.property.price.toLocaleString("es-ES")} €
+              {dwelling.property.bedrooms != null ? ` · ${dwelling.property.bedrooms} hab.` : ""}
+              {dwelling.property.bathrooms != null ? ` · ${dwelling.property.bathrooms} baños` : ""}
+              {dwelling.property.areaM2 != null ? ` · ${dwelling.property.areaM2} m²` : ""}. Se cambian allí.
+            </p>
+          ) : (
+            <>
           <select value={data.propertyType} onChange={(e) => setData({ ...data, propertyType: e.target.value as PropertyType })} aria-label="Tipo de inmueble" className={`${inputClass} col-span-2`}>
-            {Object.entries(propertyTypeLabels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          <input type="number" min={0} value={data.price} onChange={(e) => setData({ ...data, price: e.target.value })} placeholder="Precio de venta (€)" aria-label="Precio de venta" className={`${inputClass} col-span-2`} />
-          <input type="number" min={0} value={data.bedrooms} onChange={(e) => setData({ ...data, bedrooms: e.target.value })} placeholder="Habitaciones" aria-label="Habitaciones" className={inputClass} />
-          <input type="number" min={0} value={data.bathrooms} onChange={(e) => setData({ ...data, bathrooms: e.target.value })} placeholder="Baños" aria-label="Baños" className={inputClass} />
-          <input type="number" min={0} value={data.areaM2} onChange={(e) => setData({ ...data, areaM2: e.target.value })} placeholder="Metros cuadrados" aria-label="Metros cuadrados" className={`${inputClass} col-span-2`} />
+              {Object.entries(propertyTypeLabels).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <input type="number" min={0} value={data.price} onChange={(e) => setData({ ...data, price: e.target.value })} placeholder={dwelling.status === "A_ALQUILER" || dwelling.status === "ALQUILADA" ? "Renta mensual (€)" : "Precio de venta (€)"} aria-label="Precio" className={`${inputClass} col-span-2`} />
+            <input type="number" min={0} value={data.bedrooms} onChange={(e) => setData({ ...data, bedrooms: e.target.value })} placeholder="Habitaciones" aria-label="Habitaciones" className={inputClass} />
+            <input type="number" min={0} value={data.bathrooms} onChange={(e) => setData({ ...data, bathrooms: e.target.value })} placeholder="Baños" aria-label="Baños" className={inputClass} />
+            <input type="number" min={0} value={data.areaM2} onChange={(e) => setData({ ...data, areaM2: e.target.value })} placeholder="Metros cuadrados" aria-label="Metros cuadrados" className={`${inputClass} col-span-2`} />
+            </>
+          )}
           <textarea value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value })} rows={2} placeholder="Notas" aria-label="Notas" className={`${inputClass} col-span-2`} />
           <button type="submit" disabled={saveData.isPending} className="col-span-2 rounded-lg bg-[#1c1815] px-3 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50">
             Guardar datos

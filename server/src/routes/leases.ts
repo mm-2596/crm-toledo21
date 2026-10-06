@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { dwellingLabel } from "../lib/notifications.js";
+import { syncDwellingFromProperty } from "../lib/linking.js";
 import { canUse, officeAccess, uploadDwellingFile } from "./buildings.js";
 
 export const leasesRouter = Router();
@@ -44,10 +45,12 @@ async function loadLease(req: Request, id: string) {
 /** La vivienda aparece como alquilada en el mapa mientras tenga un alquiler vigente. */
 async function syncDwellingStatus(dwellingId: string) {
   const active = await prisma.lease.count({ where: { dwellingId, status: "VIGENTE" } });
-  const dwelling = await prisma.dwelling.findUnique({ where: { id: dwellingId }, select: { status: true } });
+  const dwelling = await prisma.dwelling.findUnique({ where: { id: dwellingId }, select: { status: true, propertyId: true } });
   if (!dwelling) return;
   if (active > 0 && dwelling.status !== "ALQUILADA") await prisma.dwelling.update({ where: { id: dwellingId }, data: { status: "ALQUILADA" } });
   if (active === 0 && dwelling.status === "ALQUILADA") await prisma.dwelling.update({ where: { id: dwellingId }, data: { status: "CENSADA" } });
+  // Si la vivienda tiene ficha en Propiedades, su estado manda: p. ej. vuelve a «en alquiler».
+  if (active === 0 && dwelling.propertyId) await syncDwellingFromProperty(dwelling.propertyId);
 }
 
 /** Avisos automáticos de fin de contrato (a los 90 y 30 días). Se recalculan cada vez que cambian las fechas. */

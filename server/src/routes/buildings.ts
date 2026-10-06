@@ -3,6 +3,7 @@ import type { Request } from "express";
 import { z } from "zod";
 import type { Office, Prisma } from "@prisma/client";
 import multer from "multer";
+import { propertyBriefSelect, syncDwellingFromProperty } from "../lib/linking.js";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 
@@ -10,7 +11,7 @@ export const buildingsRouter = Router();
 export const dwellingsRouter = Router();
 
 const OFFICES = ["GETAFE", "LEGANES", "LAS_ROZAS", "PUERTO_SAGUNTO"] as const;
-const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA", "ALQUILADA"] as const;
+const STATUSES = ["CENSADA", "A_LA_VENTA", "VENDIDA", "ALQUILADA", "A_ALQUILER"] as const;
 const STAGES = ["ENCARGO_VIGENTE", "RESERVADO", "ARRAS", "PENDIENTE_ESCRITURA", "FIRMADO_NOTARIO"] as const;
 const ROLES = ["PROPIETARIO", "INQUILINO", "HIJO_PROPIETARIO", "FAMILIAR", "OTRO"] as const;
 
@@ -70,6 +71,7 @@ const dwellingInput = z.object({
   saleStage: z.enum(STAGES).optional().nullable(),
   price: z.number().int().min(0).max(100_000_000).optional().nullable(),
   propertyType: z.enum(PROPERTY_TYPES).optional().nullable(),
+  propertyId: z.string().optional().nullable(),
   bedrooms: z.number().int().min(0).max(50).optional().nullable(),
   bathrooms: z.number().int().min(0).max(50).optional().nullable(),
   areaM2: z.number().int().min(0).max(100_000).optional().nullable(),
@@ -94,6 +96,7 @@ function applySaleStage<T extends { status?: (typeof STATUSES)[number]; saleStag
 }
 
 const dwellingInclude = {
+  property: { select: propertyBriefSelect },
   contact: { select: { id: true, name: true } },
   residents: { orderBy: { createdAt: "asc" as const } },
   leases: { select: { id: true, status: true, monthlyRent: true, endDate: true, tenant: { select: { name: true } } }, orderBy: { createdAt: "desc" as const } },
@@ -169,11 +172,31 @@ buildingsRouter.delete(
   }),
 );
 
+/** Por qué no se puede vincular esa propiedad (o null si se puede). Una propiedad solo va con una vivienda. */
+async function linkProblem(req: Request, propertyId: string, exceptDwellingId?: string): Promise<string | null> {
+  const property = await prisma.property.findUnique({ where: { id: propertyId }, select: { listingType: true } });
+  if (!property) return "Propiedad no encontrada";
+  if (req.user!.role === "ADMINISTRACION" && property.listingType !== "ALQUILER") return "Tu perfil solo gestiona propiedades en alquiler";
+  const other = await prisma.dwelling.findFirst({ where: { propertyId, ...(exceptDwellingId ? { id: { not: exceptDwellingId } } : {}) }, select: { id: true } });
+  return other ? "Esa propiedad ya está vinculada a otra vivienda" : null;
+}
+
 export async function loadDwellingFor(req: Request, id: string) {
   const dwelling = await prisma.dwelling.findUnique({ where: { id }, include: { building: true } });
   if (!dwelling || !canUse(await officeAccess(req), dwelling.building.office)) return null;
   return dwelling;
 }
+
+// La vivienda del mapa que corresponde a una propiedad del catálogo (si hay y el usuario tiene acceso a su oficina).
+dwellingsRouter.get(
+  "/by-property/:pid",
+  asyncHandler(async (req, res) => {
+    const dwelling = await prisma.dwelling.findFirst({ where: { propertyId: String(req.params.pid) }, include: { ...dwellingInclude, building: true } });
+    if (!dwelling) return res.json({ dwelling: null, hidden: false });
+    if (!canUse(await officeAccess(req), dwelling.building.office)) return res.json({ dwelling: null, hidden: true });
+    res.json({ dwelling, hidden: false });
+  }),
+);
 
 dwellingsRouter.post(
   "/",
@@ -181,10 +204,18 @@ dwellingsRouter.post(
     const { buildingId, ...rest } = z.object({ buildingId: z.string() }).merge(dwellingInput).parse(req.body);
     const building = await prisma.building.findUnique({ where: { id: buildingId } });
     if (!building || !canUse(await officeAccess(req), building.office)) return res.status(404).json({ error: "Edificio no encontrado" });
+    if (rest.propertyId) {
+      const problem = await linkProblem(req, rest.propertyId);
+      if (problem) return res.status(409).json({ error: problem });
+    }
     const dwelling = await prisma.dwelling.create({
-      data: { ...applySaleStage(rest), floor: rest.floor || null, door: rest.door || null, contactId: rest.contactId || null, notes: rest.notes || null, buildingId },
+      data: { ...applySaleStage(rest), propertyId: rest.propertyId || null, floor: rest.floor || null, door: rest.door || null, contactId: rest.contactId || null, notes: rest.notes || null, buildingId },
       include: dwellingInclude,
     });
+    if (dwelling.propertyId) {
+      await syncDwellingFromProperty(dwelling.propertyId);
+      return res.status(201).json(await prisma.dwelling.findUnique({ where: { id: dwelling.id }, include: dwellingInclude }));
+    }
     res.status(201).json(dwelling);
   }),
 );
@@ -205,7 +236,18 @@ dwellingsRouter.put(
     for (const key of ["price", "propertyType", "bedrooms", "bathrooms", "areaM2"] as const) {
       if (data[key] !== undefined) patch[key] = data[key];
     }
-    const dwelling = await prisma.dwelling.update({ where: { id }, data: patch, include: dwellingInclude });
+    if (data.propertyId !== undefined) {
+      if (data.propertyId) {
+        const problem = await linkProblem(req, data.propertyId, id);
+        if (problem) return res.status(409).json({ error: problem });
+      }
+      patch.propertyId = data.propertyId || null;
+    }
+    let dwelling = await prisma.dwelling.update({ where: { id }, data: patch, include: dwellingInclude });
+    if (data.propertyId) {
+      await syncDwellingFromProperty(data.propertyId);
+      dwelling = (await prisma.dwelling.findUnique({ where: { id }, include: dwellingInclude })) ?? dwelling;
+    }
     res.json(dwelling);
   }),
 );

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
+import { safeUserSelect } from "../lib/linking.js";
 
 export const pipelineRouter = Router();
 
@@ -13,7 +14,7 @@ pipelineRouter.get(
       include: {
         deals: {
           where: { status: "ABIERTO" },
-          include: { contact: true, property: true, agent: true },
+          include: { contact: true, property: true, agent: { select: safeUserSelect } },
           orderBy: { createdAt: "desc" },
         },
       },
