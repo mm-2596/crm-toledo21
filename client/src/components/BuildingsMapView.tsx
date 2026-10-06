@@ -115,5 +115,5 @@ export function BuildingsMapView({ buildings, selectedId, onSelect, draft, onPic
     map.panTo([draft.lat, draft.lng]);
   }, [draft]);
 
-  return <div ref={containerRef} className={`h-full min-h-[420px] w-full rounded-2xl ${onPick ? "cursor-crosshair" : ""}`} />;
+  return <div ref={containerRef} className={`isolate h-full min-h-[420px] w-full rounded-2xl ${onPick ? "cursor-crosshair" : ""}`} />;
 }
