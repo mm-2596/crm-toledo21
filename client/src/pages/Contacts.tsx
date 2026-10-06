@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Download, UserPlus, Users } from "lucide-react";
 import { ContactsApi } from "../api/endpoints";
 import { rentalSegments, priorityBadgeClasses, priorityLabels, propertyTypeLabels, segmentBadgeClasses, segmentLabels } from "../lib/format";
+import { MONTHS } from "../components/ContactGreetings";
 import { EmptyState } from "../components/EmptyState";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
@@ -63,6 +64,8 @@ export function Contacts() {
       segment: (String(form.get("segment") || "") || null) as Contact["segment"],
       notes: String(form.get("notes") || "") || null,
       marketingConsent: form.get("marketingConsent") === "on",
+      whatsappConsent: form.get("whatsappConsent") === "on",
+      ...(form.get("birthDay") && form.get("birthMonth") ? { birthDay: Number(form.get("birthDay")), birthMonth: Number(form.get("birthMonth")) } : {}),
     });
     e.currentTarget.reset();
   }
@@ -117,10 +120,29 @@ export function Contacts() {
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          <div className="col-span-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-slate-500">Cumpleaños (opcional):</span>
+            <select name="birthDay" defaultValue="" aria-label="Día del cumpleaños" className="rounded-lg border border-slate-300 px-2 py-2 text-sm">
+              <option value="">Día</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <select name="birthMonth" defaultValue="" aria-label="Mes del cumpleaños" className="rounded-lg border border-slate-300 px-2 py-2 text-sm">
+              <option value="">Mes</option>
+              {MONTHS.map((m, i) => (
+                <option key={m} value={i + 1}>{m}</option>
+              ))}
+            </select>
+          </div>
           <textarea name="notes" placeholder="Notas" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <label className="col-span-2 flex items-start gap-2 text-xs text-slate-500">
             <input type="checkbox" name="marketingConsent" className="mt-0.5" />
             Esta persona ha dado su consentimiento para recibir comunicaciones comerciales por email.
+          </label>
+          <label className="col-span-2 flex items-start gap-2 text-xs text-slate-500">
+            <input type="checkbox" name="whatsappConsent" className="mt-0.5" />
+            Esta persona ha dado su consentimiento para recibir mensajes por WhatsApp.
           </label>
           <button
             type="submit"

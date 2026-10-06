@@ -1,6 +1,10 @@
+import { randomBytes } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./prisma.js";
+import { rentalContactWhere } from "./contactScope.js";
+import { BIRTHDAY_DEFAULT, templateFor } from "./greetings.js";
 import { formatMadrid, madridDate, madridHour, taskDay } from "./madrid.js";
-import { sendDigestEmail, sendReminderEmail, type AgendaLine } from "./email.js";
+import { sendCampaignBatch, sendDigestEmail, sendReminderEmail, type AgendaLine } from "./email.js";
 import { classify, dwellingActivityInclude, dwellingLabel, ownedBy } from "./notifications.js";
 
 const REMIND_BEFORE_MS = 30 * 60 * 1000;
@@ -76,10 +80,82 @@ async function sendMorningDigests(now: Date) {
       if (taskDay(a.dueDate!, a.hasTime) === today && state !== "overdue") todayLines.push(line);
       else if (state === "overdue") overdueLines.push(line);
     }
+    const birthdays = await birthdayNamesFor(user.role, today);
     // Sin nada que contar no se manda correo: un resumen vacío solo molesta.
-    if (todayLines.length === 0 && overdueLines.length === 0) continue;
-    await sendDigestEmail([user.email], user.name, todayLines, overdueLines, crmUrl());
+    if (todayLines.length === 0 && overdueLines.length === 0 && birthdays.length === 0) continue;
+    await sendDigestEmail([user.email], user.name, todayLines, overdueLines, crmUrl(), birthdays);
   }
+}
+
+// --- Cumpleaños ---
+
+const BIRTHDAY_FROM_HOUR = 9;
+const BIRTHDAY_UNTIL_HOUR = 20;
+
+/** Quién cumple hoy. El 29 de febrero se felicita el 28 en los años que no son bisiestos. */
+function birthdayToday(today: string): Prisma.ContactWhereInput {
+  const [y, m, d] = today.split("-").map(Number);
+  const isLeap = new Date(Date.UTC(y, 1, 29)).getUTCMonth() === 1;
+  const days = m === 2 && d === 28 && !isLeap ? [28, 29] : [d];
+  return { birthMonth: m, birthDay: { in: days } };
+}
+
+function publicBaseUrl(): string {
+  const raw = process.env.PUBLIC_BASE_URL || process.env.CLIENT_ORIGIN || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : "");
+  return raw.replace(/\/+$/, "");
+}
+
+/**
+ * Felicita por email a quien cumple años hoy, solo si dio su consentimiento, tiene email y no se ha dado de baja.
+ * Se reclama a cada persona antes de enviar, así que aunque el servidor se reinicie no se repite en el mismo año.
+ * Con `dryRun` solo devuelve a quién se felicitaría.
+ */
+export async function sendBirthdayGreetings(now: Date, dryRun = false): Promise<string[]> {
+  if (!dryRun && (madridHour(now) < BIRTHDAY_FROM_HOUR || madridHour(now) >= BIRTHDAY_UNTIL_HOUR)) return [];
+  const template = await templateFor(BIRTHDAY_DEFAULT.key);
+  if (!template.enabled) return [];
+
+  const today = madridDate(now);
+  const year = Number(today.slice(0, 4));
+  const base = publicBaseUrl();
+  if (!dryRun && !base) {
+    console.warn("Cumpleaños: falta PUBLIC_BASE_URL/CLIENT_ORIGIN para el enlace de baja; no se envían felicitaciones.");
+    return [];
+  }
+
+  const pending: Prisma.ContactWhereInput = { OR: [{ birthdayGreetedYear: null }, { birthdayGreetedYear: { not: year } }] };
+  const where: Prisma.ContactWhereInput = {
+    AND: [birthdayToday(today), pending, { marketingConsent: true }, { unsubscribedAt: null }, { email: { not: null } }, { NOT: { email: "" } }],
+  };
+  const people = await prisma.contact.findMany({ where, select: { id: true, name: true, email: true, unsubscribeToken: true } });
+  if (dryRun) return people.map((p) => p.name);
+
+  const greeted: string[] = [];
+  for (const person of people) {
+    const claimed = await prisma.contact.updateMany({ where: { AND: [{ id: person.id }, pending] }, data: { birthdayGreetedYear: year } });
+    if (claimed.count === 0) continue;
+    let token = person.unsubscribeToken;
+    if (!token) {
+      token = randomBytes(24).toString("hex");
+      await prisma.contact.update({ where: { id: person.id }, data: { unsubscribeToken: token } });
+    }
+    const result = await sendCampaignBatch(
+      { subject: template.subject, body: template.body, theme: BIRTHDAY_DEFAULT.theme },
+      [{ to: person.email!, name: person.name, unsubscribeUrl: `${base}/api/public/unsubscribe?token=${token}` }],
+    );
+    if (result.ok) greeted.push(person.name);
+    else console.error(`Cumpleaños: no se pudo felicitar a ${person.name}: ${result.error}`);
+  }
+  return greeted;
+}
+
+async function birthdayNamesFor(role: string, today: string): Promise<string[]> {
+  const people = await prisma.contact.findMany({
+    where: { AND: [birthdayToday(today), role === "ADMINISTRACION" ? rentalContactWhere() : {}] },
+    select: { name: true },
+    orderBy: { name: "asc" },
+  });
+  return people.map((p) => p.name);
 }
 
 let running = false;
@@ -91,6 +167,7 @@ async function tick() {
     const now = new Date();
     await sendDueReminders(now);
     await sendMorningDigests(now);
+    await sendBirthdayGreetings(now);
   } catch (err) {
     console.error("Error en el ciclo de recordatorios:", err);
   } finally {

@@ -8,6 +8,7 @@ import { requireAdmin } from "../lib/auth.js";
 import { csvCell } from "../lib/csv.js";
 import { affordability } from "../lib/matching.js";
 import { PROPERTY_TYPES, canUse, officeAccess } from "./buildings.js";
+import { rentalContactWhere } from "../lib/contactScope.js";
 import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
 
 const searchInput = z.object({
@@ -30,15 +31,7 @@ const SEGMENTS = ["BUSCA_COMPRAR", "BUSCA_ALQUILER", "HA_COMPRADO", "PROPIETARIO
 
 /** Administración solo ve a la gente del mundo del alquiler: quien busca piso, propietarios e inquilinos. */
 function rentalScope(req: Request): Prisma.ContactWhereInput {
-  if (req.user!.role !== "ADMINISTRACION") return {};
-  return {
-    OR: [
-      { segment: { in: [...RENTAL_SEGMENTS] } },
-      { ownerLeases: { some: {} } },
-      { tenantLeases: { some: {} } },
-      { searches: { some: { listingType: "ALQUILER" } } },
-    ],
-  };
+  return req.user!.role === "ADMINISTRACION" ? rentalContactWhere() : {};
 }
 
 const contactInput = z.object({
@@ -62,14 +55,29 @@ const contactInput = z.object({
   priority: z.enum(["ALTA", "MEDIA", "BAJA"]).optional().nullable(),
   notes: z.string().optional().nullable(),
   marketingConsent: z.boolean().optional(),
+  whatsappConsent: z.boolean().optional(),
+  birthMonth: z.number().int().min(1).max(12).optional().nullable(),
+  birthDay: z.number().int().min(1).max(31).optional().nullable(),
 });
 
+/** Día y mes van juntos y el día debe existir en ese mes (el 29 de febrero vale). */
+function birthdayProblem(v: { birthMonth?: number | null; birthDay?: number | null }): string | null {
+  if (v.birthMonth === undefined && v.birthDay === undefined) return null;
+  if ((v.birthMonth == null) !== (v.birthDay == null)) return "Indica el día y el mes del cumpleaños";
+  if (v.birthMonth != null && v.birthDay != null && v.birthDay > [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][v.birthMonth - 1]) return "Ese día no existe en ese mes";
+  return null;
+}
+
 /** Al dar el consentimiento se registra la fecha y se anula una baja anterior; al retirarlo, deja de recibir campañas. */
-function withConsentDates<T extends { marketingConsent?: boolean }>(data: T) {
+function withConsentDates<T extends { marketingConsent?: boolean; whatsappConsent?: boolean }>(data: T) {
+  const out: T & { marketingConsentAt?: Date; unsubscribedAt?: null; whatsappConsentAt?: Date | null } = { ...data };
   if (data.marketingConsent === true) {
-    return { ...data, marketingConsentAt: new Date(), unsubscribedAt: null };
+    out.marketingConsentAt = new Date();
+    out.unsubscribedAt = null;
   }
-  return data;
+  if (data.whatsappConsent === true) out.whatsappConsentAt = new Date();
+  if (data.whatsappConsent === false) out.whatsappConsentAt = null;
+  return out;
 }
 
 contactsRouter.get(
@@ -279,6 +287,8 @@ contactsRouter.post(
   "/",
   asyncHandler(async (req, res) => {
     const data = contactInput.parse(req.body);
+    const birthdayError = birthdayProblem(data);
+    if (birthdayError) return res.status(400).json({ error: birthdayError });
     // Lo que da de alta Administración entra en su mundo (alquiler); si no se indica, busca alquilar.
     if (req.user!.role === "ADMINISTRACION" && !(data.segment && RENTAL_SEGMENTS.some((s) => s === data.segment))) data.segment = "BUSCA_ALQUILER";
     const contact = await prisma.contact.create({ data: withConsentDates(data) });
@@ -290,6 +300,8 @@ contactsRouter.put(
   "/:id",
   asyncHandler(async (req, res) => {
     const data = contactInput.partial().parse(req.body);
+    const birthdayError = birthdayProblem(data);
+    if (birthdayError) return res.status(400).json({ error: birthdayError });
     if (!(await prisma.contact.findFirst({ where: { AND: [{ id: String(req.params.id) }, rentalScope(req)] }, select: { id: true } }))) return res.status(404).json({ error: "Contacto no encontrado" });
     if (req.user!.role === "ADMINISTRACION" && data.segment && !RENTAL_SEGMENTS.some((s) => s === data.segment)) return res.status(403).json({ error: "Tu perfil solo gestiona alquileres" });
     const contact = await prisma.contact.update({

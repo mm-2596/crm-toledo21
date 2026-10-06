@@ -35,6 +35,7 @@ const campaignInput = z.object({
   ctaLabel: z.string().trim().max(60).optional().nullable(),
   ctaUrl: z.string().trim().max(500).optional().nullable(),
   segment: segmentSchema,
+  theme: z.enum(["NAVIDAD", "ANIO_NUEVO", "REYES", "DIA_PADRE", "DIA_MADRE", "SEMANA_SANTA", "VERANO", "CUMPLEANOS"]).optional().nullable(),
 });
 
 function validateCta(data: { ctaLabel?: string | null; ctaUrl?: string | null }) {

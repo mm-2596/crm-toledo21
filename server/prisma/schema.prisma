@@ -154,18 +154,27 @@ model Contact {
   updatedAt      DateTime         @updatedAt
 
   /// Consentimiento para recibir comunicaciones comerciales (RGPD / LSSI).
-  marketingConsent   Boolean   @default(false)
-  marketingConsentAt DateTime?
-  unsubscribedAt     DateTime?
+  marketingConsent    Boolean   @default(false)
+  marketingConsentAt  DateTime?
+  /// Permiso aparte para escribirle por WhatsApp (los envíos masivos solo van a quien lo tiene).
+  whatsappConsent     Boolean   @default(false)
+  whatsappConsentAt   DateTime?
+  /// Cumpleaños (sin año, para guardar solo lo necesario). Con ellos el CRM avisa y felicita.
+  birthMonth          Int?
+  birthDay            Int?
+  /// Último año en que se le envió la felicitación automática: evita repetirla.
+  birthdayGreetedYear Int?
+  unsubscribedAt      DateTime?
   /// Token del enlace de baja de los emails. Se genera al enviar la primera campaña.
-  unsubscribeToken   String?   @unique
+  unsubscribeToken    String?   @unique
 
-  deals        Deal[]
-  activities   Activity[]
-  dwellings    Dwelling[]
-  searches     ContactSearch[]
-  ownerLeases  Lease[]         @relation("LeaseOwner")
-  tenantLeases Lease[]         @relation("LeaseTenant")
+  deals             Deal[]
+  activities        Activity[]
+  dwellings         Dwelling[]
+  searches          ContactSearch[]
+  ownerLeases       Lease[]            @relation("LeaseOwner")
+  tenantLeases      Lease[]            @relation("LeaseTenant")
+  whatsappGreetings WhatsappGreeting[]
 
   @@index([email])
   @@index([phone])
@@ -346,6 +355,8 @@ model Campaign {
   body           String         @db.Text
   ctaLabel       String?
   ctaUrl         String?
+  /// Postal con la que se viste el correo (NAVIDAD, REYES…). Sin tema, es el correo de siempre.
+  theme          String?
   /// Filtros de audiencia (ver routes/campaigns.ts). Siempre se exige consentimiento y no estar dado de baja.
   segment        Json?
   status         CampaignStatus @default(BORRADOR)
@@ -563,4 +574,28 @@ model LeaseFile {
   lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
 
   @@index([leaseId])
+}
+
+/// Mensajes de felicitación que la oficina ha retocado (Navidad, cumpleaños…). Lo que no está aquí usa el texto por defecto.
+model GreetingTemplate {
+  key          String   @id
+  subject      String?
+  body         String?  @db.Text
+  whatsappText String?  @db.Text
+  enabled      Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+}
+
+/// Felicitación por WhatsApp ya enviada a un cliente en una ocasión (p. ej. NAVIDAD-2026), para no repetirla.
+model WhatsappGreeting {
+  id        String   @id @default(cuid())
+  contactId String
+  occasion  String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([occasion])
+  @@index([contactId])
 }

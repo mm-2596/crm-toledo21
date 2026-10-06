@@ -144,6 +144,46 @@ export interface CampaignContent {
   body: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
+  /** Postal con la que se viste el correo (ver POSTCARD_THEMES). Sin tema, el correo de campaña de siempre. */
+  theme?: string | null;
+}
+
+/** Postales de felicitación: colores de la marca con un toque de cada fiesta. */
+const POSTCARD_THEMES: Record<string, { from: string; to: string; fg: string; accent: string; ornament: string }> = {
+  NAVIDAD: { from: "#1f3d2e", to: "#14110f", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#10022; &nbsp;&#10052;&nbsp; &#10022;" },
+  ANIO_NUEVO: { from: "#14110f", to: "#3a2f22", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#10022; &nbsp;&#10022;&nbsp; &#10022;" },
+  REYES: { from: "#3b2a5a", to: "#1d1530", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#9733; &nbsp;&#9733;&nbsp; &#9733;" },
+  DIA_PADRE: { from: "#1f3a5f", to: "#13243d", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#10022; &nbsp;&#10022;&nbsp; &#10022;" },
+  DIA_MADRE: { from: "#8a3b5a", to: "#5c2339", fg: "#fdf6f8", accent: "#f3d3a4", ornament: "&#10048; &nbsp;&#10048;&nbsp; &#10048;" },
+  SEMANA_SANTA: { from: "#4d4160", to: "#2c2438", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#10022; &nbsp;&#10022;&nbsp; &#10022;" },
+  VERANO: { from: "#c2681f", to: "#8f4510", fg: "#fff8ef", accent: "#ffe2a8", ornament: "&#9728; &nbsp;&#9728;&nbsp; &#9728;" },
+  CUMPLEANOS: { from: "#14110f", to: "#3a2f22", fg: "#faf8f4", accent: "#e0b97d", ornament: "&#10022; &nbsp;&#10022;&nbsp; &#10022;" },
+};
+
+/** Dónde estamos: se pone al pie de las felicitaciones para que nos tengan presentes. */
+const OFFICE_CARD = [
+  { name: "Getafe", address: "C. Toledo, 21", phone: "916 95 84 22", maps: "Toledo21 C. Toledo 21 Getafe" },
+  { name: "Leganés", address: "Av. Rey Juan Carlos I, 26", phone: "910 08 21 21", maps: "Toledo21 Av. Rey Juan Carlos I 26 Leganés" },
+  { name: "Las Rozas (gestoría)", address: "C. Esperanza, 2, Local 4", phone: "", maps: "C. Esperanza 2 Las Rozas de Madrid" },
+  { name: "Puerto de Sagunto", address: "Av. Hispanitat, 5", phone: "", maps: "Toledo21 Av. Hispanitat 5 Puerto de Sagunto" },
+];
+
+function officeCardHtml() {
+  const rows = OFFICE_CARD.map((o) => {
+    const link = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.maps)}`;
+    return `<tr>
+      <td style="padding:5px 12px 5px 0;font-size:13px;color:#14110f;white-space:nowrap;vertical-align:top;"><strong>${escapeHtml(o.name)}</strong></td>
+      <td style="padding:5px 0;font-size:13px;color:#4a443d;">${escapeHtml(o.address)}${o.phone ? ` · ${escapeHtml(o.phone)}` : ""} · <a href="${link}" style="color:#8a6a3b;">Cómo llegar</a></td>
+    </tr>`;
+  }).join("");
+  return `<p style="margin:0 0 8px 0;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8378;">Dónde estamos</p>
+    <table role="presentation" style="border-collapse:collapse;">${rows}</table>
+    <p style="margin:10px 0 0 0;font-size:13px;"><a href="${escapeHtml(WEBSITE_URL)}" style="color:#8a6a3b;">${escapeHtml(WEBSITE_URL.replace(/^https?:\/\//, ""))}</a></p>`;
+}
+
+function personalizeText(text: string, name: string) {
+  const first = name.trim().split(/\s+/)[0] || "";
+  return text.replace(/\{\{\s*nombre\s*\}\}/gi, first);
 }
 
 export interface CampaignMessage {
@@ -180,20 +220,42 @@ export function renderCampaignHtml(content: CampaignContent, name: string, unsub
       ? `<tr><td style="padding:8px 32px 32px 32px;"><a href="${escapeHtml(content.ctaUrl)}" style="display:inline-block;background:#14110f;color:#faf8f4;text-decoration:none;font-size:14px;font-weight:600;padding:13px 26px;border-radius:999px;">${escapeHtml(content.ctaLabel)}</a></td></tr>`
       : "";
 
-  return `
-  <div style="background:#f1ede4;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#faf8f4;border-radius:16px;overflow:hidden;border:1px solid #e4ddd0;">
-      <tr><td style="padding:28px 32px 0 32px;"><img src="${WEBSITE_URL}/logo/toledo21-wordmark.png" alt="Toledo21" height="34" style="height:34px;width:auto;display:block;border-radius:3px;" /></td></tr>
-      <tr><td style="padding:24px 32px 12px 32px;"><h1 style="margin:0;font-size:22px;line-height:1.3;color:#14110f;">${escapeHtml(content.subject)}</h1></td></tr>
-      <tr><td style="padding:0 32px 16px 32px;">${paragraphs}</td></tr>
-      ${cta}
-      <tr><td style="padding:20px 32px;border-top:1px solid #e4ddd0;">
+  const title = escapeHtml(personalizeText(content.subject, name));
+  const theme = content.theme ? POSTCARD_THEMES[content.theme] : undefined;
+
+  // Con postal: banda de color con el título grande en lugar del título normal.
+  const heading = theme
+    ? `<tr><td align="center" bgcolor="${theme.from}" style="background-color:${theme.from};background-image:linear-gradient(135deg,${theme.from},${theme.to});padding:44px 28px;text-align:center;">
+        <p style="margin:0 0 14px 0;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:${theme.accent};">Toledo21 &middot; Somos Tu Inmobiliaria</p>
+        <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.2;font-weight:normal;color:${theme.fg};">${title}</h1>
+        <p style="margin:18px 0 0 0;font-size:20px;letter-spacing:0.4em;color:${theme.accent};">${theme.ornament}</p>
+      </td></tr>`
+    : `<tr><td style="padding:24px 32px 12px 32px;"><h1 style="margin:0;font-size:22px;line-height:1.3;color:#14110f;">${title}</h1></td></tr>`;
+  const logo = `<tr><td style="padding:28px 32px ${theme ? "20px" : "0"} 32px;"><img src="${WEBSITE_URL}/logo/toledo21-wordmark.png" alt="Toledo21" height="34" style="height:34px;width:auto;display:block;border-radius:3px;" /></td></tr>`;
+
+  const footer = theme
+    ? `<tr><td style="padding:22px 32px;border-top:1px solid #e4ddd0;">${officeCardHtml()}
+        <p style="margin:16px 0 0 0;font-size:12px;line-height:1.7;color:#8a8378;">
+          Recibes este email porque aceptaste recibir comunicaciones de Toledo21.
+          <a href="${escapeHtml(unsubscribeUrl)}" style="color:#8a8378;">Darme de baja</a>
+        </p>
+      </td></tr>`
+    : `<tr><td style="padding:20px 32px;border-top:1px solid #e4ddd0;">
         <p style="margin:0;font-size:12px;line-height:1.7;color:#8a8378;">
           Toledo21 · Somos Tu Inmobiliaria · C. Toledo, 21, 28901 Getafe, Madrid<br />
           Recibes este email porque aceptaste recibir comunicaciones de Toledo21.
           <a href="${escapeHtml(unsubscribeUrl)}" style="color:#8a8378;">Darme de baja</a>
         </p>
-      </td></tr>
+      </td></tr>`;
+
+  return `
+  <div style="background:#f1ede4;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#faf8f4;border-radius:16px;overflow:hidden;border:1px solid #e4ddd0;">
+      ${logo}
+      ${heading}
+      <tr><td style="padding:${theme ? "28px" : "0"} 32px 16px 32px;">${paragraphs}</td></tr>
+      ${cta}
+      ${footer}
     </table>
   </div>`;
 }
@@ -209,7 +271,7 @@ export async function sendCampaignBatch(
       messages.map((m) => ({
         from: FROM_EMAIL,
         to: m.to,
-        subject: content.subject,
+        subject: personalizeText(content.subject, m.name),
         html: renderCampaignHtml(content, m.name, m.unsubscribeUrl),
         headers: {
           "List-Unsubscribe": `<${m.unsubscribeUrl}>`,
@@ -291,10 +353,11 @@ export function sendReminderEmail(to: string[], line: AgendaLine, crmUrl: string
   return sendAgentMail(to, `${ACTIVITY_LABELS[line.type] ?? "Aviso"} ${line.when.split(", ").pop()}: ${line.description}`.slice(0, 150), html);
 }
 
-export function sendDigestEmail(to: string[], name: string, today: AgendaLine[], overdue: AgendaLine[], crmUrl: string) {
+export function sendDigestEmail(to: string[], name: string, today: AgendaLine[], overdue: AgendaLine[], crmUrl: string, birthdays: string[] = []) {
   const first = escapeHtml(name.trim().split(/\s+/)[0] || "");
   const inner = `
     ${today.length ? `<p style="margin:0 0 6px 0;font-size:14px;color:#4a443d;">Esto es lo que tienes hoy, ${first}:</p><table role="presentation" style="border-collapse:collapse;">${agendaRows(today)}</table>` : `<p style="margin:0;font-size:14px;color:#4a443d;">Hoy no tienes nada con fecha, ${first}.</p>`}
-    ${overdue.length ? `<p style="margin:18px 0 6px 0;font-size:14px;color:#b45309;">Pendientes de días anteriores (${overdue.length}):</p><table role="presentation" style="border-collapse:collapse;">${agendaRows(overdue.slice(0, 8))}</table>` : ""}`;
-  return sendAgentMail(to, `Tu agenda de hoy (${today.length} ${today.length === 1 ? "tarea" : "tareas"})`, agentMailShell("Tu agenda de hoy", inner, crmUrl));
+    ${overdue.length ? `<p style="margin:18px 0 6px 0;font-size:14px;color:#b45309;">Pendientes de días anteriores (${overdue.length}):</p><table role="presentation" style="border-collapse:collapse;">${agendaRows(overdue.slice(0, 8))}</table>` : ""}
+    ${birthdays.length ? `<p style="margin:18px 0 6px 0;font-size:14px;color:#4a443d;"><strong>Hoy cumplen años</strong> (los que tienen consentimiento reciben nuestra felicitación por email; a los demás, felicítalos tú):</p><p style="margin:0;font-size:14px;color:#14110f;">${birthdays.map(escapeHtml).join(" · ")}</p>` : ""}`;
+  return sendAgentMail(to, `Tu agenda de hoy (${today.length} ${today.length === 1 ? "tarea" : "tareas"}${birthdays.length ? `, ${birthdays.length} ${birthdays.length === 1 ? "cumpleaños" : "cumpleaños"}` : ""})`, agentMailShell("Tu agenda de hoy", inner, crmUrl));
 }

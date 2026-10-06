@@ -1,5 +1,9 @@
 import { api } from "./client";
 import type {
+  BirthdayItem,
+  FestivitiesResponse,
+  GreetingTexts,
+  WhatsappRecipient,
   ContactLinks,
   Lease,
   LeaseInput,
@@ -229,4 +233,16 @@ export const LeasesApi = {
 
 export const TeamApi = {
   overview: (office?: Office) => api.get<{ users: TeamOverviewUser[] }>("/team/overview", { params: { office } }).then((r) => r.data.users),
+};
+
+export const GreetingsApi = {
+  birthdays: (days = 30) => api.get<{ autoEmail: boolean; birthdays: BirthdayItem[] }>("/greetings/birthdays", { params: { days } }).then((r) => r.data),
+  festivities: () => api.get<FestivitiesResponse>("/greetings/festivities").then((r) => r.data),
+  saveTemplate: (key: string, data: { subject?: string | null; body?: string | null; whatsappText?: string | null; enabled?: boolean }) =>
+    api.put<{ template: GreetingTexts }>(`/greetings/templates/${key}`, data).then((r) => r.data),
+  createCampaign: (key: string) => api.post<{ id: string }>(`/greetings/festivities/${key}/campaign`).then((r) => r.data),
+  whatsapp: (key: string) =>
+    api.get<{ occasion: string; recipients: WhatsappRecipient[]; invalidPhones: number }>(`/greetings/festivities/${key}/whatsapp`).then((r) => r.data),
+  markSent: (contactId: string, occasion: string) => api.post("/greetings/whatsapp-sent", { contactId, occasion }),
+  preview: (key: string) => api.get<{ html: string }>(`/greetings/preview/${key}`).then((r) => r.data.html),
 };

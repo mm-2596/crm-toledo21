@@ -7,12 +7,12 @@ import {
   activityTypeLabels,
   contactSourceLabels,
   formatCurrency,
-  formatDate,
   formatDateTime,
   priorityBadgeClasses,
   priorityLabels,
 } from "../lib/format";
 import { ContactProfile } from "../components/ContactProfile";
+import { ContactGreetings } from "../components/ContactGreetings";
 import { ContactLinks } from "../components/ContactLinks";
 import { segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
@@ -47,15 +47,6 @@ export function ContactDetail() {
   });
 
   const { data: agents } = useQuery({ queryKey: ["assignable-users"], queryFn: UsersApi.assignable });
-
-  const toggleConsent = useMutation({
-    mutationFn: (value: boolean) => ContactsApi.update(id as string, { marketingConsent: value }),
-    onSuccess: (_data, value) => {
-      queryClient.invalidateQueries({ queryKey: ["contact", id] });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      showToast(value ? "Consentimiento registrado" : "Consentimiento retirado");
-    },
-  });
 
   const addActivity = useMutation({
     mutationFn: ActivitiesApi.create,
@@ -190,25 +181,7 @@ export function ContactDetail() {
         </div>
       )}
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-1 text-lg font-medium text-[#1c1815]">Comunicaciones por email</h2>
-        <p className="mb-3 text-sm text-slate-500">
-          {contact.marketingConsent
-            ? `Acepta recibir novedades por email${contact.marketingConsentAt ? ` (desde el ${formatDate(contact.marketingConsentAt)})` : ""}.`
-            : contact.unsubscribedAt
-              ? `Se dio de baja el ${formatDate(contact.unsubscribedAt)}. No recibirá más campañas.`
-              : "No ha dado su consentimiento: no recibirá campañas de email."}
-        </p>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={Boolean(contact.marketingConsent)}
-            disabled={toggleConsent.isPending}
-            onChange={(e) => toggleConsent.mutate(e.target.checked)}
-          />
-          Ha dado su consentimiento para recibir comunicaciones comerciales
-        </label>
-      </div>
+      <ContactGreetings key={`${contact.id}-${contact.updatedAt ?? ""}`} contact={contact} />
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Notas</h2>

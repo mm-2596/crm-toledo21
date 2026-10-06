@@ -80,6 +80,9 @@ export interface Contact {
   notes?: string | null;
   marketingConsent?: boolean;
   marketingConsentAt?: string | null;
+  whatsappConsent?: boolean;
+  birthMonth?: number | null;
+  birthDay?: number | null;
   unsubscribedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
@@ -489,4 +492,51 @@ export interface TeamOverviewUser {
   today: TeamTask[];
   upcoming: TeamTask[];
   recent: TeamTask[];
+}
+
+export interface GreetingTexts {
+  subject: string;
+  body: string;
+  whatsappText: string;
+  enabled: boolean;
+  customized: boolean;
+}
+
+export interface Festivity {
+  key: string;
+  name: string;
+  theme: string;
+  date: string;
+  daysLeft: number;
+  occasion: string;
+  template: GreetingTexts;
+  whatsappSent: number;
+}
+
+export interface FestivitiesResponse {
+  festivities: Festivity[];
+  birthday: { key: string; template: GreetingTexts };
+  audience: { email: number; whatsapp: number };
+}
+
+export interface BirthdayItem {
+  id: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  month: number;
+  day: number;
+  daysLeft: number;
+  emailConsent: boolean;
+  emailSent: boolean;
+  whatsappSent: boolean;
+  whatsappUrl: string | null;
+}
+
+export interface WhatsappRecipient {
+  id: string;
+  name: string;
+  phone: string | null;
+  sent: boolean;
+  url: string | null;
 }

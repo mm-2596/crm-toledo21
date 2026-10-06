@@ -10,6 +10,7 @@ import { Visits } from "./pages/Visits";
 import { Tasks } from "./pages/Tasks";
 import { Help } from "./pages/Help";
 import { Team } from "./pages/Team";
+import { Greetings } from "./pages/Greetings";
 import { Campaigns } from "./pages/Campaigns";
 import { BuildingsMap } from "./pages/BuildingsMap";
 import { Profile } from "./pages/Profile";
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="perfil" element={<Profile />} />
           <Route element={<AdminRoute />}>
             <Route path="campanas" element={<Campaigns />} />
+            <Route path="felicitaciones" element={<Greetings />} />
             <Route path="equipo" element={<Team />} />
           </Route>
         </Route>

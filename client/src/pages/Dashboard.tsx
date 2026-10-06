@@ -7,6 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import { endBadge } from "../lib/leases";
 import { formatCurrency, formatDate } from "../lib/format";
 import { TodayTasks } from "../components/TodayTasks";
+import { BirthdaysCard } from "../components/BirthdaysCard";
 
 function StatCard({
   label,
@@ -47,6 +48,7 @@ function SalesDashboard() {
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
       <TodayTasks />
+      <BirthdaysCard />
 
       {isEmpty && (
         <div className="mb-6 flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
@@ -101,6 +103,7 @@ function RentalsHome() {
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel de alquileres</h1>
       <p className="mb-6 text-sm text-slate-500">Tus tareas de hoy y los contratos que terminan pronto.</p>
       <TodayTasks />
+      <BirthdaysCard />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Contratos que terminan en los próximos 90 días</h2>
         {ending.length === 0 ? (
