@@ -87,14 +87,14 @@ propertiesRouter.get(
           q
             ? {
                 OR: [
-                  { title: { contains: String(q) } },
-                  { reference: { contains: String(q) } },
-                  { city: { contains: String(q) } },
+                  { title: { contains: String(q), mode: "insensitive" } },
+                  { reference: { contains: String(q), mode: "insensitive" } },
+                  { city: { contains: String(q), mode: "insensitive" } },
                 ],
               }
             : {},
           status ? { status: String(status) as never } : {},
-          city ? { city: String(city) } : {},
+          city ? { city: { equals: String(city), mode: "insensitive" } } : {},
           agentId ? { agentId: String(agentId) } : {},
           req.user!.role === "ADMINISTRACION" ? { listingType: "ALQUILER" } : {},
         ],

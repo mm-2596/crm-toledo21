@@ -18,8 +18,8 @@ export function generateDescription(property: Pick<Property, "type" | "city" | "
   );
 
   const features: string[] = [];
-  if (property.bedrooms) features.push(`${property.bedrooms} habitaciones`);
-  if (property.bathrooms) features.push(`${property.bathrooms} baños`);
+  if (property.bedrooms) features.push(`${property.bedrooms} ${property.bedrooms === 1 ? "habitación" : "habitaciones"}`);
+  if (property.bathrooms) features.push(`${property.bathrooms} ${property.bathrooms === 1 ? "baño" : "baños"}`);
   if (features.length > 0) parts.push(`Cuenta con ${features.join(" y ")}.`);
 
   parts.push("Una oportunidad a tener en cuenta por su ubicación y distribución.");
