@@ -67,7 +67,7 @@ export function Pipeline() {
       </p>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-4 gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <form onSubmit={handleSubmit} className="mb-6 grid grid-cols-1 gap-3 rounded-2xl sm:grid-cols-4 border border-slate-200 bg-white p-5 shadow-sm">
           <select name="contactId" required className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Contacto…</option>
             {(contacts ?? []).map((c) => (
@@ -96,7 +96,7 @@ export function Pipeline() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="col-span-4 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50"
+            className="rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] disabled:opacity-50 sm:col-span-4"
           >
             Crear oportunidad
           </button>

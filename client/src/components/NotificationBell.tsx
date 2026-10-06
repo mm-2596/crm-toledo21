@@ -89,7 +89,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] rounded-2xl md:left-0 md:right-auto md:w-80 border border-slate-200 bg-white shadow-xl">
           <div className="border-b border-slate-100 px-4 py-3 text-sm font-medium text-[#1c1815]">Tus avisos</div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-slate-500">No tienes nada pendiente. 🎉</p>

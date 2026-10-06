@@ -218,8 +218,8 @@ export function ContactDetail() {
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Actividad y tareas</h2>
 
-        <form onSubmit={handleAddActivity} className="mb-4 grid grid-cols-4 gap-2">
-          <select name="type" className="rounded-lg border border-slate-300 px-2 py-2 text-sm">
+        <form onSubmit={handleAddActivity} className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <select name="type" className="col-span-2 rounded-lg sm:col-span-1 border border-slate-300 px-2 py-2 text-sm">
             {Object.entries(activityTypeLabels).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -235,10 +235,10 @@ export function ContactDetail() {
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
           </select>
-          <p className="col-span-4 text-xs text-slate-400">Pon fecha y hora para que el responsable reciba un aviso 30 minutos antes.</p>
+          <p className="col-span-2 text-xs text-slate-400 sm:col-span-4">Pon fecha y hora para que el responsable reciba un aviso 30 minutos antes.</p>
           <button
             type="submit"
-            className="col-span-4 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
+            className="col-span-2 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f] sm:col-span-4"
           >
             Añadir
           </button>

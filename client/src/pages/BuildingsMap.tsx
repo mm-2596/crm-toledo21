@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Building2, MapPin, Plus, Search } from "lucide-react";
@@ -94,6 +94,13 @@ export function BuildingsMap() {
     },
     onError,
   });
+  // En el móvil el panel queda debajo del mapa: al elegir un edificio, una vivienda o «Nuevo edificio» se baja hasta él.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelOpen = Boolean(selectedId || form);
+  useEffect(() => {
+    if (panelOpen && window.matchMedia("(max-width: 1023px)").matches) panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedId, dwellingId, panelOpen]);
+
   const draft = form && form.latitude !== "" && form.longitude !== "" && !Number.isNaN(Number(form.latitude)) && !Number.isNaN(Number(form.longitude))
     ? { lat: Number(form.latitude), lng: Number(form.longitude) }
     : null;
@@ -142,11 +149,11 @@ export function BuildingsMap() {
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Mapa de viviendas</h1>
         <button
           onClick={openNew}
-          className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
         >
           <Plus size={16} /> Nuevo edificio
         </button>
@@ -182,7 +189,7 @@ export function BuildingsMap() {
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mb-4 grid grid-cols-5 gap-1.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
         {totals.map((t) => {
           const active = statusFilter === t.status;
           return (
@@ -190,14 +197,14 @@ export function BuildingsMap() {
               key={t.status}
               onClick={() => setStatusFilter(active ? null : t.status)}
               aria-pressed={active}
-              className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 text-left shadow-sm transition-colors hover:bg-slate-50 ${
+              className={`flex flex-col items-center gap-1 rounded-xl border bg-white px-1 py-2 text-center shadow-sm transition-colors hover:bg-slate-50 sm:flex-row sm:gap-3 sm:px-4 sm:py-3 sm:text-left ${
                 active ? "border-[#1c1815] ring-1 ring-[#1c1815]" : "border-slate-200"
               }`}
             >
-              <span className="h-9 w-9 shrink-0 rounded-full" style={{ background: dwellingStatusColors[t.status], boxShadow: `0 0 0 4px ${dwellingStatusColors[t.status]}22` }} />
+              <span className="h-3 w-3 shrink-0 rounded-full sm:h-9 sm:w-9" style={{ background: dwellingStatusColors[t.status], boxShadow: `0 0 0 4px ${dwellingStatusColors[t.status]}22` }} />
               <span>
-                <span className="block text-2xl font-semibold leading-none tabular-nums text-[#1c1815]">{t.count}</span>
-                <span className="mt-1 block text-xs text-slate-500">{dwellingStatusLabels[t.status]}{active ? " · filtrando" : ""}</span>
+                <span className="block text-lg font-semibold leading-none tabular-nums text-[#1c1815] sm:text-2xl">{t.count}</span>
+                <span className="mt-1 block text-[10px] leading-tight text-slate-500 sm:text-xs">{dwellingStatusLabels[t.status]}{active ? " · filtrando" : ""}</span>
               </span>
             </button>
           );
@@ -219,7 +226,7 @@ export function BuildingsMap() {
           />
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto rounded-2xl lg:max-h-[calc(100vh-20rem)] lg:min-h-[520px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div ref={panelRef} className="scroll-mt-16 rounded-2xl lg:max-h-[calc(100vh-20rem)] lg:min-h-[520px] lg:overflow-y-auto border border-slate-200 bg-white p-4 shadow-sm">
           {form ? (
             <form onSubmit={submitBuilding} className="flex flex-col gap-3">
               <h2 className="text-lg font-medium text-[#1c1815]">{form.id ? "Editar edificio" : "Nuevo edificio"}</h2>
