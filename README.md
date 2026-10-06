@@ -51,6 +51,19 @@ El frontend hace proxy de `/api` hacia `http://localhost:4000` (ver
   resto son `AGENT`. Sesión guardada en una cookie httpOnly — ver
   `server/src/routes/auth.ts`, `server/src/lib/auth.ts` y
   `client/src/auth/`.
+- **Roles**: `ADMIN` (todo), `AGENT` (compraventa; el mapa de viviendas solo
+  si un administrador le da acceso y oficina) y `ADMINISTRACION` (gestión de
+  alquileres de una oficina, o de todas si no tiene oficina asignada: pisos en
+  alquiler, contratos, documentos, clientes que buscan alquiler y «Equipo hoy»).
+  El rol y el estado del usuario se leen de la base de datos en cada petición,
+  no del token. Permisos en `server/src/lib/auth.ts` y en cada ruta.
+- **Viviendas (mapa)**: edificios por oficina con viviendas, personas, archivos,
+  seguimiento de venta, diario con avisos y alquileres (`Lease`). Cada vivienda
+  puede enlazarse con su ficha de Propiedades (`Dwelling.propertyId`): es el
+  mismo piso visto desde el catálogo o desde el mapa.
+- **Clientes y cruce de demanda**: segmentos, varias búsquedas por cliente,
+  economía y viabilidad orientativa, cruce con colores por presupuesto
+  (`server/src/lib/matching.ts`) y agenda de visitas.
 - **Contactos**: alta, búsqueda, ficha con actividad/tareas.
 - **Propiedades**: alta, búsqueda, ficha de detalle con fotos (subida propia,
   guardadas en `server/uploads/`), planta, ascensor, certificado energético
