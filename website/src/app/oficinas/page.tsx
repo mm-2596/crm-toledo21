@@ -40,10 +40,20 @@ const OFFICES: Office[] = [
     name: "Toledo21 · Somos Tu Inmobiliaria",
     city: "Leganés",
     address: "Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid",
-    services: "Inmobiliaria y gestoría",
+    services: "Inmobiliaria",
     phone: "910 08 21 21",
     mapsUrl:
       "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Leganés,+Av.+Rey+Juan+Carlos+I,+26,+28915+Leganés,+Madrid/@40.33408,-3.75375,15z",
+  },
+  {
+    name: "Toledo21 · Somos Tu Gestoría",
+    city: "Leganés",
+    address: "Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid",
+    services: "Gestoría",
+    phone: "910 08 21 21",
+    // Mismo local que la inmobiliaria: el enlace cambia solo para que no sean dos tarjetas con la misma clave.
+    mapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid"),
   },
   {
     name: "Gestoría Las Rozas",
@@ -132,7 +142,6 @@ export default function OfficesPage() {
 
       <section className="mt-14">
         <h2 className="font-display text-2xl text-ink">Gestorías</h2>
-        <p className="mt-2 text-sm text-ink-soft">La oficina de Leganés también ofrece servicios de gestoría.</p>
         <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {gestorias.map((office) => (
             <OfficeCard key={office.mapsUrl} office={office} />
