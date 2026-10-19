@@ -172,8 +172,8 @@ export function Layout() {
   );
 
   const brand = (
-    <div className="flex min-w-0 flex-1 flex-col gap-1 px-2">
-      <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-7 w-auto self-start object-contain" />
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 px-8 text-center">
+      <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-7 w-auto object-contain" />
       <div className="text-[11px] leading-tight text-slate-500">Gestión inmobiliaria</div>
     </div>
   );
@@ -183,9 +183,11 @@ export function Layout() {
       {isDesktop ? (
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-slate-200/70 bg-white/70 px-4 py-6 backdrop-blur-xl">
           <div>
-            <div className="mb-8 flex items-center">
+            <div className="relative mb-8 flex items-center">
               {brand}
-              <NotificationBell />
+              <div className="absolute right-0 top-0">
+                <NotificationBell />
+              </div>
             </div>
             {navigation}
           </div>
