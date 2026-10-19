@@ -73,7 +73,7 @@ export function NotificationBell() {
   const items = data?.items ?? [];
 
   return (
-    <div ref={rootRef} className="relative ml-auto">
+    <div ref={rootRef} className="relative ml-auto shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={count > 0 ? `${count} avisos pendientes` : "Avisos"}

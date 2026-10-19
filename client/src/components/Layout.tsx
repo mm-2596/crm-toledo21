@@ -172,11 +172,9 @@ export function Layout() {
   );
 
   const brand = (
-    <div className="flex items-center gap-2 px-2">
-      <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-7 w-auto object-contain" />
-      <div className="border-l border-slate-200 pl-2">
-        <div className="text-xs text-slate-500">Gestión inmobiliaria</div>
-      </div>
+    <div className="flex min-w-0 flex-1 flex-col gap-1 px-2">
+      <img src="/toledo21-logo-mark.png" alt="Toledo21" className="h-7 w-auto self-start object-contain" />
+      <div className="text-[11px] leading-tight text-slate-500">Gestión inmobiliaria</div>
     </div>
   );
 
