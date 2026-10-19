@@ -40,12 +40,12 @@ export function ContactForm({ propertyId, propertyTitle }: { propertyId: string;
           name="email"
           type="email"
           placeholder="Email"
-          className="flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
         />
         <input
           name="phone"
           placeholder="Teléfono"
-          className="flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60"
         />
       </div>
       <textarea
