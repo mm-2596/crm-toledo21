@@ -95,7 +95,8 @@ publicRouter.get(
       res.setHeader("Cache-Control", "public, max-age=0, s-maxage=30, stale-while-revalidate=120");
       return res.json(cached.body);
     }
-    const { type, listingType, city, bedroomsMin, priceMin, priceMax, q, page, pageSize } = req.query;
+    const { type, listingType, city, bedroomsMin, bathroomsMin, priceMin, priceMax, areaMin, areaMax, q, page, pageSize, sort } = req.query;
+    const wants = (key: string) => req.query[key] === "1";
     const take = Math.min(Number(pageSize) || 12, 48);
     const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
 
@@ -105,6 +106,14 @@ publicRouter.get(
       listingType: listingType ? (String(listingType) as never) : undefined,
       city: city ? { equals: String(city) } : undefined,
       bedrooms: bedroomsMin ? { gte: Number(bedroomsMin) } : undefined,
+      bathrooms: bathroomsMin ? { gte: Number(bathroomsMin) } : undefined,
+      areaM2: areaMin || areaMax ? { gte: areaMin ? Number(areaMin) : undefined, lte: areaMax ? Number(areaMax) : undefined } : undefined,
+      hasElevator: wants("elevator") ? true : undefined,
+      hasPool: wants("pool") ? true : undefined,
+      hasTerrace: wants("terrace") ? true : undefined,
+      hasGarden: wants("garden") ? true : undefined,
+      hasStorageRoom: wants("storage") ? true : undefined,
+      parkingSpaces: wants("parking") ? { gte: 1 } : undefined,
       price: priceMin || priceMax ? { gte: priceMin ? Number(priceMin) : undefined, lte: priceMax ? Number(priceMax) : undefined } : undefined,
       OR: q
         ? [
@@ -119,7 +128,7 @@ publicRouter.get(
       prisma.property.findMany({
         where,
         select: publicPropertySelect,
-        orderBy: { createdAt: "desc" },
+        orderBy: sort === "price_asc" ? { price: "asc" } : sort === "price_desc" ? { price: "desc" } : { createdAt: "desc" },
         take,
         skip,
       }),

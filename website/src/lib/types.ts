@@ -134,8 +134,18 @@ export interface PropertyFilters {
   listingType?: string;
   city?: string;
   bedroomsMin?: string;
+  bathroomsMin?: string;
   priceMin?: string;
   priceMax?: string;
+  areaMin?: string;
+  areaMax?: string;
+  elevator?: string;
+  pool?: string;
+  terrace?: string;
+  garden?: string;
+  parking?: string;
+  storage?: string;
+  sort?: string;
   q?: string;
   page?: string;
   pageSize?: string;

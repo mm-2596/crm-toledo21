@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-const PHONE = "34711550732";
+const PHONE = "34673490094";
 const MESSAGE = "Hola, estoy interesado/a en una propiedad de Toledo21.";
 
 export function WhatsAppButton() {
