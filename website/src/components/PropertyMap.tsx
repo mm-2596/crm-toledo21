@@ -1,47 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapPin } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 
 interface Props {
   title: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  address?: string | null;
-  zone?: string | null;
-  city?: string | null;
-  // true cuando las coordenadas salen de buscar la zona, no de la dirección exacta
-  approximate?: boolean;
+  latitude: number;
+  longitude: number;
+  label: string;
+  // radio del círculo en metros; la vivienda queda siempre dentro
+  radius?: number;
 }
 
 // El mapa solo se carga cuando la persona lo pide: así no se envía ninguna
-// petición a un servicio de mapas externo antes de que lo quiera ver.
-export function PropertyMap({ title, latitude, longitude, address, zone, city, approximate }: Props) {
+// petición a un servicio de mapas externo antes de que quiera verlo.
+export function PropertyMap({ title, latitude, longitude, label, radius = 350 }: Props) {
   const [show, setShow] = useState(false);
-  const hasCoords = latitude != null && longitude != null;
-  const place = [address, zone, city].filter(Boolean).join(", ");
+  const box = useRef<HTMLDivElement>(null);
 
-  if (!hasCoords) return null;
-  const exact = !approximate;
-  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${(longitude! - 0.006).toFixed(5)}%2C${(latitude! - 0.004).toFixed(5)}%2C${(longitude! + 0.006).toFixed(5)}%2C${(latitude! + 0.004).toFixed(5)}&layer=mapnik&marker=${latitude}%2C${longitude}`;
-  const external = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=16/${latitude}/${longitude}`;
+  useEffect(() => {
+    if (!show || !box.current) return;
+    let map: import("leaflet").Map | undefined;
+    let cancelled = false;
+    import("leaflet").then((L) => {
+      if (cancelled || !box.current) return;
+      map = L.map(box.current, { scrollWheelZoom: false, zoomControl: true }).setView([latitude, longitude], 15);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+      const circle = L.circle([latitude, longitude], {
+        radius,
+        color: "#b08d57",
+        weight: 3,
+        fillColor: "#b08d57",
+        fillOpacity: 0.28,
+      }).addTo(map);
+      map.fitBounds(circle.getBounds(), { padding: [60, 60] });
+    });
+    return () => {
+      cancelled = true;
+      map?.remove();
+    };
+  }, [show, latitude, longitude, radius]);
 
   return (
     <div className="mt-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-display text-xl text-ink">Ubicación</h2>
-        <p className="text-xs text-ink-soft">{exact ? place || "Zona de la vivienda" : `Zona aproximada: ${place}`}</p>
+        <p className="text-xs text-ink-soft">{label}</p>
       </div>
       <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-paper-dim">
         {show ? (
-          <iframe
-            title={`Mapa de ${title}`}
-            src={src}
-            loading="lazy"
-            className="h-72 w-full border-0 sm:h-80"
-          />
+          <div ref={box} role="img" aria-label={`Mapa de la zona de ${title}`} className="h-72 w-full sm:h-96" />
         ) : (
-          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center sm:h-80">
+          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center sm:h-96">
             <MapPin size={28} className="text-gold" aria-hidden="true" />
             <p className="max-w-sm text-sm text-ink-soft">
               El mapa se carga desde un servicio externo. Púlsalo cuando quieras verlo.
@@ -56,9 +70,9 @@ export function PropertyMap({ title, latitude, longitude, address, zone, city, a
           </div>
         )}
       </div>
-      <a href={external} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-ink-soft underline hover:text-ink">
-        Abrir en el mapa
-      </a>
+      <p className="mt-2 text-xs text-ink-soft/80">
+        El círculo señala la zona aproximada; la dirección exacta se facilita al contactar.
+      </p>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
@@ -25,6 +26,7 @@ import { PropertyVideos } from "@/components/PropertyVideos";
 import { ContactForm } from "@/components/ContactForm";
 import { PropertyMap } from "@/components/PropertyMap";
 import { geocodePlace } from "@/lib/geocode";
+import { NearbyPlacesLoader } from "@/components/NearbyPlaces";
 import { PHONE_DISPLAY, PHONE_TEL, whatsappLink } from "@/lib/contact";
 import { MortgageCalculator } from "@/components/MortgageCalculator";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -68,12 +70,17 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const property = await getProperty(id).catch(() => null);
   if (!property) notFound();
 
-  // Sin coordenadas propias se coloca el mapa en la zona (aproximado).
+  // Sin coordenadas propias se coloca la vivienda en su zona. El círculo del mapa
+  // se desplaza un poco, de forma fija para cada ficha, para no señalar el portal.
   const hasOwnCoords = property.latitude != null && property.longitude != null;
   const placeQuery = [property.address, property.zone, property.city].filter(Boolean).join(", ");
   const found = hasOwnCoords ? null : await geocodePlace(placeQuery);
-  const mapLat = hasOwnCoords ? property.latitude : found?.lat;
-  const mapLon = hasOwnCoords ? property.longitude : found?.lon;
+  const baseLat = hasOwnCoords ? property.latitude : found?.lat;
+  const baseLon = hasOwnCoords ? property.longitude : found?.lon;
+  const seed = [...property.id].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) % 9973, 7);
+  const mapLat = baseLat != null ? baseLat + ((seed % 21) - 10) * 0.00001 * 9 : null;
+  const mapLon = baseLon != null ? baseLon + (((seed >> 3) % 21) - 10) * 0.00001 * 12 : null;
+  const zoneLabel = [property.zone, property.city].filter(Boolean).join(", ") || "Getafe";
 
   const amenities = [
     property.hasElevator && { icon: <Layers size={16} />, label: "Ascensor" },
@@ -135,15 +142,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
-          <PropertyMap
-            title={property.title}
-            latitude={mapLat}
-            longitude={mapLon}
-            approximate={!hasOwnCoords && !property.address}
-            address={property.address}
-            zone={property.zone}
-            city={property.city}
-          />
+          {mapLat != null && mapLon != null && (
+            <PropertyMap title={property.title} latitude={mapLat} longitude={mapLon} label={zoneLabel} />
+          )}
+
+          {baseLat != null && baseLon != null && (
+            <Suspense fallback={null}>
+              <NearbyPlacesLoader lat={baseLat} lon={baseLon} />
+            </Suspense>
+          )}
 
           {amenities.length > 0 && (
             <div className="mt-8">
