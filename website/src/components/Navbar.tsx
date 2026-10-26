@@ -5,7 +5,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Heart, Menu, Scale, Search, X } from "lucide-react";
+import { ChevronDown, Heart, Menu, Phone, Scale, Search, X } from "lucide-react";
+import { PHONE_DISPLAY, PHONE_TEL } from "@/lib/contact";
 import { useCompare } from "./CompareContext";
 import { useFavorites } from "./FavoritesContext";
 
@@ -111,7 +112,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative text-sm transition-colors ${
+                className={`relative whitespace-nowrap text-sm transition-colors ${
                   onDark ? "text-paper/75 hover:text-paper" : "text-ink-soft hover:text-ink"
                 }`}
               >
@@ -230,6 +231,25 @@ export function Navbar() {
                 </span>
               )}
             </Link>
+
+            <a
+              href={`tel:${PHONE_TEL}`}
+              aria-label={`Llamar al ${PHONE_DISPLAY}`}
+              className={`hidden items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1.5 text-sm font-medium xl:flex ${
+                onDark ? "text-paper hover:text-gold" : "text-ink hover:text-gold"
+              }`}
+            >
+              <Phone size={15} aria-hidden="true" />
+              {PHONE_DISPLAY}
+            </a>
+
+            <a
+              href={`tel:${PHONE_TEL}`}
+              aria-label={`Llamar al ${PHONE_DISPLAY}`}
+              className={`flex h-8 w-8 items-center justify-center rounded-full xl:hidden ${onDark ? "text-paper" : "text-ink"}`}
+            >
+              <Phone size={18} />
+            </a>
 
             <Link
               href="/agentes"

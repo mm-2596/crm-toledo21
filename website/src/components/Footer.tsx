@@ -53,7 +53,7 @@ export function Footer() {
           <div>
             <div className="mb-3 text-xs font-medium uppercase tracking-wider text-ink-soft">Contacto</div>
             <p className="text-sm text-ink-soft">C. Toledo, 21, 28901 Getafe, Madrid</p>
-            <p className="mt-1 text-sm text-ink-soft">673 49 00 94</p>
+            <p className="mt-1 text-sm text-ink-soft"><a href="tel:+34673490094" className="hover:text-ink">673 49 00 94</a></p>
             <p className="mt-1 text-sm text-ink-soft">info@somostuinmobiliaria.es</p>
           </div>
         </div>

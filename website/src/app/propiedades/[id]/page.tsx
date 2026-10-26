@@ -17,11 +17,15 @@ import {
   Mail,
   Phone,
   Download,
+  MessageCircle,
 } from "lucide-react";
 import { getProperty } from "@/lib/api";
 import { PropertyGallery } from "@/components/PropertyGallery";
 import { PropertyVideos } from "@/components/PropertyVideos";
 import { ContactForm } from "@/components/ContactForm";
+import { PropertyMap } from "@/components/PropertyMap";
+import { geocodePlace } from "@/lib/geocode";
+import { PHONE_DISPLAY, PHONE_TEL, whatsappLink } from "@/lib/contact";
 import { MortgageCalculator } from "@/components/MortgageCalculator";
 import { PropertyCard } from "@/components/PropertyCard";
 import {
@@ -63,6 +67,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const property = await getProperty(id).catch(() => null);
   if (!property) notFound();
+
+  // Sin coordenadas propias se coloca el mapa en la zona (aproximado).
+  const hasOwnCoords = property.latitude != null && property.longitude != null;
+  const placeQuery = [property.address, property.zone, property.city].filter(Boolean).join(", ");
+  const found = hasOwnCoords ? null : await geocodePlace(placeQuery);
+  const mapLat = hasOwnCoords ? property.latitude : found?.lat;
+  const mapLon = hasOwnCoords ? property.longitude : found?.lon;
 
   const amenities = [
     property.hasElevator && { icon: <Layers size={16} />, label: "Ascensor" },
@@ -124,6 +135,16 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
+          <PropertyMap
+            title={property.title}
+            latitude={mapLat}
+            longitude={mapLon}
+            approximate={!hasOwnCoords && !property.address}
+            address={property.address}
+            zone={property.zone}
+            city={property.city}
+          />
+
           {amenities.length > 0 && (
             <div className="mt-8">
               <h2 className="font-display text-xl text-ink">Características</h2>
@@ -173,6 +194,26 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
         </div>
 
         <div className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-line bg-paper-dim p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-ink-soft">¿Hablamos?</p>
+            <div className="mt-3 flex flex-col gap-2">
+              <a
+                href={`tel:${PHONE_TEL}`}
+                className="flex items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper transition-transform hover:scale-[1.02]"
+              >
+                <Phone size={15} aria-hidden="true" /> Llamar al {PHONE_DISPLAY}
+              </a>
+              <a
+                href={whatsappLink(`Hola, me interesa la propiedad ${property.reference} (${property.title}).`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 rounded-full border border-line bg-paper px-5 py-2.5 text-sm font-medium text-ink transition-transform hover:scale-[1.02]"
+              >
+                <MessageCircle size={15} aria-hidden="true" /> Escribir por WhatsApp
+              </a>
+            </div>
+          </div>
+
           {property.agent && (
             <div className="rounded-2xl border border-line bg-paper-dim p-6">
               <p className="text-xs font-medium uppercase tracking-wider text-ink-soft">Tu agente</p>

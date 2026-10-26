@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { whatsappLink } from "@/lib/contact";
 
-const PHONE = "34673490094";
 const MESSAGE = "Hola, estoy interesado/a en una propiedad de Toledo21.";
 
 export function WhatsAppButton() {
@@ -10,7 +10,7 @@ export function WhatsAppButton() {
 
   return (
     <motion.a
-      href={`https://wa.me/${PHONE}?text=${encodeURIComponent(MESSAGE)}`}
+      href={whatsappLink(MESSAGE)}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
