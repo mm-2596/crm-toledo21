@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Search } from "lucide-react";
+import { AlertCircle, ArrowLeft, Search } from "lucide-react";
 import { TeamApi } from "../api/endpoints";
 import { EmptyState } from "../components/EmptyState";
 import { activityTypeLabels, formatDateTime, officeLabels } from "../lib/format";
@@ -91,7 +91,7 @@ export function TeamMemberTasks() {
       {isLoading ? (
         <p className="text-slate-500">Cargando…</p>
       ) : isError || !data ? (
-        <EmptyState title="No se pudieron cargar las tareas" description="Puede que esa persona ya no esté en tu oficina." />
+        <EmptyState icon={AlertCircle} title="No se pudieron cargar las tareas" description="Puede que esa persona ya no esté en tu oficina." />
       ) : data.tasks.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">{search || type ? "No hay tareas con esos filtros." : EMPTY[tab]}</p>
       ) : (
