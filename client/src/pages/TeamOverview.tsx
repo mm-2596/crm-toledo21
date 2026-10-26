@@ -97,7 +97,7 @@ export function TeamOverview() {
               <section key={u.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-base font-medium text-[#1c1815]">{u.name}</h2>
+                    <h2 className="text-base font-medium text-[#1c1815]"><Link to={`/mi-equipo/${u.id}`} className="hover:underline">{u.name}</Link></h2>
                     <p className="text-xs text-slate-500">{u.office ? officeLabels[u.office] : "Sin oficina"}</p>
                   </div>
                   <div className="flex gap-2 text-xs font-medium">
@@ -105,6 +105,12 @@ export function TeamOverview() {
                     <span className={`rounded px-2 py-0.5 ${u.today.length ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{u.today.length} hoy</span>
                   </div>
                 </div>
+                <Link to={`/mi-equipo/${u.id}`} className="mb-3 flex flex-wrap gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 hover:bg-slate-100">
+                  <span><strong className="text-red-700">{u.counts.overdue}</strong> vencidas</span>
+                  <span><strong className="text-amber-700">{u.counts.pending}</strong> pendientes</span>
+                  <span><strong className="text-emerald-700">{u.counts.done}</strong> realizadas</span>
+                  <span className="ml-auto text-slate-400">Ver todas →</span>
+                </Link>
                 {open.length === 0 ? <p className="text-sm text-slate-400">Nada pendiente para hoy.</p> : <ul className="divide-y divide-slate-100">{open.map((t) => <TaskRow key={t.id} t={t} owner={u.id} />)}</ul>}
                 {showUpcoming && u.upcoming.length > 0 && (
                   <>

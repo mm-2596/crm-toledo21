@@ -483,11 +483,32 @@ export interface TeamTask {
   dwelling: { id: string; buildingId: string; label: string } | null;
 }
 
+export interface TeamCounts {
+  overdue: number;
+  pending: number;
+  done: number;
+}
+
+export interface TeamMemberTask extends Omit<TeamTask, "state"> {
+  state: NotificationState | null;
+  done: boolean;
+}
+
+export interface TeamMemberTasksResponse {
+  user: { id: string; name: string; role: Role; office?: Office | null };
+  counts: TeamCounts;
+  total: number;
+  page: number;
+  pageSize: number;
+  tasks: TeamMemberTask[];
+}
+
 export interface TeamOverviewUser {
   id: string;
   name: string;
   role: Role;
   office?: Office | null;
+  counts: TeamCounts;
   overdue: TeamTask[];
   today: TeamTask[];
   upcoming: TeamTask[];

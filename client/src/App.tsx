@@ -22,6 +22,7 @@ import { RentalsRoute, SalesRoute } from "./auth/RoleRoute";
 import { Rentals } from "./pages/Rentals";
 import { RentalDetail } from "./pages/RentalDetail";
 import { TeamOverview } from "./pages/TeamOverview";
+import { TeamMemberTasks } from "./pages/TeamMemberTasks";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="alquileres" element={<Rentals />} />
             <Route path="alquileres/:id" element={<RentalDetail />} />
             <Route path="mi-equipo" element={<TeamOverview />} />
+            <Route path="mi-equipo/:id" element={<TeamMemberTasks />} />
           </Route>
           <Route path="ayuda" element={<Help />} />
           <Route path="perfil" element={<Profile />} />

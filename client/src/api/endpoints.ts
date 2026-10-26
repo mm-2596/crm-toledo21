@@ -9,6 +9,7 @@ import type {
   LeaseInput,
   Role,
   TeamOverviewUser,
+  TeamMemberTasksResponse,
   ContactSearch,
   ContactSearchInput,
   MatchesResponse,
@@ -233,6 +234,8 @@ export const LeasesApi = {
 
 export const TeamApi = {
   overview: (office?: Office) => api.get<{ users: TeamOverviewUser[] }>("/team/overview", { params: { office } }).then((r) => r.data.users),
+  tasksOf: (userId: string, params: { state?: string; type?: string; q?: string; page?: number }) =>
+    api.get<TeamMemberTasksResponse>(`/team/${userId}/tasks`, { params }).then((r) => r.data),
 };
 
 export const GreetingsApi = {
