@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BrandLogo } from "./BrandLogo";
 
 const EXPLORE_LINKS = [
   { href: "/comprar", label: "Comprar" },
@@ -23,13 +23,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
-            <Image
-              src="/logo/toledo21-wordmark.png"
-              alt="Toledo21 — somos tu inmobiliaria.es"
-              width={634}
-              height={174}
-              className="h-12 w-auto rounded-[4px] object-contain object-left"
-            />
+            <BrandLogo size="lg" />
             <p className="mt-3 max-w-xs text-sm text-ink-soft">
               Inmuebles seleccionados en Getafe y Madrid sur, con datos completos y un equipo de agentes dedicado a
               acompañarte en cada paso.
