@@ -20,11 +20,20 @@ type ExtraKey = (typeof EXTRAS)[number]["key"];
 const inputClass =
   "w-full rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-soft/60";
 
-export function PropertyFiltersBar({ filters }: { filters: PropertyFilters }) {
+export function PropertyFiltersBar({
+  filters,
+  basePath = "/propiedades",
+  fixedListingType,
+}: {
+  filters: PropertyFilters;
+  basePath?: string;
+  // cuando la página ya es solo de venta o de alquiler, no se muestra el filtro de operación
+  fixedListingType?: "VENTA" | "ALQUILER";
+}) {
   const router = useRouter();
   const [form, setForm] = useState({
     type: filters.type || "",
-    listingType: filters.listingType || "",
+    listingType: fixedListingType || filters.listingType || "",
     city: filters.city || "",
     bedroomsMin: filters.bedroomsMin || "",
     bathroomsMin: filters.bathroomsMin || "",
@@ -46,12 +55,13 @@ export function PropertyFiltersBar({ filters }: { filters: PropertyFilters }) {
   function go(next: typeof form, nextExtras: Record<ExtraKey, boolean>) {
     const params = new URLSearchParams();
     Object.entries(next).forEach(([key, value]) => {
+      if (key === "listingType" && fixedListingType) return;
       if (value) params.set(key, value);
     });
     EXTRAS.forEach(({ key }) => {
       if (nextExtras[key]) params.set(key, "1");
     });
-    router.push(`/propiedades${params.toString() ? `?${params.toString()}` : ""}`);
+    router.push(`${basePath}${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
   function apply(e: React.FormEvent) {
@@ -61,6 +71,7 @@ export function PropertyFiltersBar({ filters }: { filters: PropertyFilters }) {
 
   function clear() {
     const empty = Object.fromEntries(Object.keys(form).map((k) => [k, ""])) as typeof form;
+    if (fixedListingType) empty.listingType = fixedListingType;
     const none = Object.fromEntries(EXTRAS.map(({ key }) => [key, false])) as Record<ExtraKey, boolean>;
     setForm(empty);
     setExtras(none);
@@ -74,13 +85,15 @@ export function PropertyFiltersBar({ filters }: { filters: PropertyFilters }) {
   return (
     <form onSubmit={apply} className="rounded-2xl border border-line bg-paper-dim/60 p-4 sm:p-5">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-        <Field label="Operación">
-          <select value={form.listingType} onChange={(e) => update("listingType", e.target.value)} className={inputClass}>
-            <option value="">Todas</option>
-            <option value="VENTA">Venta</option>
-            <option value="ALQUILER">Alquiler</option>
-          </select>
-        </Field>
+        {!fixedListingType && (
+          <Field label="Operación">
+            <select value={form.listingType} onChange={(e) => update("listingType", e.target.value)} className={inputClass}>
+              <option value="">Todas</option>
+              <option value="VENTA">Venta</option>
+              <option value="ALQUILER">Alquiler</option>
+            </select>
+          </Field>
+        )}
 
         <Field label="Tipo">
           <select value={form.type} onChange={(e) => update("type", e.target.value)} className={inputClass}>

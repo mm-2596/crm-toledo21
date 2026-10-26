@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 const EXPLORE_LINKS = [
-  { href: "/propiedades", label: "Propiedades" },
+  { href: "/comprar", label: "Comprar" },
+  { href: "/alquilar", label: "Alquilar" },
   { href: "/comparar", label: "Comparar" },
   { href: "/favoritos", label: "Favoritos" },
   { href: "/calculadora", label: "Calculadora de hipoteca" },

@@ -14,7 +14,8 @@ import { useFavorites } from "./FavoritesContext";
 // el resto (trámites, herramientas) se agrupan bajo "Servicios" para no
 // saturar la barra con seis enlaces sueltos al mismo nivel.
 const primaryLinks = [
-  { href: "/propiedades", label: "Propiedades" },
+  { href: "/comprar", label: "Comprar" },
+  { href: "/alquilar", label: "Alquilar" },
   { href: "/tasacion", label: "Tasación gratis" },
   { href: "/quienes-somos", label: "Quiénes somos" },
   { href: "/equipo", label: "Equipo" },

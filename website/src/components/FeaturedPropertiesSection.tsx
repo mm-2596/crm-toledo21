@@ -11,7 +11,7 @@ export function FeaturedPropertiesSection({ sale, rent }: { sale: PublicProperty
           title="Propiedades en venta"
           properties={sale}
           emptyText="Todavía no hay propiedades en venta. Vuelve pronto."
-          href="/propiedades?listingType=VENTA"
+          href="/comprar"
         />
 
         <div className="mt-20 border-t border-paper/10 pt-20">
@@ -19,7 +19,7 @@ export function FeaturedPropertiesSection({ sale, rent }: { sale: PublicProperty
             title="Propiedades en alquiler"
             properties={rent}
             emptyText="Todavía no hay propiedades en alquiler. Vuelve pronto."
-            href="/propiedades?listingType=ALQUILER"
+            href="/alquilar"
           />
         </div>
       </div>
