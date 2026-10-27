@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Check, Phone, Search, Target } from "lucide-react";
+import { Check, Phone, Plus, Search, Target } from "lucide-react";
 import { ActivitiesApi, ProspectionsApi, UsersApi } from "../api/endpoints";
 import { EmptyState } from "../components/EmptyState";
+import { NewProspectionForm } from "../components/NewProspectionForm";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
 import { formatDate, formatDateTime, officeLabels, prospectStatusLabels, sellInterestLabels } from "../lib/format";
@@ -46,6 +47,7 @@ export function Prospections() {
   const [interest, setInterest] = useState<SellInterest | "">("");
   const [agentId, setAgentId] = useState("");
   const [q, setQ] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const calls = useQuery({ queryKey: ["prospect-calls", who], queryFn: () => ProspectionsApi.calls({ all: who === "all" }), refetchInterval: 60_000 });
   const list = useQuery({
@@ -71,10 +73,23 @@ export function Prospections() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Prospección</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Prospección</h1>
+        {!creating && (
+          <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white">
+            <Plus size={14} /> Nueva prospección
+          </button>
+        )}
+      </div>
       <p className="mt-1 max-w-3xl text-sm text-slate-500">
         Los pisos que todavía no tenemos y estamos intentando captar, y las llamadas pendientes para volver a hablar con sus propietarios o con quien pidió una tasación. Cuando se consigue la nota de encargo, el piso pasa a «A la venta».
       </p>
+
+      {creating && (
+        <div className="mt-6">
+          <NewProspectionForm onClose={() => setCreating(false)} />
+        </div>
+      )}
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
