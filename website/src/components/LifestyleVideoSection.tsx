@@ -5,9 +5,10 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Pause, Play } from "lucide-react";
 
-// Vídeo de stock (genérico, no un barrio real de Getafe): ilustra la idea de
-// "calidad de vida" sin decir que esa toma concreta es la zona. Con
-// prefers-reduced-motion no se reproduce solo: hace falta pulsar play.
+// Vídeo de stock (Mixkit, licencia libre sin atribución; genérico, no un barrio real de
+// Getafe): ilustra la idea de "calidad de vida" sin decir que esa toma concreta es la zona.
+// Es un tramo de 4 s de un clip original en Full HD, con el final fundido con el inicio para
+// que el bucle no se note. Con prefers-reduced-motion no se reproduce solo: hace falta pulsar play.
 export function LifestyleVideoSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reduceMotion = useReducedMotion();
@@ -15,8 +16,8 @@ export function LifestyleVideoSection() {
 
   // La fuente se decide en el cliente (no en el JSX) para no descargar de
   // entrada la pesada en móvil: por debajo de 640px se sirve la copia
-  // ligera (960x506, de sobra para el ancho real de una pantalla de móvil),
-  // y a partir de ahí la de calidad completa (2048x1080), donde el vídeo
+  // ligera (960x540, de sobra para el ancho real de una pantalla de móvil),
+  // y a partir de ahí la de calidad completa (1920x1080), donde el vídeo
   // ocupa todo el ancho y la versión pequeña se veía borrosa.
   // El atributo autoPlay tampoco arranca siempre por sí solo (varía según
   // navegador y momento de la hidratación); pedirlo explícitamente en
@@ -50,6 +51,7 @@ export function LifestyleVideoSection() {
           loop
           playsInline
           preload="auto"
+          poster="/video/lifestyle-poster.jpg"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-ink/10" />
