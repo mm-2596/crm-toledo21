@@ -348,7 +348,15 @@ async function answer(input: string, queryClient: QueryClient, pending: PendingR
     );
   }
 
-  return 'Uy, no entendí eso todavía 🤔 Escribe "ayuda" para ver el menú de opciones.';
+  return {
+    text: "No he entendido eso del todo 🤔 Prueba a decírmelo de otra forma, o elige qué quieres hacer:",
+    choices: [
+      { label: "Anotar una conversación", run: async () => "Escríbeme lo que hablaste con el propietario, como si se lo contaras a un compañero. Por ejemplo:\n\n«He hablado con Paca del 3ºB de Calle Mayor 5 y me ha dicho que la llame en un mes»\n\nSi no sé el piso, te lo pregunto." },
+      { label: "Crear una tarea", run: async () => "Escríbeme algo como «nueva tarea llamar a Ana mañana» o «agrégame a Laura con número 622333444 y ponle una cita el jueves»." },
+      { label: "Ver mis tareas", run: async () => answer("tareas", queryClient, pending) },
+      { label: "Resumen", run: async () => answer("resumen", queryClient, pending) },
+    ],
+  };
 }
 
 export function AIAssistant() {

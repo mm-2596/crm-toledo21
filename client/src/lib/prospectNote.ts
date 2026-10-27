@@ -280,17 +280,62 @@ export function findDwellingsByPerson<
   D extends { id: string; floor?: string | null; door?: string | null; contact?: { name: string } | null; residents?: { name: string }[] },
   B extends { dwellings: D[] },
 >(person: string, buildings: B[]): PersonMatch<B, D>[] {
-  const words = norm(person).split(" ").filter((w) => w.length > 1);
-  if (words.length === 0) return [];
+  if (norm(person).split(" ").filter((w) => w.length > 1).length === 0) return [];
   const out: PersonMatch<B, D>[] = [];
   for (const building of buildings) {
     for (const dwelling of building.dwellings) {
       const names = [dwelling.contact?.name, ...(dwelling.residents ?? []).map((r) => r.name)].filter(Boolean) as string[];
-      if (names.some((n) => {
-        const hay = ` ${norm(n)} `;
-        return words.every((w) => hay.includes(` ${w} `) || hay.includes(` ${w}`));
-      })) out.push({ building, dwelling });
+      if (names.some((n) => wordsMatch(person, n))) out.push({ building, dwelling });
     }
   }
   return out;
 }
+
+/** Distancia de edición entre dos palabras (para perdonar erratas: "Llares" ~ "Lares"). */
+function editDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (Math.abs(a.length - b.length) > 1) return 2;
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return dp[a.length][b.length];
+}
+
+/** ¿Esta palabra aparece en el texto, o hay una casi igual (1 letra de diferencia en palabras largas)? */
+function wordIn(word: string, hayWords: string[]): boolean {
+  return hayWords.some((h) => h === word || h.startsWith(word) || (word.length >= 5 && h.length >= 5 && editDistance(word, h) <= 1));
+}
+
+export function wordsMatch(query: string, text: string): boolean {
+  const words = norm(query).split(" ").filter((w) => w.length > 1 && !SKIP_WORDS.has(w));
+  if (words.length === 0) return false;
+  const hay = norm(text).split(" ");
+  return words.every((w) => wordIn(w, hay));
+}
+
+/** Edificios que encajan con lo que escriba la persona, aunque sea a medias ("el de toledo", "toledo 21"). */
+export function matchBuildingsByWords<T extends BuildingLike>(answer: string, buildings: T[]): T[] {
+  const number = answer.match(/\b(\d{1,4})\b/)?.[1];
+  const words = answer.replace(/\b\d{1,4}\b/g, " ");
+  const found = buildings.filter((b) => wordsMatch(words, `${b.name} ${b.address}`));
+  if (number && found.length > 1) {
+    const exact = found.filter((b) => new RegExp(`\\b${number}\\b`).test(norm(`${b.name} ${b.address}`)));
+    if (exact.length > 0) return exact;
+  }
+  return found;
+}
+
+/** Respuesta corta a "¿qué piso?": "2b", "2 b", "2º B", "segundo izquierda", "bajo A". */
+export function parseUnitAnswer(answer: string): { floor: string; door: string | null } | null {
+  const a = answer.trim();
+  const withOrd = parseUnit(a);
+  if (withOrd.floor) return { floor: withOrd.floor, door: withOrd.door };
+  const m = a.match(/^\s*(?:el\s+|piso\s+)?(\d{1,2})\s*[ºª°.-]?\s*([A-Za-zñ]{1,10}|\d{1,2})?\s*$/i);
+  if (m) return { floor: m[1], door: validDoor(m[2]) };
+  return null;
+}
+
+export const isCancel = (t: string) => /^(no|cancela(r)?|olv[ií]dalo|d[eé]jalo|nada|da igual|paso)\b/i.test(t.trim());
+export const isDontKnow = (t: string) => /\b(no\s+s[eé]|ni\s+idea|no\s+lo\s+s[eé]|ninguno|ninguna|sin\s+piso|no\s+tengo|solo\s+(?:la\s+)?nota|solo\s+(?:un\s+)?recordatorio)\b/i.test(t);
