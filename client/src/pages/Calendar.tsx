@@ -33,7 +33,7 @@ export function Calendar() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const today = todayMadrid();
-  const [view, setView] = useState<"month" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day">("month");
   const [cursor, setCursor] = useState(today);
   const [creating, setCreating] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -111,16 +111,22 @@ export function Calendar() {
 
   function move(dir: -1 | 1) {
     if (view === "day") return setCursor(addDays(cursor, dir));
+    if (view === "week") return setCursor(addDays(cursor, dir * 7));
     const d = parse(monthStart);
     d.setUTCMonth(d.getUTCMonth() + dir);
     setCursor(iso(d));
   }
 
   const cursorDate = parse(cursor);
+  const weekStart = mondayOf(cursor);
+  const weekEnd = parse(addDays(weekStart, 6));
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const title =
     view === "month"
       ? `${MONTHS[cursorDate.getUTCMonth()]} de ${cursorDate.getUTCFullYear()}`
-      : `${WEEKDAYS[(cursorDate.getUTCDay() + 6) % 7]} ${cursorDate.getUTCDate()} de ${MONTHS[cursorDate.getUTCMonth()]} de ${cursorDate.getUTCFullYear()}`;
+      : view === "week"
+        ? `Semana del ${parse(weekStart).getUTCDate()} de ${MONTHS[parse(weekStart).getUTCMonth()]} al ${weekEnd.getUTCDate()} de ${MONTHS[weekEnd.getUTCMonth()]} de ${weekEnd.getUTCFullYear()}`
+        : `${WEEKDAYS[(cursorDate.getUTCDay() + 6) % 7]} ${cursorDate.getUTCDate()} de ${MONTHS[cursorDate.getUTCMonth()]} de ${cursorDate.getUTCFullYear()}`;
 
   const dayTasks = byDay.get(cursor) ?? [];
   const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
@@ -138,14 +144,14 @@ export function Calendar() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 bg-white text-sm">
-            {(["month", "day"] as const).map((v) => (
+            {(["month", "week", "day"] as const).map((v) => (
               <button
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
                 className={`px-3 py-1.5 ${view === v ? "bg-[#1c1815] text-white" : "text-slate-600 hover:bg-slate-50"}`}
               >
-                {v === "month" ? "Mes" : "Día"}
+                {v === "month" ? "Mes" : v === "week" ? "Semana" : "Día"}
               </button>
             ))}
           </div>
@@ -237,6 +243,44 @@ export function Calendar() {
 
       {isLoading ? (
         <p className="text-sm text-slate-500">Cargando…</p>
+      ) : view === "week" ? (
+        <div className="grid gap-2 md:grid-cols-7">
+          {weekDays.map((day, i) => {
+            const list = byDay.get(day) ?? [];
+            return (
+              <div key={day} className={`rounded-lg border bg-white p-2 ${day === today ? "border-[#1c1815]" : "border-slate-200"}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCursor(day);
+                    setView("day");
+                  }}
+                  className="mb-2 flex w-full items-baseline gap-1.5 text-left"
+                >
+                  <span className="text-xs font-medium text-slate-500">{WEEKDAYS[i]}</span>
+                  <span className={`text-sm font-semibold ${day === today ? "text-[#1c1815]" : "text-slate-700"}`}>{Number(day.slice(8))}</span>
+                </button>
+                <div className="space-y-1.5">
+                  {list.length === 0 && <p className="text-xs text-slate-300">—</p>}
+                  {list.map((t) => (
+                    <div
+                      key={t.id}
+                      className={`rounded px-2 py-1.5 text-xs text-white ${t.completed ? "opacity-50" : ""}`}
+                      style={{ background: colorOf(t.agentId) }}
+                      title={`${nameOf(t.agentId)} · ${t.description}`}
+                    >
+                      <p className={`break-words font-medium leading-snug ${t.completed ? "line-through" : ""}`}>{t.description}</p>
+                      <p className="mt-0.5 opacity-90">
+                        {timeOf(t) || "Todo el día"}
+                        {isAdmin && ` · ${nameOf(t.agentId).split(" ")[0]}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : view === "month" ? (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
           <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-medium text-slate-500">
