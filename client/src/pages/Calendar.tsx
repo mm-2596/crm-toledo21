@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { CalendarRange, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { ActivitiesApi, CalendarApi } from "../api/endpoints";
-import type { CalendarTask } from "../api/types";
+import { CalendarRange, Check, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ActivitiesApi, CalendarApi, UsersApi } from "../api/endpoints";
+import type { ActivityType, CalendarTask } from "../api/types";
 import { activityTypeLabels } from "../lib/format";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
@@ -35,6 +35,7 @@ export function Calendar() {
   const today = todayMadrid();
   const [view, setView] = useState<"month" | "day">("month");
   const [cursor, setCursor] = useState(today);
+  const [creating, setCreating] = useState(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const monthStart = `${cursor.slice(0, 8)}01`;
@@ -80,6 +81,34 @@ export function Calendar() {
     },
   });
 
+  const { data: assignable } = useQuery({ queryKey: ["assignable-users"], queryFn: UsersApi.assignable, enabled: isAdmin });
+  const createMutation = useMutation({
+    mutationFn: ActivitiesApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+      setCreating(false);
+      showToast("Tarea creada");
+    },
+    onError: () => showToast("No se pudo crear la tarea"),
+  });
+
+  function submitTask(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const date = String(form.get("date") || "");
+    const time = String(form.get("time") || "");
+    if (!date) return;
+    createMutation.mutate({
+      type: String(form.get("type")) as ActivityType,
+      description: String(form.get("description")).trim(),
+      dueDate: time ? new Date(`${date}T${time}`).toISOString() : new Date(`${date}T12:00:00Z`).toISOString(),
+      hasTime: Boolean(time),
+      agentId: isAdmin ? String(form.get("agentId") || "") || undefined : undefined,
+    });
+  }
+
   function move(dir: -1 | 1) {
     if (view === "day") return setCursor(addDays(cursor, dir));
     const d = parse(monthStart);
@@ -120,6 +149,13 @@ export function Calendar() {
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setCreating((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-lg bg-[#1c1815] px-3 py-1.5 text-sm text-white hover:bg-[#2a241f]"
+          >
+            <Plus size={14} /> Nueva tarea
+          </button>
           <button type="button" onClick={() => setCursor(today)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
             Hoy
           </button>
@@ -133,6 +169,42 @@ export function Calendar() {
           </div>
         </div>
       </div>
+
+      {creating && (
+        <form key={cursor} onSubmit={submitTask} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-6">
+          <select id="task-type" name="type" defaultValue="TAREA" aria-label="Tipo" className="rounded-lg border border-slate-300 px-2 py-2 text-sm sm:col-span-2">
+            {Object.entries(activityTypeLabels)
+              .filter(([k]) => k !== "NOTA")
+              .map(([k, label]) => (
+                <option key={k} value={k}>
+                  {label}
+                </option>
+              ))}
+          </select>
+          <input id="task-description" name="description" required placeholder="¿Qué hay que hacer?" className="rounded-lg border border-slate-300 px-3 py-2 text-sm sm:col-span-4" />
+          <input id="task-date" name="date" type="date" required defaultValue={cursor} aria-label="Día" className="rounded-lg border border-slate-300 px-2 py-2 text-sm sm:col-span-2" />
+          <input id="task-time" name="time" type="time" aria-label="Hora (opcional)" className="rounded-lg border border-slate-300 px-2 py-2 text-sm sm:col-span-2" />
+          {isAdmin ? (
+            <select id="task-agent" name="agentId" defaultValue={user?.id} aria-label="Responsable" className="rounded-lg border border-slate-300 px-2 py-2 text-sm sm:col-span-2">
+              {assignable?.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="sm:col-span-2" />
+          )}
+          <div className="flex gap-2 sm:col-span-6">
+            <button type="submit" disabled={createMutation.isPending} className="rounded-lg bg-[#1c1815] px-4 py-2 text-sm text-white disabled:opacity-60">
+              Crear tarea
+            </button>
+            <button type="button" onClick={() => setCreating(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-[#2a241f] first-letter:uppercase">{title}</h2>
