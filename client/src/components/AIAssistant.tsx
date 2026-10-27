@@ -5,11 +5,14 @@ import { Bot, LayoutList, Search, Send, Sparkles, X } from "lucide-react";
 import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
 import type { QueryClient } from "@tanstack/react-query";
+import { looksLikeProspectNote } from "../lib/prospectNote";
+import { continueProspectNote, handleProspectNote, type Choice, type PendingProspect, type PendingRef, type Reply } from "./prospectAssistant";
 
 interface Message {
   id: number;
   role: "assistant" | "user";
   text: string;
+  choices?: Choice[];
 }
 
 let msgId = 1;
@@ -161,8 +164,16 @@ function buildDue(date: Date | null, time: { hours: number; minutes: number } | 
   return { dueDate: base.toISOString(), hasTime: true };
 }
 
-async function answer(input: string, queryClient: QueryClient): Promise<string> {
+const OTHER_COMMAND = /^(nueva|crear|agr[eé]game|agregar?|a[ñn]ade|apunta|buscar|resumen|tareas?|citas?|agenda|propiedades?|ayuda|hola|men[uú])\b/i;
+
+async function answer(input: string, queryClient: QueryClient, pending: PendingRef): Promise<Reply> {
   const q = input.toLowerCase().trim();
+
+  // Nota de captación ("He hablado con Paca del 3ºB de Calle Mayor 5, que la llame en un mes"):
+  // o es la respuesta a lo que el asistente acaba de preguntar, o una frase nueva de este tipo.
+  if (pending.current && input.length <= 90 && !OTHER_COMMAND.test(q)) return continueProspectNote(input, queryClient, pending);
+  pending.current = null;
+  if (looksLikeProspectNote(input)) return handleProspectNote(input, queryClient, pending);
 
   if (q.startsWith("crear contacto")) {
     const rest = input.replace(/crear contacto/i, "").trim();
@@ -349,6 +360,7 @@ export function AIAssistant() {
   const listRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
+  const pendingRef = useRef<PendingProspect | null>(null);
 
   function scrollToBottom() {
     requestAnimationFrame(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }));
@@ -370,6 +382,24 @@ export function AIAssistant() {
     scrollToBottom();
   }
 
+  function pushReply(reply: Reply) {
+    const msg: Message = typeof reply === "string" ? { id: msgId++, role: "assistant", text: reply } : { id: msgId++, role: "assistant", text: reply.text, choices: reply.choices };
+    setMessages((prev) => [...prev, msg]);
+  }
+
+  async function runChoice(message: Message, choice: Choice) {
+    setMessages((prev) => [...prev.map((m) => (m.id === message.id ? { ...m, choices: undefined } : m)), { id: msgId++, role: "user", text: choice.label }]);
+    setThinking(true);
+    try {
+      pushReply(await choice.run());
+    } catch {
+      setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: "Algo falló al guardarlo. Inténtalo otra vez o anótalo desde la ficha del piso." }]);
+    } finally {
+      setThinking(false);
+      scrollToBottom();
+    }
+  }
+
   async function send(text: string) {
     const clean = text.trim();
     if (!clean) return;
@@ -386,8 +416,7 @@ export function AIAssistant() {
     setThinking(true);
     setMenuStage(null);
     try {
-      const reply = await answer(clean, queryClient);
-      setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: reply }]);
+      pushReply(await answer(clean, queryClient, pendingRef as PendingRef));
     } catch {
       setMessages((prev) => [...prev, { id: msgId++, role: "assistant", text: "Algo falló al procesar eso. ¿Puedes reformularlo?" }]);
     } finally {
@@ -449,6 +478,20 @@ export function AIAssistant() {
                   }`}
                 >
                   {m.text}
+                  {m.choices && !thinking && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {m.choices.map((c) => (
+                        <button
+                          key={c.label}
+                          type="button"
+                          onClick={() => runChoice(m, c)}
+                          className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[11px] font-medium text-[#2a241f] hover:bg-slate-50"
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {thinking && (

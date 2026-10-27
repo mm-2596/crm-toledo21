@@ -19,6 +19,7 @@ import { Register } from "./pages/Register";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AdminRoute } from "./auth/AdminRoute";
 import { ZonePrices } from "./pages/ZonePrices";
+import { Prospections } from "./pages/Prospections";
 import { RentalsRoute, SalesRoute } from "./auth/RoleRoute";
 import { Rentals } from "./pages/Rentals";
 import { RentalDetail } from "./pages/RentalDetail";
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="pipeline" element={<Pipeline />} />
           </Route>
           <Route path="mapa" element={<BuildingsMap />} />
+          <Route path="captacion" element={<Prospections />} />
           <Route path="tareas" element={<Tasks />} />
           <Route element={<RentalsRoute />}>
             <Route path="alquileres" element={<Rentals />} />

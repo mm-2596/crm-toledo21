@@ -108,10 +108,11 @@ model User {
   /// Permiso que concede un administrador para usar el mapa de viviendas (los administradores siempre lo tienen).
   canViewBuildings Boolean  @default(false)
 
-  deals      Deal[]
-  activities Activity[]
-  properties Property[]
-  reviews    AgentReview[]
+  deals               Deal[]
+  activities          Activity[]
+  properties          Property[]
+  prospectedDwellings Dwelling[]    @relation("DwellingProspector")
+  reviews             AgentReview[]
 }
 
 model AgentReview {
@@ -423,6 +424,21 @@ enum DwellingStatus {
   A_ALQUILER
 }
 
+/// Captación de un piso que todavía no tenemos: se trabaja con el propietario hasta conseguir la nota de encargo.
+enum ProspectStatus {
+  EN_SEGUIMIENTO
+  CAPTADO
+  DESCARTADO
+}
+
+/// Cuándo piensa vender el propietario de un piso en prospección.
+enum SellInterest {
+  CORTO
+  MEDIO
+  LARGO
+  NO_INTERESADO
+}
+
 /// Edificio censado, con coordenadas para pintarlo en el mapa de su oficina.
 model Building {
   id        String   @id @default(cuid())
@@ -441,30 +457,36 @@ model Building {
 
 /// Vivienda dentro de un edificio (haya o no un anuncio publicado).
 model Dwelling {
-  id           String         @id @default(cuid())
-  buildingId   String
-  floor        String?
-  door         String?
-  status       DwellingStatus @default(CENSADA)
+  id             String          @id @default(cuid())
+  buildingId     String
+  floor          String?
+  door           String?
+  status         DwellingStatus  @default(CENSADA)
   /// Cliente principal (propietario) para poder buscar la vivienda por su nombre.
   /// Ficha de Propiedades de este mismo piso: una vivienda es una sola cosa, vista desde el mapa o desde el catálogo.
-  propertyId   String?
-  contactId    String?
-  notes        String?        @db.Text
+  propertyId     String?
+  contactId      String?
+  notes          String?         @db.Text
   /// Fase del seguimiento de venta (solo cuando la vivienda se ha cogido a la venta).
-  saleStage    SaleStage?
-  saleStageAt  DateTime?
+  saleStage      SaleStage?
+  saleStageAt    DateTime?
+  /// Prospección: vacío = no se está captando. Al pasar a CAPTADO el piso se coge a la venta.
+  prospectStatus ProspectStatus?
+  sellInterest   SellInterest?
+  /// Comercial que trabaja la captación de este piso.
+  agentId        String?
   /// Características para poder cruzarla con lo que buscan los clientes.
-  price        Int?
-  propertyType PropertyType?
-  bedrooms     Int?
-  bathrooms    Int?
-  areaM2       Int?
-  createdAt    DateTime       @default(now())
+  price          Int?
+  propertyType   PropertyType?
+  bedrooms       Int?
+  bathrooms      Int?
+  areaM2         Int?
+  createdAt      DateTime        @default(now())
 
   building   Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
   contact    Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
   property   Property?          @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  agent      User?              @relation("DwellingProspector", fields: [agentId], references: [id], onDelete: SetNull)
   residents  DwellingResident[]
   files      DwellingFile[]
   activities Activity[]
@@ -473,6 +495,8 @@ model Dwelling {
   @@index([buildingId])
   @@index([contactId])
   @@index([propertyId])
+  @@index([prospectStatus])
+  @@index([agentId])
 }
 
 enum SaleStage {

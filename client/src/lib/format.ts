@@ -129,6 +129,19 @@ export const officeLabels: Record<string, string> = {
   PUERTO_SAGUNTO: "Puerto de Sagunto",
 };
 
+export const prospectStatusLabels: Record<string, string> = {
+  EN_SEGUIMIENTO: "En seguimiento",
+  CAPTADO: "Captado",
+  DESCARTADO: "Descartado",
+};
+
+export const sellInterestLabels: Record<string, string> = {
+  CORTO: "Corto plazo",
+  MEDIO: "Medio plazo",
+  LARGO: "Largo plazo",
+  NO_INTERESADO: "No interesado",
+};
+
 export const dwellingStatusLabels: Record<string, string> = {
   CENSADA: "Censada",
   A_LA_VENTA: "A la venta",

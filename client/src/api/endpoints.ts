@@ -9,6 +9,9 @@ import type {
   LeaseInput,
   Role,
   TeamOverviewUser,
+  ProspectCall,
+  ProspectionRow,
+  QuickNoteInput,
   ValuationPreview,
   ZonePrice,
   ZonePriceInput,
@@ -261,4 +264,12 @@ export const ZonePricesApi = {
   remove: (id: string) => api.delete(`/zone-prices/${id}`),
   preview: (data: { type: string; address: string; zoneId?: string | null; areaM2: number; condition?: string | null; extras: string[] }) =>
     api.post<ValuationPreview>("/zone-prices/preview", data).then((r) => r.data),
+};
+
+export const ProspectionsApi = {
+  list: (params?: { status?: string; interest?: string; agentId?: string; q?: string }) =>
+    api.get<{ prospections: ProspectionRow[] }>("/prospections", { params }).then((r) => r.data.prospections),
+  calls: (params?: { all?: boolean; agentId?: string }) =>
+    api.get<{ calls: ProspectCall[] }>("/prospections/calls", { params: { all: params?.all ? "1" : undefined, agentId: params?.agentId } }).then((r) => r.data.calls),
+  quickNote: (dwellingId: string, data: QuickNoteInput) => api.post(`/prospections/dwellings/${dwellingId}/quick-note`, data).then((r) => r.data),
 };

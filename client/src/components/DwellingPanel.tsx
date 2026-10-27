@@ -8,6 +8,7 @@ import { getErrorMessage } from "../api/client";
 import { propertyTypeLabels, dwellingStatusColors, dwellingStatusLabels, formatDate, formatFileSize, residentRoleLabels, saleStageLabels, saleStages } from "../lib/format";
 import { useToast } from "./Toast";
 import { DwellingDiary } from "./DwellingDiary";
+import { DwellingProspect } from "./DwellingProspect";
 import { MatchesPanel } from "./MatchesPanel";
 import type { Building, Contact, Dwelling, DwellingStatus, PropertyType, ResidentInput, ResidentRole, SaleStage } from "../api/types";
 
@@ -151,6 +152,12 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
           </Link>
         )}
       </div>
+
+      {!rentalOnly && (dwelling.prospectStatus || dwelling.status === "CENSADA") && (
+        <Section title="Captación (prospección)" hint="Un piso que todavía no tenemos y estamos intentando captar. Escribe lo que hables con el propietario: se guarda en el historial y, si dices cuándo, te avisa para volver a llamar.">
+          <DwellingProspect dwelling={dwelling} onChanged={onChanged} />
+        </Section>
+      )}
 
       {!rentalOnly && (
       <Section title="Seguimiento de venta" hint="Pulsa la fase en la que está. Pasa la vivienda a «A la venta» y, al firmar ante notario, a «Vendida».">

@@ -327,6 +327,9 @@ export interface NotificationsResponse {
 export type Office = "GETAFE" | "LEGANES" | "LAS_ROZAS" | "PUERTO_SAGUNTO";
 export type DwellingStatus = "CENSADA" | "A_LA_VENTA" | "VENDIDA" | "ALQUILADA" | "A_ALQUILER";
 
+export type ProspectStatus = "EN_SEGUIMIENTO" | "CAPTADO" | "DESCARTADO";
+export type SellInterest = "CORTO" | "MEDIO" | "LARGO" | "NO_INTERESADO";
+
 export type SaleStage = "ENCARGO_VIGENTE" | "RESERVADO" | "ARRAS" | "PENDIENTE_ESCRITURA" | "FIRMADO_NOTARIO";
 export type ResidentRole = "PROPIETARIO" | "INQUILINO" | "HIJO_PROPIETARIO" | "FAMILIAR" | "OTRO";
 
@@ -386,6 +389,10 @@ export interface Dwelling {
   notes?: string | null;
   saleStage?: SaleStage | null;
   saleStageAt?: string | null;
+  prospectStatus?: ProspectStatus | null;
+  sellInterest?: SellInterest | null;
+  agentId?: string | null;
+  agent?: { id: string; name: string } | null;
   residents: DwellingResident[];
   files: DwellingFile[];
   property?: PropertyBrief | null;
@@ -425,6 +432,9 @@ export interface DwellingInput {
   contactId?: string | null;
   notes?: string | null;
   saleStage?: SaleStage | null;
+  prospectStatus?: ProspectStatus | null;
+  sellInterest?: SellInterest | null;
+  agentId?: string | null;
   propertyId?: string | null;
   price?: number | null;
   propertyType?: PropertyType | null;
@@ -588,4 +598,36 @@ export interface ZonePricesResponse {
 export interface ValuationPreview {
   zone: string | null;
   estimate: { low: number; high: number; mid: number; eurM2: number; zoneLabel: string } | null;
+}
+
+export interface ProspectionRow {
+  id: string;
+  buildingId: string;
+  floor: string | null;
+  door: string | null;
+  prospectStatus: ProspectStatus;
+  sellInterest: SellInterest | null;
+  agent: { id: string; name: string } | null;
+  owner: string | null;
+  building: { id: string; name: string; address: string; city: string | null; office: Office };
+  lastNote: { description: string; createdAt: string; agent: string | null } | null;
+  nextCall: { id: string; description: string; dueDate: string; hasTime: boolean; state: NotificationState } | null;
+}
+
+export interface ProspectCall {
+  id: string;
+  type: ActivityType;
+  description: string;
+  dueDate: string;
+  hasTime: boolean;
+  state: NotificationState;
+  agent: { id: string; name: string } | null;
+  dwelling: { id: string; buildingId: string; label: string; address: string; owner: string | null; phone: string | null; sellInterest: SellInterest | null } | null;
+}
+
+export interface QuickNoteInput {
+  note: string;
+  callAt?: string | null;
+  hasTime?: boolean;
+  callText?: string;
 }

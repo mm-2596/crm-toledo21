@@ -62,7 +62,13 @@ const buildingInput = z.object({
   longitude: z.number().min(-180).max(180),
 });
 
+const PROSPECT_STATUSES = ["EN_SEGUIMIENTO", "CAPTADO", "DESCARTADO"] as const;
+const SELL_INTERESTS = ["CORTO", "MEDIO", "LARGO", "NO_INTERESADO"] as const;
+
 const dwellingInput = z.object({
+  prospectStatus: z.enum(PROSPECT_STATUSES).optional().nullable(),
+  sellInterest: z.enum(SELL_INTERESTS).optional().nullable(),
+  agentId: z.string().optional().nullable(),
   floor: z.string().trim().max(20).optional().nullable(),
   door: z.string().trim().max(20).optional().nullable(),
   status: z.enum(STATUSES).optional(),
@@ -95,8 +101,15 @@ function applySaleStage<T extends { status?: (typeof STATUSES)[number]; saleStag
   return out;
 }
 
+/** Al conseguir la nota de encargo (CAPTADO), el piso deja de ser una prospección y se coge a la venta. */
+function applyProspect(out: Record<string, unknown>, data: { prospectStatus?: (typeof PROSPECT_STATUSES)[number] | null; status?: string }, current?: { status: string }) {
+  if (data.prospectStatus === "CAPTADO" && (data.status ?? current?.status ?? "CENSADA") === "CENSADA") out.status = "A_LA_VENTA";
+  return out;
+}
+
 const dwellingInclude = {
   property: { select: propertyBriefSelect },
+  agent: { select: { id: true, name: true } },
   contact: { select: { id: true, name: true } },
   residents: { orderBy: { createdAt: "asc" as const } },
   leases: { select: { id: true, status: true, monthlyRent: true, endDate: true, tenant: { select: { name: true } } }, orderBy: { createdAt: "desc" as const } },
@@ -209,7 +222,16 @@ dwellingsRouter.post(
       if (problem) return res.status(409).json({ error: problem });
     }
     const dwelling = await prisma.dwelling.create({
-      data: { ...applySaleStage(rest), propertyId: rest.propertyId || null, floor: rest.floor || null, door: rest.door || null, contactId: rest.contactId || null, notes: rest.notes || null, buildingId },
+      data: {
+        ...applyProspect(applySaleStage(rest), rest),
+        propertyId: rest.propertyId || null,
+        floor: rest.floor || null,
+        door: rest.door || null,
+        contactId: rest.contactId || null,
+        agentId: rest.agentId || null,
+        notes: rest.notes || null,
+        buildingId,
+      },
       include: dwellingInclude,
     });
     if (dwelling.propertyId) {
@@ -228,12 +250,12 @@ dwellingsRouter.put(
     if (!current) return res.status(404).json({ error: "Vivienda no encontrada" });
     const data = dwellingInput.parse(req.body);
     // Solo se tocan los campos que llegan: así cambiar el estado desde el mapa no borra el resto.
-    const patch: Record<string, unknown> = applySaleStage(data, current);
-    for (const key of ["floor", "door", "contactId", "notes"] as const) {
+    const patch: Record<string, unknown> = applyProspect(applySaleStage(data, current), data, current);
+    for (const key of ["floor", "door", "contactId", "notes", "agentId"] as const) {
       if (data[key] !== undefined) patch[key] = data[key] || null;
     }
     // Estos números pueden valer 0 (p. ej. un estudio sin habitaciones): no se convierten en vacío.
-    for (const key of ["price", "propertyType", "bedrooms", "bathrooms", "areaM2"] as const) {
+    for (const key of ["price", "propertyType", "bedrooms", "bathrooms", "areaM2", "prospectStatus", "sellInterest"] as const) {
       if (data[key] !== undefined) patch[key] = data[key];
     }
     if (data.propertyId !== undefined) {
