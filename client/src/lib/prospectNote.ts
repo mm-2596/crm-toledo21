@@ -202,11 +202,15 @@ export function parseProspectNote(text: string, now: Date = new Date()): ParsedN
   };
 }
 
-/** ¿Parece una nota de captación ("he hablado con..., llámala en un mes")? */
+/**
+ * ¿Parece una nota de captación? Hace falta haber hablado/llamado/visitado y, además, o bien nombrar un piso
+ * o una calle, o bien pedir volver a llamar a una persona ("he hablado con Carmen y me ha dicho que la llame en un mes").
+ */
 export function looksLikeProspectNote(text: string): boolean {
   if (!/\b(he\s+hablado|habl[eé]|he\s+llamado|llam[eé]|he\s+visitado|visit[eé]|he\s+estado|estuve|he\s+quedado|qued[eé]|he\s+charlado|charl[eé])\b/i.test(text)) return false;
   const p = parseProspectNote(text);
-  return Boolean(p.floor || p.street || /\b(piso|vecin[oa]|propietari[oa]|due[ñn][oa]|portal|edificio)\b/i.test(text));
+  if (p.floor || p.street || /\b(vecin[oa]|propietari[oa]|due[ñn][oa]|portal|edificio)\b/i.test(text)) return true;
+  return Boolean(p.person && (p.reminder || p.reminderUnclear));
 }
 
 export function formatUnit(floor?: string | null, door?: string | null): string {
@@ -264,4 +268,29 @@ export function findDwelling<T extends { id: string; floor?: string | null; door
   const sameFloor = dwellings.filter((d) => normFloor(d.floor) === floor);
   if (door) return sameFloor.find((d) => normDoor(d.door) === door) ?? null;
   return sameFloor.length === 1 ? sameFloor[0] : null;
+}
+
+export interface PersonMatch<B, D> {
+  building: B;
+  dwelling: D;
+}
+
+/** Pisos cuyo propietario, residente o cliente se llama así (todas las palabras del nombre escrito deben aparecer). */
+export function findDwellingsByPerson<
+  D extends { id: string; floor?: string | null; door?: string | null; contact?: { name: string } | null; residents?: { name: string }[] },
+  B extends { dwellings: D[] },
+>(person: string, buildings: B[]): PersonMatch<B, D>[] {
+  const words = norm(person).split(" ").filter((w) => w.length > 1);
+  if (words.length === 0) return [];
+  const out: PersonMatch<B, D>[] = [];
+  for (const building of buildings) {
+    for (const dwelling of building.dwellings) {
+      const names = [dwelling.contact?.name, ...(dwelling.residents ?? []).map((r) => r.name)].filter(Boolean) as string[];
+      if (names.some((n) => {
+        const hay = ` ${norm(n)} `;
+        return words.every((w) => hay.includes(` ${w} `) || hay.includes(` ${w}`));
+      })) out.push({ building, dwelling });
+    }
+  }
+  return out;
 }

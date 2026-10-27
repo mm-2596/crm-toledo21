@@ -1,7 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { BuildingsApi, DwellingsApi, ProspectionsApi } from "../api/endpoints";
 import { formatDate, formatDateTime } from "../lib/format";
-import { findDwelling, formatUnit, matchBuildings, parseProspectNote, type ParsedNote } from "../lib/prospectNote";
+import { findDwelling, findDwellingsByPerson, formatUnit, matchBuildings, parseProspectNote, type ParsedNote } from "../lib/prospectNote";
 import type { Building } from "../api/types";
 
 export interface Choice {
@@ -160,6 +160,34 @@ export async function handleProspectNote(input: string, queryClient: QueryClient
       text: "Hay varios edificios que encajan. ¿Cuál es?",
       choices: candidates.slice(0, 5).map((b) => ({ label: placeLabel(b), run: async () => withBuilding(parsed, b, input, pending, queryClient) })),
     };
+  }
+  // Sin dirección: se busca a la persona entre los propietarios y residentes de los pisos del mapa.
+  if (!parsed.street && !parsed.floor && parsed.person) {
+    const people = findDwellingsByPerson(parsed.person, data.buildings);
+    const draftFor = (m: (typeof people)[number]): Draft => ({
+      building: m.building,
+      floor: m.dwelling.floor ?? "",
+      door: m.dwelling.door ?? null,
+      dwellingId: m.dwelling.id,
+      parsed,
+      reminder: parsed.reminder,
+    });
+    if (people.length === 1) {
+      pending.current = null;
+      return withReminderStep(draftFor(people[0]), queryClient);
+    }
+    if (people.length > 1) {
+      pending.current = null;
+      return {
+        text: `Hay varios pisos con alguien llamado «${parsed.person}». ¿Cuál es?`,
+        choices: people.slice(0, 6).map((m) => ({
+          label: `${formatUnit(m.dwelling.floor, m.dwelling.door) || "Piso"} · ${m.building.address}`,
+          run: async () => withReminderStep(draftFor(m), queryClient),
+        })),
+      };
+    }
+    pending.current = { text: input };
+    return `No encuentro a «${parsed.person}» como propietario en ningún piso del mapa. ¿De qué edificio hablas? Dime la calle y el número, por ejemplo «Calle Mayor 5».`;
   }
   if (parsed.street) {
     pending.current = null;
