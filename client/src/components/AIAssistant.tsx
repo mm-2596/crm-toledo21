@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bot, LayoutList, Search, Send, Sparkles, X } from "lucide-react";
@@ -6,7 +7,7 @@ import { ActivitiesApi, ContactsApi, DashboardApi, PropertiesApi } from "../api/
 import { formatCurrency, formatDate, formatDateTime } from "../lib/format";
 import type { QueryClient } from "@tanstack/react-query";
 import { looksLikeProspectNote } from "../lib/prospectNote";
-import { continueProspectNote, handleProspectNote, type Choice, type PendingProspect, type PendingRef, type Reply } from "./prospectAssistant";
+import { continueNote, continueProspectNote, handleProspectNote, lookupPerson, type Choice, type PendingProspect, type PendingRef, type Reply } from "./prospectAssistant";
 
 interface Message {
   id: number;
@@ -171,6 +172,7 @@ async function answer(input: string, queryClient: QueryClient, pending: PendingR
 
   // Nota de captación ("He hablado con Paca del 3ºB de Calle Mayor 5, que la llame en un mes"):
   // o es la respuesta a lo que el asistente acaba de preguntar, o una frase nueva de este tipo.
+  if (pending.current?.awaiting === "note" && !OTHER_COMMAND.test(q)) return continueNote(input, queryClient, pending);
   if (pending.current && input.length <= 90 && !OTHER_COMMAND.test(q)) return continueProspectNote(input, queryClient, pending);
   pending.current = null;
   if (looksLikeProspectNote(input)) return handleProspectNote(input, queryClient, pending);
@@ -315,6 +317,8 @@ async function answer(input: string, queryClient: QueryClient, pending: PendingR
   }
 
   if (q.startsWith("buscar")) {
+    const found = await lookupPerson(input, queryClient, pending);
+    if (found) return found;
     const term = input.slice(input.toLowerCase().indexOf("buscar") + 6).trim();
     if (!term) return 'Dime a quién busco, por ejemplo: "buscar Ana".';
     const contacts = await ContactsApi.list(term);
@@ -348,6 +352,12 @@ async function answer(input: string, queryClient: QueryClient, pending: PendingR
     );
   }
 
+  // Una o dos palabras sueltas ("carmen", "carmen lares"): se busca a esa persona.
+  if (input.trim().split(/\s+/).length <= 4 && /^[\p{L}\s'.-]+$/u.test(input.trim())) {
+    const found = await lookupPerson(input, queryClient, pending);
+    if (found) return found;
+  }
+
   return {
     text: "No he entendido eso del todo 🤔 Prueba a decírmelo de otra forma, o elige qué quieres hacer:",
     choices: [
@@ -368,6 +378,7 @@ export function AIAssistant() {
   const listRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const pendingRef = useRef<PendingProspect | null>(null);
 
   function scrollToBottom() {
@@ -396,6 +407,11 @@ export function AIAssistant() {
   }
 
   async function runChoice(message: Message, choice: Choice) {
+    if (choice.href) {
+      navigate(choice.href);
+      return;
+    }
+    if (!choice.run) return;
     setMessages((prev) => [...prev.map((m) => (m.id === message.id ? { ...m, choices: undefined } : m)), { id: msgId++, role: "user", text: choice.label }]);
     setThinking(true);
     try {

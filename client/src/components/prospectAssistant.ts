@@ -14,11 +14,13 @@ import {
   wordsMatch,
   type ParsedNote,
 } from "../lib/prospectNote";
-import type { Building } from "../api/types";
+import type { Building, Dwelling } from "../api/types";
 
 export interface Choice {
   label: string;
-  run: () => Promise<Reply>;
+  /** Qué hace el botón. Si en vez de eso lleva `href`, abre esa pantalla del CRM. */
+  run?: () => Promise<Reply>;
+  href?: string;
 }
 export type Reply = string | { text: string; choices?: Choice[] };
 
@@ -28,9 +30,13 @@ export interface PendingProspect {
   buildingId?: string;
   /** La frase tal como la escribió la persona: es la que se guarda como nota, sin las respuestas añadidas después. */
   original?: string;
-  /** Qué se está esperando: el edificio o la planta y puerta. */
-  awaiting?: "building" | "unit";
+  /** Qué se está esperando: el edificio, la planta y puerta, o lo que se habló con una persona ya elegida. */
+  awaiting?: "building" | "unit" | "note";
+  target?: Target;
 }
+
+/** A quién va dirigida una nota o una llamada: un contacto o un piso. */
+export type Target = { kind: "contact"; id: string; name: string } | { kind: "dwelling"; id: string; name: string; place: string };
 export type PendingRef = { current: PendingProspect | null };
 
 type Reminder = { date: Date; hasTime: boolean } | null;
@@ -364,4 +370,132 @@ export async function continueProspectNote(answer: string, queryClient: QueryCli
     };
   }
   return askBuilding(parsedOriginal, p.text, original, data.buildings, pending, queryClient, `No encuentro ningún edificio parecido a «${answer}».`);
+}
+
+
+// ---------------------------------------------------------------- buscar a una persona
+
+const cap = (t: string) => t.trim().replace(/\s+/g, " ").replace(/(^|\s)(\S)/g, (_m, a, b) => a + b.toUpperCase());
+
+async function saveCall(target: Target, reminder: NonNullable<Reminder>, queryClient: QueryClient): Promise<Reply> {
+  if (target.kind === "contact") {
+    await ActivitiesApi.create({ type: "LLAMADA", description: `Llamar a ${target.name}`, contactId: target.id, dueDate: reminder.date.toISOString(), hasTime: reminder.hasTime });
+  } else {
+    await ProspectionsApi.quickNote(target.id, {
+      note: `Llamada programada con ${target.name}.`,
+      callAt: reminder.date.toISOString(),
+      hasTime: reminder.hasTime,
+      callText: `Llamar a ${target.name} · ${target.place}`,
+    });
+  }
+  refresh(queryClient);
+  return `Hecho ✅ Te avisaré el ${formatDateTime(reminder.date.toISOString(), reminder.hasTime)} para llamar a ${target.name}.`;
+}
+
+async function saveNoteFor(target: Target, parsed: ParsedNote, reminder: Reminder, queryClient: QueryClient): Promise<Reply> {
+  if (target.kind === "contact") return saveOnContact({ id: target.id, name: target.name }, parsed, reminder, queryClient);
+  await ProspectionsApi.quickNote(target.id, {
+    note: parsed.note,
+    callAt: reminder ? reminder.date.toISOString() : null,
+    hasTime: reminder?.hasTime ?? false,
+    callText: `Llamar a ${target.name} · ${target.place}`,
+  });
+  refresh(queryClient);
+  return `Hecho ✅ Guardé la nota en el historial de ${target.place}.` + (reminder ? `\nTe avisaré el ${formatDateTime(reminder.date.toISOString(), reminder.hasTime)}.` : "");
+}
+
+function confirmNoteFor(target: Target, parsed: ParsedNote, reminder: Reminder, queryClient: QueryClient): Reply {
+  const lines = [
+    `Entendido, para ${target.name}${target.kind === "dwelling" ? ` (${target.place})` : ""}:`,
+    `· Nota: «${short(parsed.note)}»`,
+    reminder ? `· Aviso: ${when(reminder)}` : "· Aviso: ninguno",
+    "¿Lo guardo?",
+  ];
+  return {
+    text: lines.join("\n"),
+    choices: [
+      { label: "Sí, guardar", run: () => saveNoteFor(target, parsed, reminder, queryClient) },
+      ...(reminder ? [] : [{ label: "Añadir un aviso", run: async () => pickDate({ ...parsed, reminderUnclear: false }, (r) => confirmNoteFor(target, parsed, r, queryClient)) }]),
+      { label: "No", run: async () => "Vale, no he guardado nada." },
+    ],
+  };
+}
+
+/** Qué se puede hacer con una persona ya elegida. */
+function personActions(target: Target, pending: PendingRef, queryClient: QueryClient): Reply {
+  return {
+    text: `¿Qué hago con ${target.name}${target.kind === "dwelling" ? ` (${target.place})` : ""}?`,
+    choices: [
+      {
+        label: "Anotar una conversación",
+        run: async () => {
+          pending.current = { text: "", awaiting: "note", target };
+          return `Cuéntame qué habéis hablado con ${target.name}, como si se lo contaras a un compañero. Si dice cuándo volver a llamar («en un mes», «el lunes»), te dejo el aviso.`;
+        },
+      },
+      { label: "Programar una llamada", run: async () => pickDate({ ...parseProspectNote(""), reminderUnclear: false }, (r) => (r ? saveCall(target, r, queryClient) : "Vale, no he programado nada.")) },
+      { label: "Ver su ficha", href: target.kind === "contact" ? `/contactos/${target.id}` : `/mapa?vivienda=${target.id}` },
+    ],
+  };
+}
+
+/** Si lo escrito es un nombre ("carmen"), se busca entre contactos y propietarios de pisos y se ofrece qué hacer. */
+export async function lookupPerson(term: string, queryClient: QueryClient, pending: PendingRef): Promise<Reply | null> {
+  const query = term.replace(/^\s*(buscar|busca|b[uú]scame|encuentra|qui[eé]n es)\s+/i, "").trim();
+  if (query.length < 2) return null;
+  let contacts: { id: string; name: string; phone?: string | null }[] = [];
+  try {
+    contacts = (await ContactsApi.list(query.split(" ")[0])).filter((c) => wordsMatch(query, c.name)).slice(0, 5);
+  } catch {
+    contacts = [];
+  }
+  let owners: { building: Building; dwelling: Dwelling }[] = [];
+  try {
+    const data = await loadBuildings(queryClient);
+    owners = findDwellingsByPerson<Dwelling, Building>(query, data.buildings).slice(0, 5);
+  } catch {
+    owners = [];
+  }
+  const targets: { label: string; target: Target }[] = [
+    ...contacts.map((c) => ({ label: `${c.name} · contacto${c.phone ? ` · ${c.phone}` : ""}`, target: { kind: "contact", id: c.id, name: c.name } as Target })),
+    ...owners.map((o) => {
+      const place = `${formatUnit(o.dwelling.floor, o.dwelling.door) || "piso"} de ${o.building.address}`;
+      const name = o.dwelling.contact?.name ?? o.dwelling.residents?.find((r) => wordsMatch(query, r.name))?.name ?? cap(query);
+      return { label: `${name} · ${place}`, target: { kind: "dwelling", id: o.dwelling.id, name, place } as Target };
+    }),
+  ];
+  if (targets.length === 0) {
+    return {
+      text: `No encuentro a «${cap(query)}» ni en tus contactos ni como propietario de ningún piso.`,
+      choices: [
+        {
+          label: `Crear el contacto «${cap(query)}»`,
+          run: async () => {
+            const created = await ContactsApi.create({ name: cap(query), source: "MANUAL" });
+            refresh(queryClient);
+            return personActions({ kind: "contact", id: created.id, name: created.name }, pending, queryClient);
+          },
+        },
+        { label: "No", run: async () => "Vale." },
+      ],
+    };
+  }
+  if (targets.length === 1) return personActions(targets[0].target, pending, queryClient);
+  return {
+    text: `He encontrado ${targets.length} coincidencias con «${query}». ¿Cuál es?`,
+    choices: targets.map((t) => ({ label: t.label, run: async () => personActions(t.target, pending, queryClient) })),
+  };
+}
+
+/** Respuesta a "cuéntame qué habéis hablado": se lee la nota y se pide confirmación. */
+export async function continueNote(text: string, queryClient: QueryClient, pending: PendingRef): Promise<Reply> {
+  const p = pending.current;
+  if (!p?.target) return "No tengo nada pendiente.";
+  pending.current = null;
+  if (isCancel(text)) return "Vale, lo dejo. No he guardado nada.";
+  const parsed = parseProspectNote(text);
+  if (!parsed.reminder && parsed.reminderUnclear) {
+    return pickDate(parsed, (r) => confirmNoteFor(p.target!, parsed, r, queryClient));
+  }
+  return confirmNoteFor(p.target, parsed, parsed.reminder, queryClient);
 }
