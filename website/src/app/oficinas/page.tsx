@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { MapPin, Navigation, Star } from "lucide-react";
+import { OfficesMap, type MapOffice } from "@/components/OfficesMap";
+import { getProperties } from "@/lib/api";
+import { geocodePlace } from "@/lib/geocode";
 
 export const metadata: Metadata = {
   title: "Nuestras oficinas",
@@ -8,6 +11,9 @@ export const metadata: Metadata = {
 };
 
 interface Office {
+  /** Coordenadas conocidas; si faltan se buscan por la dirección. */
+  lat?: number;
+  lon?: number;
   name: string;
   city: string;
   address: string;
@@ -24,6 +30,8 @@ const OFFICES: Office[] = [
     address: "C. Toledo, 21, 28901 Getafe, Madrid",
     services: "Inmobiliaria",
     phone: "916 95 84 22",
+    lat: 40.3034017,
+    lon: -3.7327946,
     mapsUrl:
       "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Getafe,+C.+Toledo,+21,+28901+Getafe,+Madrid/@40.3034017,-3.7327946,15z",
     featured: true,
@@ -33,6 +41,8 @@ const OFFICES: Office[] = [
     city: "Getafe",
     address: "C. Toledo, 38, 28901 Getafe, Madrid",
     services: "Gestoría",
+    lat: 40.3014095,
+    lon: -3.7339528,
     mapsUrl:
       "https://www.google.com/maps/place/Gestoría+Sampablo+-+Somos+Tu+Gestoría+-+Getafe,+C.+Toledo,+38,+28901+Getafe,+Madrid/@40.3014095,-3.7339528,15z",
   },
@@ -42,6 +52,8 @@ const OFFICES: Office[] = [
     address: "Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid",
     services: "Inmobiliaria",
     phone: "910 08 21 21",
+    lat: 40.33408,
+    lon: -3.75375,
     mapsUrl:
       "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Leganés,+Av.+Rey+Juan+Carlos+I,+26,+28915+Leganés,+Madrid/@40.33408,-3.75375,15z",
   },
@@ -67,6 +79,8 @@ const OFFICES: Office[] = [
     city: "Puerto de Sagunto, Valencia",
     address: "Av. Hispanitat, 5, 46520 Puerto de Sagunto, Valencia",
     services: "Inmobiliaria",
+    lat: 39.6663699,
+    lon: -0.2328303,
     mapsUrl:
       "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Puerto+de+Sagunto,+Av.+Hispanitat,+5,+46520+Puerto+de+Sagunto,+Valencia/@39.6663699,-0.2328303,15z",
   },
@@ -94,7 +108,24 @@ function OfficeCard({ office }: { office: Office }) {
   );
 }
 
-export default function OfficesPage() {
+export default async function OfficesPage() {
+  // Mapa: las oficinas (con coordenadas conocidas o buscadas por su dirección; la gestoría de Leganés
+  // comparte local con la inmobiliaria y no se repite) y los inmuebles publicados de venta y alquiler.
+  const [list, ...coords] = await Promise.all([
+    getProperties({ pageSize: "48" }).catch(() => ({ properties: [] })),
+    ...OFFICES.map(async (o) => (o.lat != null && o.lon != null ? { lat: o.lat, lon: o.lon } : await geocodePlace(o.address).then((g) => (g ? { lat: g.lat, lon: g.lon } : null)))),
+  ]);
+  const seen = new Set<string>();
+  const mapOffices: MapOffice[] = [];
+  OFFICES.forEach((o, i) => {
+    const c = coords[i];
+    if (!c) return;
+    const key = `${c.lat.toFixed(3)},${c.lon.toFixed(3)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    mapOffices.push({ name: o.name, city: o.city, address: o.address, services: o.services, phone: o.phone, mapsUrl: o.mapsUrl, lat: c.lat, lon: c.lon });
+  });
+
   const featured = OFFICES.find((o) => o.featured)!;
   const realEstate = OFFICES.filter((o) => !o.featured && o.services.startsWith("Inmobiliaria"));
   const gestorias = OFFICES.filter((o) => o.services === "Gestoría");
@@ -109,7 +140,13 @@ export default function OfficesPage() {
         </p>
       </div>
 
-      <div className="mt-10 rounded-3xl border border-gold/30 bg-gold-soft p-8">
+      <section className="mt-10" aria-labelledby="mapa-inmuebles">
+        <h2 id="mapa-inmuebles" className="font-display text-2xl text-ink">Inmuebles y oficinas en el mapa</h2>
+        <p className="mt-1 mb-5 max-w-2xl text-sm text-ink-soft">Mira dónde están nuestros pisos en venta y en alquiler y cuál es la oficina más cercana. Pulsa un marcador para ver la ficha.</p>
+        <OfficesMap properties={list.properties} offices={mapOffices} />
+      </section>
+
+      <div className="mt-14 rounded-3xl border border-gold/30 bg-gold-soft p-8">
         <span className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-gold">
           <Star size={13} className="fill-gold" /> Oficina principal
         </span>
