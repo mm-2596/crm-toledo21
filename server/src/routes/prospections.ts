@@ -103,8 +103,9 @@ prospectionsRouter.get(
 );
 
 /**
- * Llamadas de seguimiento pendientes: las tareas con fecha de los pisos en prospección.
- * Cada comercial ve las suyas; un administrador puede ver las de todos (?all=1) o las de una persona (?agentId=).
+ * Llamadas de seguimiento pendientes (hasta 90 días vista): las de los pisos en prospección y las de contactos
+ * (p. ej. alguien que pidió una tasación). Cada comercial ve las suyas; un administrador puede ver las de todos
+ * (?all=1) o las de una persona (?agentId=).
  */
 prospectionsRouter.get(
   "/calls",
@@ -121,13 +122,24 @@ prospectionsRouter.get(
         completed: false,
         type: { not: "NOTA" },
         dueDate: { not: null, lte: new Date(now.getTime() + 90 * 86_400_000) },
-        dwelling: { is: { AND: [base, { prospectStatus: { not: null } }] } },
-        ...(everyone ? {} : { agentId: agentId ?? req.user!.userId }),
+        // Una llamada: de tipo llamada, o una tarea que empieza por "Llamar" (como las de tasación).
+        AND: [
+          { OR: [{ type: "LLAMADA" }, { description: { startsWith: "Llamar", mode: "insensitive" } }] },
+          {
+            OR: [
+              { dwelling: { is: { AND: [base, { prospectStatus: { not: null } }] } } },
+              { dwellingId: null, leaseId: null, contactId: { not: null } },
+            ],
+          },
+        ],
+        // Cada uno ve lo suyo; lo que no tiene responsable (p. ej. una tasación recién llegada) lo ven los administradores, como en Tareas.
+        ...(everyone ? {} : agentId ? { agentId } : isAdmin ? { OR: [{ agentId: req.user!.userId }, { agentId: null }] } : { agentId: req.user!.userId }),
       },
       orderBy: { dueDate: "asc" },
       take: 300,
       include: {
         agent: { select: { id: true, name: true } },
+        contact: { select: { id: true, name: true, phone: true } },
         dwelling: { select: { id: true, buildingId: true, floor: true, door: true, prospectStatus: true, sellInterest: true, building: { select: { name: true, address: true } }, residents: { where: { role: "PROPIETARIO" }, take: 1, select: { name: true, phone: true } } } },
       },
     });
@@ -141,6 +153,7 @@ prospectionsRouter.get(
         hasTime: a.hasTime,
         state: classify(a.dueDate!, a.hasTime, now),
         agent: a.agent,
+        contact: a.contact ? { id: a.contact.id, name: a.contact.name, phone: a.contact.phone } : null,
         dwelling: a.dwelling
           ? {
               id: a.dwelling.id,

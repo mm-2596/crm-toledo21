@@ -622,6 +622,8 @@ export interface ProspectCall {
   hasTime: boolean;
   state: NotificationState;
   agent: { id: string; name: string } | null;
+  /** Presente en las llamadas a contactos (p. ej. quien pidió una tasación). */
+  contact?: { id: string; name: string; phone: string | null } | null;
   dwelling: { id: string; buildingId: string; label: string; address: string; owner: string | null; phone: string | null; sellInterest: SellInterest | null } | null;
 }
 
