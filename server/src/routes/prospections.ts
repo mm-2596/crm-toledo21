@@ -120,7 +120,7 @@ prospectionsRouter.get(
       where: {
         completed: false,
         type: { not: "NOTA" },
-        dueDate: { not: null, lte: new Date(now.getTime() + 30 * 86_400_000) },
+        dueDate: { not: null, lte: new Date(now.getTime() + 90 * 86_400_000) },
         dwelling: { is: { AND: [base, { prospectStatus: { not: null } }] } },
         ...(everyone ? {} : { agentId: agentId ?? req.user!.userId }),
       },
