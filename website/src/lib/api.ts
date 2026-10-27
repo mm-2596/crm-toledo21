@@ -51,6 +51,50 @@ export function submitLead(data: { name: string; email?: string; phone?: string;
   });
 }
 
+export interface ZoneOption {
+  id: string;
+  city: string;
+  zone: string | null;
+}
+
+/** Zonas con precio: alimentan el desplegable de la tasación. Si falla, el formulario funciona igual sin él. */
+export async function getZones(): Promise<ZoneOption[]> {
+  try {
+    const res = await apiFetch<{ zones: ZoneOption[] }>(`/api/public/zones`, undefined, { revalidate: 60 });
+    return res.zones;
+  } catch {
+    return [];
+  }
+}
+
+export interface ValuationRequest {
+  name: string;
+  email?: string;
+  phone?: string;
+  type: string;
+  address: string;
+  zoneId?: string;
+  areaM2?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  condition?: string;
+  extras: string[];
+  timing?: string;
+  marketingConsent?: boolean;
+}
+
+export interface ValuationResponse {
+  ok: true;
+  estimate: { low: number; high: number; zone: string; emailed: boolean } | null;
+}
+
+export function submitValuationRequest(data: ValuationRequest) {
+  return apiFetch<ValuationResponse>(`/api/public/valuation-requests`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function subscribeNewsletter(data: { email: string; consent: true }) {
   return apiFetch<{ ok: true }>(`/api/public/newsletter`, {
     method: "POST",

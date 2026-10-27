@@ -18,6 +18,7 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AdminRoute } from "./auth/AdminRoute";
+import { ZonePrices } from "./pages/ZonePrices";
 import { RentalsRoute, SalesRoute } from "./auth/RoleRoute";
 import { Rentals } from "./pages/Rentals";
 import { RentalDetail } from "./pages/RentalDetail";
@@ -53,6 +54,7 @@ export default function App() {
           <Route element={<AdminRoute />}>
             <Route path="campanas" element={<Campaigns />} />
             <Route path="felicitaciones" element={<Greetings />} />
+            <Route path="precios-zona" element={<ZonePrices />} />
             <Route path="equipo" element={<Team />} />
           </Route>
         </Route>

@@ -336,6 +336,20 @@ model Activity {
   @@index([dueDate])
 }
 
+/// Precio orientativo de venta por metro cuadrado de cada zona. Lo mantiene el administrador y es
+/// la base de la valoración orientativa que se envía por correo al pedir una tasación en la web.
+model ZonePrice {
+  id        String   @id @default(cuid())
+  city      String
+  /// Barrio o zona; vacío = precio para toda la ciudad (se usa si no hay uno más concreto).
+  zone      String?
+  saleEurM2 Int
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 /// Registro de valoraciones (manuales o generadas por IA en una fase posterior)
 model Valuation {
   id             String   @id @default(cuid())

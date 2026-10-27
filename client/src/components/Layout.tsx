@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  Calculator,
   Building2,
   Kanban,
   LayoutDashboard,
@@ -77,7 +78,7 @@ export function Layout() {
   const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa");
   const visibleLinks: NavItem[] =
     user?.role === "ADMIN"
-      ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/felicitaciones", label: "Felicitaciones", icon: Gift }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
+      ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/felicitaciones", label: "Felicitaciones", icon: Gift }, { to: "/precios-zona", label: "Precios por zona", icon: Calculator }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
       : user?.role === "ADMINISTRACION"
         ? [
             links[0],

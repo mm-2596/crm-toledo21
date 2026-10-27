@@ -9,6 +9,10 @@ import type {
   LeaseInput,
   Role,
   TeamOverviewUser,
+  ValuationPreview,
+  ZonePrice,
+  ZonePriceInput,
+  ZonePricesResponse,
   TeamMemberTasksResponse,
   ContactSearch,
   ContactSearchInput,
@@ -248,4 +252,13 @@ export const GreetingsApi = {
     api.get<{ occasion: string; recipients: WhatsappRecipient[]; invalidPhones: number }>(`/greetings/festivities/${key}/whatsapp`).then((r) => r.data),
   markSent: (contactId: string, occasion: string) => api.post("/greetings/whatsapp-sent", { contactId, occasion }),
   preview: (key: string) => api.get<{ html: string }>(`/greetings/preview/${key}`).then((r) => r.data.html),
+};
+
+export const ZonePricesApi = {
+  list: () => api.get<ZonePricesResponse>("/zone-prices").then((r) => r.data),
+  create: (data: ZonePriceInput) => api.post<ZonePrice>("/zone-prices", data).then((r) => r.data),
+  update: (id: string, data: ZonePriceInput) => api.put<ZonePrice>(`/zone-prices/${id}`, data).then((r) => r.data),
+  remove: (id: string) => api.delete(`/zone-prices/${id}`),
+  preview: (data: { type: string; address: string; zoneId?: string | null; areaM2: number; condition?: string | null; extras: string[] }) =>
+    api.post<ValuationPreview>("/zone-prices/preview", data).then((r) => r.data),
 };

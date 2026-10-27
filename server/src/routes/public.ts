@@ -6,7 +6,8 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { signToken } from "../lib/auth.js";
-import { sendLeadConfirmationEmail, sendNewLeadAlertEmail } from "../lib/email.js";
+import { sendLeadConfirmationEmail, sendNewLeadAlertEmail, sendValuationEmail } from "../lib/email.js";
+import { estimateValuation, type ZoneRow } from "../lib/valuation.js";
 
 export const publicRouter = Router();
 
@@ -228,81 +229,186 @@ publicRouter.post(
   }),
 );
 
-publicRouter.post(
-  "/leads",
-  asyncHandler(async (req, res) => {
-    const data = leadInput.parse(req.body);
+type LeadData = z.infer<typeof leadInput>;
 
-    const property = data.propertyId
-      ? await prisma.property.findUnique({ where: { id: data.propertyId } })
-      : null;
+/** Crea el contacto (y la operación si es por una propiedad), la tarea de 24 h y avisa al equipo. */
+async function registerLead(data: LeadData, opts: { sendConfirmation?: boolean; taskNote?: string } = {}) {
+  const property = data.propertyId ? await prisma.property.findUnique({ where: { id: data.propertyId } }) : null;
 
-    const contact = await prisma.contact.create({
-      data: {
-        name: data.name,
-        email: data.email ?? null,
-        phone: data.phone ?? null,
-        source: "WEB_HOUZEZ",
-        marketingConsent: data.marketingConsent === true,
-        marketingConsentAt: data.marketingConsent === true ? new Date() : null,
-        propertyType: property?.type,
-        listingType: property?.listingType,
-        preferredZone: property?.zone,
-        notes: [
-          property ? `Interesado/a en: ${property.title} (${property.reference})` : null,
-          data.message ? `Mensaje: ${data.message}` : null,
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      },
-    });
+  const contact = await prisma.contact.create({
+    data: {
+      name: data.name,
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      source: "WEB_HOUZEZ",
+      marketingConsent: data.marketingConsent === true,
+      marketingConsentAt: data.marketingConsent === true ? new Date() : null,
+      propertyType: property?.type,
+      listingType: property?.listingType,
+      preferredZone: property?.zone,
+      notes: [
+        property ? `Interesado/a en: ${property.title} (${property.reference})` : null,
+        data.message ? `Mensaje: ${data.message}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    },
+  });
 
-    if (property) {
-      const firstStage = await prisma.pipelineStage.findFirst({ orderBy: { order: "asc" } });
-      if (firstStage) {
-        await prisma.deal.create({
-          data: {
-            contactId: contact.id,
-            propertyId: property.id,
-            stageId: firstStage.id,
-            agentId: property.agentId,
-            value: property.price,
-          },
-        });
-      }
-    }
-
-    const isValuation = Boolean(data.message?.startsWith("TASACIÓN GRATUITA"));
-    if (isValuation) {
-      // Tarea con vencimiento a 24 h (la promesa hecha en la web): aparece en
-      // "Tareas" y en el resumen del asistente hasta que alguien la complete.
-      await prisma.activity.create({
+  if (property) {
+    const firstStage = await prisma.pipelineStage.findFirst({ orderBy: { order: "asc" } });
+    if (firstStage) {
+      await prisma.deal.create({
         data: {
-          type: "TAREA",
-          description: "Llamar para dar la tasación gratuita solicitada en la web",
-          dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
           contactId: contact.id,
+          propertyId: property.id,
+          stageId: firstStage.id,
+          agentId: property.agentId,
+          value: property.price,
         },
       });
     }
+  }
 
-    const crmBase = (process.env.CLIENT_ORIGIN || "").replace(/\/+$/, "");
-    sendNewLeadAlertEmail({
-      isValuation,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      message: data.message,
-      contactUrl: `${crmBase}/contactos/${contact.id}`,
-    }).catch(() => {});
+  const isValuation = Boolean(data.message?.startsWith("TASACIÓN GRATUITA"));
+  if (isValuation) {
+    // Tarea con vencimiento a 24 h (la promesa hecha en la web): aparece en
+    // "Tareas" y en el resumen del asistente hasta que alguien la complete.
+    await prisma.activity.create({
+      data: {
+        type: "TAREA",
+        description: `Llamar para dar la tasación gratuita solicitada en la web${opts.taskNote ? ` (${opts.taskNote})` : ""}`,
+        dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        contactId: contact.id,
+      },
+    });
+  }
 
-    if (data.email) {
-      // No bloquea la respuesta: si el correo falla, el lead ya está
-      // guardado en el CRM de todas formas.
-      sendLeadConfirmationEmail(data.email, data.name).catch(() => {});
+  const crmBase = (process.env.CLIENT_ORIGIN || "").replace(/\/+$/, "");
+  sendNewLeadAlertEmail({
+    isValuation,
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    message: data.message,
+    contactUrl: `${crmBase}/contactos/${contact.id}`,
+  }).catch(() => {});
+
+  if (data.email && opts.sendConfirmation !== false) {
+    // No bloquea la respuesta: si el correo falla, el lead ya está
+    // guardado en el CRM de todas formas.
+    sendLeadConfirmationEmail(data.email, data.name).catch(() => {});
+  }
+
+  return contact;
+}
+
+publicRouter.post(
+  "/leads",
+  asyncHandler(async (req, res) => {
+    await registerLead(leadInput.parse(req.body));
+    res.status(201).json({ ok: true });
+  }),
+);
+
+/** Zonas con precio, para el desplegable de la tasación (sin precios). */
+publicRouter.get(
+  "/zones",
+  asyncHandler(async (_req, res) => {
+    try {
+      const rows = await prisma.zonePrice.findMany({ where: { active: true, saleEurM2: { gt: 0 } }, orderBy: [{ city: "asc" }, { zone: "asc" }], select: { id: true, city: true, zone: true } });
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=60, stale-while-revalidate=300");
+      res.json({ zones: rows });
+    } catch {
+      res.json({ zones: [] });
+    }
+  }),
+);
+
+const valuationRequestInput = z.object({
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().optional().nullable(),
+  phone: z.string().trim().max(40).optional().nullable(),
+  type: z.enum(["Piso", "Casa o chalet", "Local u oficina", "Terreno u otro"]),
+  address: z.string().trim().min(3).max(200),
+  zoneId: z.string().optional().nullable(),
+  areaM2: z.number().positive().max(100000).optional().nullable(),
+  bedrooms: z.number().int().min(0).max(30).optional().nullable(),
+  bathrooms: z.number().int().min(0).max(30).optional().nullable(),
+  condition: z.enum(["Nuevo", "Buen estado", "Reformado", "A reformar"]).optional().nullable(),
+  extras: z.array(z.string().max(40)).max(10).default([]),
+  timing: z.string().max(80).optional().nullable(),
+  marketingConsent: z.boolean().optional(),
+});
+
+/**
+ * Solicitud de tasación desde la web: se guarda como siempre (contacto + tarea de 24 h) y, si hay
+ * precios de la zona, se calcula un rango orientativo que se envía por correo y se devuelve a la web.
+ */
+publicRouter.post(
+  "/valuation-requests",
+  asyncHandler(async (req, res) => {
+    const d = valuationRequestInput.parse(req.body);
+    if (!d.email && !d.phone) return res.status(400).json({ error: "Hace falta un teléfono o un email" });
+
+    let rows: ZoneRow[] = [];
+    try {
+      rows = await prisma.zonePrice.findMany({ where: { active: true } });
+    } catch {
+      rows = [];
+    }
+    const estimate = d.areaM2
+      ? estimateValuation(rows, { type: d.type, address: d.address, zoneId: d.zoneId, areaM2: d.areaM2, condition: d.condition, extras: d.extras })
+      : null;
+
+    const lines = [
+      "TASACIÓN GRATUITA SOLICITADA DESDE LA WEB",
+      `Tipo: ${d.type}`,
+      `Ubicación: ${d.address}`,
+      d.areaM2 ? `Superficie: ${d.areaM2} m²` : null,
+      d.bedrooms != null ? `Habitaciones: ${d.bedrooms}` : null,
+      d.bathrooms != null ? `Baños: ${d.bathrooms}` : null,
+      d.condition ? `Estado: ${d.condition}` : null,
+      d.extras.length ? `Extras: ${d.extras.join(", ")}` : null,
+      d.timing ? `Plazo para vender: ${d.timing}` : null,
+      estimate ? `VALORACIÓN ORIENTATIVA ENVIADA: ${estimate.low.toLocaleString("es-ES")} – ${estimate.high.toLocaleString("es-ES")} € (${estimate.eurM2} €/m² en ${estimate.zoneLabel})` : "Sin valoración automática (falta precio de la zona o el tipo no se estima): la prepara un agente.",
+    ].filter(Boolean);
+
+    const contact = await registerLead(
+      { name: d.name, email: d.email ?? null, phone: d.phone ?? null, message: lines.join("\n"), marketingConsent: d.marketingConsent },
+      {
+        sendConfirmation: !estimate,
+        taskNote: estimate ? `valoración orientativa enviada: ${estimate.low.toLocaleString("es-ES")}–${estimate.high.toLocaleString("es-ES")} €` : "sin valoración automática",
+      },
+    );
+
+    if (estimate) {
+      await prisma.valuation
+        .create({
+          data: {
+            source: "web",
+            estimatedValue: estimate.mid,
+            inputData: { contactId: contact.id, ...d },
+            factors: { low: estimate.low, high: estimate.high, eurM2: estimate.eurM2, zone: estimate.zoneLabel, ...estimate.factors },
+          },
+        })
+        .catch(() => {});
+      if (d.email) {
+        sendValuationEmail({
+          to: d.email,
+          name: d.name,
+          low: estimate.low,
+          high: estimate.high,
+          zoneLabel: estimate.zoneLabel,
+          areaM2: d.areaM2!,
+          typeLabel: d.type,
+          condition: d.condition,
+          extras: d.extras,
+        }).catch(() => {});
+      }
     }
 
-    res.status(201).json({ ok: true });
+    res.status(201).json({ ok: true, estimate: estimate ? { low: estimate.low, high: estimate.high, zone: estimate.zoneLabel, emailed: Boolean(d.email) } : null });
   }),
 );
 

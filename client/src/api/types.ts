@@ -561,3 +561,31 @@ export interface WhatsappRecipient {
   sent: boolean;
   url: string | null;
 }
+
+export interface ZonePrice {
+  id: string;
+  city: string;
+  zone: string | null;
+  saleEurM2: number;
+  notes: string | null;
+  active: boolean;
+  updatedAt: string;
+}
+
+export interface ZonePriceInput {
+  city: string;
+  zone?: string | null;
+  saleEurM2: number;
+  notes?: string | null;
+  active?: boolean;
+}
+
+export interface ZonePricesResponse {
+  rows: ZonePrice[];
+  adjustments: { extras: Record<string, number>; margin: number };
+}
+
+export interface ValuationPreview {
+  zone: string | null;
+  estimate: { low: number; high: number; mid: number; eurM2: number; zoneLabel: string } | null;
+}

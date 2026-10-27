@@ -54,6 +54,91 @@ function leadConfirmationHtml(name: string) {
   </div>`;
 }
 
+const eur = (n: number) => `${n.toLocaleString("es-ES")} €`;
+
+export interface ValuationEmailData {
+  to: string;
+  name: string;
+  low: number;
+  high: number;
+  zoneLabel: string;
+  areaM2: number;
+  typeLabel: string;
+  condition?: string | null;
+  extras?: string[];
+}
+
+function valuationHtml(d: ValuationEmailData) {
+  const logoUrl = `${WEBSITE_URL}/logo/toledo21-logo.png`;
+  const rows = [
+    ["Tipo", d.typeLabel],
+    ["Zona", d.zoneLabel],
+    ["Superficie", `${d.areaM2} m²`],
+    d.condition ? ["Estado", d.condition] : null,
+    d.extras && d.extras.length ? ["Extras", d.extras.join(", ")] : null,
+  ]
+    .filter(Boolean)
+    .map(
+      (r) =>
+        `<tr><td style="padding:4px 14px 4px 0;color:#8a8378;font-size:13px;">${r![0]}</td><td style="padding:4px 0;font-size:14px;color:#14110f;">${escapeHtml(String(r![1]))}</td></tr>`,
+    )
+    .join("");
+  return `
+  <div style="background:#f1ede4;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" style="max-width:520px;margin:0 auto;background:#faf8f4;border-radius:16px;overflow:hidden;border:1px solid #e4ddd0;">
+      <tr><td style="padding:32px 32px 0 32px;"><img src="${logoUrl}" alt="Toledo21" height="34" style="height:34px;width:auto;display:block;" /></td></tr>
+      <tr><td style="padding:24px 32px 4px 32px;">
+        <h1 style="margin:0;font-size:20px;line-height:1.3;color:#14110f;font-weight:700;">${escapeHtml(d.name.split(" ")[0])}, esta es tu valoración orientativa</h1>
+      </td></tr>
+      <tr><td style="padding:12px 32px 4px 32px;">
+        <p style="margin:0 0 6px 0;font-size:13px;color:#8a8378;">Según los datos que nos has dado, tu vivienda podría valer entre</p>
+        <p style="margin:0;font-size:28px;line-height:1.2;color:#14110f;font-weight:700;">${eur(d.low)} <span style="color:#8a8378;font-weight:400;">y</span> ${eur(d.high)}</p>
+      </td></tr>
+      <tr><td style="padding:16px 32px 4px 32px;"><table role="presentation">${rows}</table></td></tr>
+      <tr><td style="padding:12px 32px 8px 32px;">
+        <p style="margin:0;padding:12px 14px;background:#f1ede4;border-radius:10px;font-size:12.5px;line-height:1.6;color:#4a443d;">
+          <strong>Es una valoración orientativa, no una tasación oficial ni un precio garantizado.</strong>
+          Se calcula automáticamente con precios de la zona y los datos que has indicado. El valor real depende de
+          detalles que solo se ven en persona: orientación, planta, reformas, comunidad o el momento del mercado.
+        </p>
+      </td></tr>
+      <tr><td style="padding:12px 32px 8px 32px;">
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#4a443d;">
+          Un agente de Toledo21 revisará tu caso y te llamará <strong>en menos de 24 horas</strong> para afinar esta cifra, sin compromiso.
+          Si prefieres hablar ya, escríbenos o llámanos al 673 49 00 94.
+        </p>
+      </td></tr>
+      <tr><td style="padding:12px 32px 32px 32px;">
+        <a href="https://wa.me/34673490094?text=${encodeURIComponent("Hola, he recibido mi valoración orientativa y quiero hablar con un agente.")}"
+           style="display:inline-block;background:#14110f;color:#faf8f4;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:999px;">Hablar con un agente</a>
+      </td></tr>
+      <tr><td style="padding:20px 32px;border-top:1px solid #e4ddd0;">
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#8a8378;">
+          Toledo21 · C. Toledo, 21, Getafe · Este es un correo automático; no hace falta que lo respondas.
+        </p>
+      </td></tr>
+    </table>
+  </div>`;
+}
+
+/** Envía al cliente la valoración orientativa con su rango de precio. */
+export async function sendValuationEmail(d: ValuationEmailData) {
+  if (!resend) {
+    console.warn("RESEND_API_KEY no configurada: no se envió la valoración orientativa.");
+    return;
+  }
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: d.to,
+      subject: "Tu valoración orientativa — Toledo21",
+      html: valuationHtml(d),
+    });
+  } catch (err) {
+    console.error("Error enviando la valoración orientativa:", err);
+  }
+}
+
 function escapeHtml(text: string) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }

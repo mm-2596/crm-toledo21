@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Building2, Check, Home, Send, Store, Trees } from "lucide-react";
-import { sendLead } from "@/app/propiedades/[id]/actions";
+import { requestValuation } from "@/app/tasacion/actions";
+import type { ZoneOption } from "@/lib/api";
 import { MarketingConsent } from "./MarketingConsent";
 
 const TYPES = [
@@ -35,10 +36,12 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-export function ValuationWizard() {
+export function ValuationWizard({ zones = [] }: { zones?: ZoneOption[] }) {
   const [step, setStep] = useState(0);
   const [type, setType] = useState("");
   const [address, setAddress] = useState("");
+  const [zoneId, setZoneId] = useState("");
+  const [estimate, setEstimate] = useState<{ low: number; high: number; zone: string; emailed: boolean } | null>(null);
   const [area, setArea] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -68,29 +71,28 @@ export function ValuationWizard() {
     if (!email.trim() && !phone.trim()) return setError("Déjanos un teléfono o un email.");
     setError(null);
 
-    const lines = [
-      "TASACIÓN GRATUITA SOLICITADA DESDE LA WEB",
-      `Tipo: ${type}`,
-      `Ubicación: ${address.trim()}`,
-      area ? `Superficie: ${area} m²` : null,
-      bedrooms ? `Habitaciones: ${bedrooms}` : null,
-      bathrooms ? `Baños: ${bathrooms}` : null,
-      condition ? `Estado: ${condition}` : null,
-      extras.length ? `Extras: ${extras.join(", ")}` : null,
-      timing ? `Plazo para vender: ${timing}` : null,
-    ].filter(Boolean);
-
-    const formData = new FormData();
-    formData.set("name", name.trim());
-    formData.set("email", email.trim());
-    formData.set("phone", phone.trim());
-    formData.set("message", lines.join("\n"));
-    if (consent) formData.set("marketingConsent", "true");
+    const toNumber = (v: string) => (v ? Number(v.replace(/\D/g, "")) || undefined : undefined);
 
     startTransition(async () => {
-      const res = await sendLead(formData);
-      if (res.ok) setDone(true);
-      else setError(res.error ?? "No se pudo enviar. Inténtalo de nuevo.");
+      const res = await requestValuation({
+        name: name.trim(),
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        type,
+        address: address.trim(),
+        zoneId: zoneId || undefined,
+        areaM2: toNumber(area),
+        bedrooms: toNumber(bedrooms),
+        bathrooms: toNumber(bathrooms),
+        condition: condition || undefined,
+        extras,
+        timing: timing || undefined,
+        marketingConsent: consent,
+      });
+      if (res.ok) {
+        setEstimate(res.estimate);
+        setDone(true);
+      } else setError(res.error ?? "No se pudo enviar. Inténtalo de nuevo.");
     });
   }
 
@@ -101,9 +103,21 @@ export function ValuationWizard() {
           <Check size={22} />
         </span>
         <h3 className="font-display text-2xl text-ink">¡Recibido! Ya estamos con tu tasación.</h3>
+        {estimate && (
+          <div className="w-full rounded-2xl bg-gold-soft px-5 py-4">
+            <p className="text-xs uppercase tracking-wider text-ink-soft">Valoración orientativa · {estimate.zone}</p>
+            <p className="mt-1 font-display text-2xl text-ink sm:text-3xl">
+              {estimate.low.toLocaleString("es-ES")} € – {estimate.high.toLocaleString("es-ES")} €
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+              Es una estimación automática con precios de la zona, no una tasación oficial ni un precio garantizado.
+              {estimate.emailed ? " Te la hemos enviado también por correo." : ""}
+            </p>
+          </div>
+        )}
         <p className="max-w-md text-sm leading-relaxed text-ink-soft">
-          Un agente de Toledo21 estudiará tu vivienda con datos reales de la zona y te contactará en menos de 24
-          horas. Sin compromiso.
+          Un agente de Toledo21 revisará tu vivienda y te contactará en menos de 24 horas para afinar el precio. Sin
+          compromiso.
         </p>
       </div>
     );
@@ -158,6 +172,19 @@ export function ValuationWizard() {
 
           {step === 1 && (
             <div className="grid gap-4 sm:grid-cols-2">
+              {zones.length > 0 && (
+                <label className="sm:col-span-2">
+                  <span className="mb-1.5 block text-xs text-ink-soft">Zona o barrio</span>
+                  <select value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={fieldClass}>
+                    <option value="">Mi zona no aparece / no lo sé</option>
+                    {zones.map((z) => (
+                      <option key={z.id} value={z.id}>
+                        {[z.zone, z.city].filter(Boolean).join(", ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="sm:col-span-2">
                 <span className="mb-1.5 block text-xs text-ink-soft">Dirección o zona</span>
                 <input

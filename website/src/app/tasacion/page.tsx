@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Clock, FileCheck, LineChart, ShieldCheck } from "lucide-react";
 import { ValuationWizard } from "@/components/ValuationWizard";
+import { getZones } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Tasación gratuita",
@@ -23,7 +24,8 @@ const BENEFITS = [
   },
 ];
 
-export default function TasacionPage() {
+export default async function TasacionPage() {
+  const zones = await getZones();
   return (
     <div className="mx-auto max-w-6xl px-6 pb-24 pt-32">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
@@ -50,7 +52,7 @@ export default function TasacionPage() {
           </ul>
         </div>
 
-        <ValuationWizard />
+        <ValuationWizard zones={zones} />
       </div>
     </div>
   );
