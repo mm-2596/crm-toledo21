@@ -1,3 +1,4 @@
+import { geocodePropertyLater } from "../lib/geocode.js";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -134,6 +135,9 @@ publicRouter.get(
       }),
       prisma.property.count({ where }),
     ]);
+
+    // Las propiedades que aún no tienen coordenadas se colocan en el mapa en segundo plano.
+    properties.filter((p) => p.latitude == null || p.longitude == null).slice(0, 3).forEach((p) => geocodePropertyLater(p.id));
 
     const baseUrl = publicBaseUrl(req.protocol, req.get("host") || "");
     const propertiesWithMedia = properties.map((p) => withAbsoluteMedia(p, baseUrl));

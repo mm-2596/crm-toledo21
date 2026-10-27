@@ -53,9 +53,9 @@ export function PropertyMap({ title, latitude, longitude, label, radius = 350 }:
       </div>
       <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-paper-dim">
         {show ? (
-          <div ref={box} role="img" aria-label={`Mapa de la zona de ${title}`} className="h-72 w-full sm:h-96" />
+          <div ref={box} role="img" aria-label={`Mapa de la zona de ${title}`} className="h-80 w-full sm:h-[28rem]" />
         ) : (
-          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center sm:h-96">
+          <div className="flex h-80 flex-col items-center justify-center gap-3 px-6 text-center sm:h-[28rem]">
             <MapPin size={28} className="text-gold" aria-hidden="true" />
             <p className="max-w-sm text-sm text-ink-soft">
               El mapa se carga desde un servicio externo. Púlsalo cuando quieras verlo.

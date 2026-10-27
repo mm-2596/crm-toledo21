@@ -142,9 +142,6 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
-          {mapLat != null && mapLon != null && (
-            <PropertyMap title={property.title} latitude={mapLat} longitude={mapLon} label={zoneLabel} />
-          )}
 
           {baseLat != null && baseLon != null && (
             <Suspense fallback={null}>
@@ -241,6 +238,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <ContactForm propertyId={property.id} propertyTitle={property.title} />
         </div>
       </div>
+
+      {mapLat != null && mapLon != null && (
+        <div className="mt-12 border-t border-line pt-4">
+          <PropertyMap title={property.title} latitude={mapLat} longitude={mapLon} label={zoneLabel} />
+        </div>
+      )}
 
       {property.similar.length > 0 && (
         <div className="mt-16 border-t border-line pt-12">

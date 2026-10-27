@@ -1,6 +1,7 @@
 import { getProperties } from "@/lib/api";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyFiltersBar } from "@/components/PropertyFiltersBar";
+import { ListingMap } from "@/components/ListingMap";
 import type { PropertyFilters } from "@/lib/types";
 
 const PAGE_SIZE = 12;
@@ -66,6 +67,8 @@ export async function PropertyListing({
       <div className="mt-8">
         <PropertyFiltersBar filters={filters} basePath={basePath} fixedListingType={fixedListingType} />
       </div>
+
+      <ListingMap properties={data.properties} />
 
       {data.properties.length > 0 ? (
         <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">

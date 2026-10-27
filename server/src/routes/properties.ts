@@ -1,3 +1,4 @@
+import { geocodePropertyLater } from "../lib/geocode.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Router } from "express";
@@ -136,6 +137,7 @@ propertiesRouter.post(
     const property = await prisma.property.create({
       data: { ...data, agentId: data.agentId ?? req.user!.userId },
     });
+    if (property.latitude == null || property.longitude == null) geocodePropertyLater(property.id);
     res.status(201).json(property);
   }),
 );
@@ -150,6 +152,10 @@ propertiesRouter.put(
       data,
     });
     await syncDwellingFromProperty(property.id);
+    // Si cambia la dirección y nadie fija las coordenadas a mano, se vuelven a calcular.
+    const addressChanged = "address" in data || "zone" in data || "city" in data;
+    if (addressChanged && !("latitude" in data) && !("longitude" in data)) geocodePropertyLater(property.id, true);
+    else if (property.latitude == null || property.longitude == null) geocodePropertyLater(property.id);
     res.json(property);
   }),
 );
