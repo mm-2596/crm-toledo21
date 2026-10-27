@@ -24,6 +24,7 @@ import { PropertyGallery } from "@/components/PropertyGallery";
 import { PropertyVideos } from "@/components/PropertyVideos";
 import { ContactForm } from "@/components/ContactForm";
 import { PropertyMap } from "@/components/PropertyMap";
+import { PropertyStickyBar } from "@/components/PropertyStickyBar";
 import { geocodePlace } from "@/lib/geocode";
 import { NearbyPlaces } from "@/components/NearbyPlaces";
 import { PHONE_DISPLAY, PHONE_TEL, whatsappLink } from "@/lib/contact";
@@ -97,6 +98,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="mx-auto max-w-7xl px-6 pb-12 pt-28">
+      <PropertyStickyBar
+        price={property.listingType === "ALQUILER" ? `${formatCurrency(property.price)}/mes` : formatCurrency(property.price)}
+        title={property.title}
+        place={[property.zone, property.city].filter(Boolean).join(", ") || "Getafe"}
+        reference={property.reference}
+        bedrooms={property.bedrooms}
+        bathrooms={property.bathrooms}
+        areaM2={property.areaM2}
+      />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-gold">
@@ -114,7 +124,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <Download size={14} /> Descargar ficha en PDF
           </a>
         </div>
-        <p className="font-display text-3xl text-ink sm:text-4xl">{formatCurrency(property.price)}</p>
+        <p id="ficha-precio" className="font-display text-3xl text-ink sm:text-4xl">{formatCurrency(property.price)}</p>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-3">
@@ -232,7 +242,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             </div>
           )}
 
-          <ContactForm propertyId={property.id} propertyTitle={property.title} />
+          <div id="contactar" className="scroll-mt-40">
+            <ContactForm propertyId={property.id} propertyTitle={property.title} />
+          </div>
         </div>
       </div>
 
