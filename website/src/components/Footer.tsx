@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "./BrandLogo";
+import { GoogleRatingBadge } from "./GoogleRatingBadge";
 
 const EXPLORE_LINKS = [
   { href: "/comprar", label: "Comprar" },
@@ -50,6 +51,7 @@ export function Footer() {
             <p className="text-sm text-ink-soft">C. Toledo, 21, 28901 Getafe, Madrid</p>
             <p className="mt-1 text-sm text-ink-soft"><a href="tel:+34673490094" className="hover:text-ink">673 49 00 94</a></p>
             <p className="mt-1 text-sm text-ink-soft">info@somostuinmobiliaria.es</p>
+            <GoogleRatingBadge className="mt-3 text-xs" />
           </div>
         </div>
         <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">

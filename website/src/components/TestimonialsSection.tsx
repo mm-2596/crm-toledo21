@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { GOOGLE_PROFILE_URL, GOOGLE_RATING, GOOGLE_RATING_LABEL, GOOGLE_REVIEW_COUNT } from "@/lib/reviews";
 
 // Reseñas reales, copiadas de la ficha pública de Toledo21 - SomosTuInmobiliaria
-// en Google Maps (4,2★, 144 reseñas) — no editar el contenido de las citas,
+// en Google Maps (cifras en lib/reviews.ts) — no editar el contenido de las citas,
 // y no ponerles ninguna foto: son personas reales que no conocemos, así que
 // solo se identifican con sus iniciales, nunca con una cara inventada.
-const GOOGLE_URL =
-  "https://www.google.com/maps/place/Toledo21+-+SomosTuInmobiliaria+-+Getafe,+C.+Toledo,+21,+28901+Getafe,+Madrid/@40.3034017,-3.7327946,15z";
+const GOOGLE_URL = GOOGLE_PROFILE_URL;
 
 const AUTOPLAY_MS = 6000;
 
@@ -110,11 +110,16 @@ export function TestimonialsSection() {
           <GoogleG />
           <span className="flex gap-0.5">
             {Array.from({ length: 5 }, (_, s) => (
-              <Star key={s} size={13} className={s < 4 ? "fill-gold text-gold" : "fill-gold/40 text-gold/40"} />
+              <Star key={s} size={13} className={s < Math.round(GOOGLE_RATING) ? "fill-gold text-gold" : "fill-gold/40 text-gold/40"} />
             ))}
           </span>
-          4,2 en Google · 144 reseñas
+          {GOOGLE_RATING_LABEL} en Google · {GOOGLE_REVIEW_COUNT} reseñas
         </a>
+        <p className="mt-2 text-xs text-ink-soft">
+          <a href={GOOGLE_URL} target="_blank" rel="noopener noreferrer" className="underline hover:text-ink">
+            Ver todas las reseñas o escribir la tuya en Google
+          </a>
+        </p>
       </div>
 
       <div

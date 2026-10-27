@@ -27,6 +27,7 @@ import { PropertyMap } from "@/components/PropertyMap";
 import { geocodePlace } from "@/lib/geocode";
 import { NearbyPlaces } from "@/components/NearbyPlaces";
 import { PHONE_DISPLAY, PHONE_TEL, whatsappLink } from "@/lib/contact";
+import { GoogleRatingBadge } from "@/components/GoogleRatingBadge";
 import { MortgageCalculator } from "@/components/MortgageCalculator";
 import { PropertyCard } from "@/components/PropertyCard";
 import {
@@ -211,6 +212,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <MessageCircle size={15} aria-hidden="true" /> Escribir por WhatsApp
               </a>
             </div>
+            <GoogleRatingBadge className="mt-4 w-full justify-center text-xs" />
           </div>
 
           {property.agent && (
