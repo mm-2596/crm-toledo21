@@ -4,6 +4,17 @@ const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Toledo21 <onboarding@resend.dev>";
+
+// Un fallo al arrancar es lo primero que se mira cuando "no llega el correo".
+if (!resend) console.warn("Correo: RESEND_API_KEY no está definida, no se enviará ningún correo.");
+else if (/onboarding@resend\.dev/.test(FROM_EMAIL))
+  console.warn("Correo: el remitente es el de pruebas de Resend (onboarding@resend.dev); solo entrega a la cuenta dueña de Resend. Verifica un dominio y define RESEND_FROM_EMAIL.");
+else console.log(`Correo: Resend activo, remitente ${FROM_EMAIL}`);
+
+/** Resend no lanza error cuando rechaza un envío: lo devuelve. Aquí se registra para que se vea en los logs. */
+function logSendError(label: string, error: { name?: string; message?: string } | null | undefined) {
+  if (error) console.error(`Correo rechazado por Resend (${label}): ${error.name ?? ""} ${error.message ?? ""}`.trim());
+}
 const WEBSITE_URL = process.env.WEBSITE_URL || "https://crm-toledo21.vercel.app";
 
 function leadConfirmationHtml(name: string) {
@@ -128,12 +139,13 @@ export async function sendValuationEmail(d: ValuationEmailData) {
     return;
   }
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: d.to,
       subject: "Tu valoración orientativa — Toledo21",
       html: valuationHtml(d),
     });
+    logSendError("valoración orientativa", error);
   } catch (err) {
     console.error("Error enviando la valoración orientativa:", err);
   }
@@ -192,12 +204,13 @@ export async function sendNewLeadAlertEmail(lead: LeadAlert) {
   </div>`;
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: recipients,
       subject: `${lead.isValuation ? "Tasación gratuita" : "Nuevo contacto web"}: ${lead.name}`,
       html,
     });
+    logSendError("aviso de nuevo contacto", error);
   } catch (err) {
     console.error("Error enviando el aviso de nuevo contacto:", err);
   }
@@ -209,12 +222,13 @@ export async function sendLeadConfirmationEmail(to: string, name: string) {
     return;
   }
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to,
       subject: "Hemos recibido tu mensaje — Toledo21",
       html: leadConfirmationHtml(name),
     });
+    logSendError("confirmación al cliente", error);
   } catch (err) {
     console.error("Error enviando correo de confirmación de lead:", err);
   }
