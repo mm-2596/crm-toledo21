@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  CalendarRange,
   Calculator,
   Target,
   Building2,
@@ -36,6 +37,7 @@ const links = [
   { to: "/pipeline", label: "Pipeline", icon: Kanban },
   { to: "/visitas", label: "Visitas", icon: CalendarDays },
   { to: "/tareas", label: "Tareas", icon: CheckSquare },
+  { to: "/calendario", label: "Calendario", icon: CalendarRange },
 ];
 
 /** Escritorio (menú lateral fijo) o móvil (barra superior con menú desplegable). Se monta solo uno de los dos. */
@@ -91,6 +93,7 @@ export function Layout() {
             { to: "/contactos", label: "Clientes de alquiler", icon: Users },
             rentalLinks[1],
             links.find((l) => l.to === "/tareas")!,
+            links.find((l) => l.to === "/calendario")!,
           ]
         : baseLinks;
 

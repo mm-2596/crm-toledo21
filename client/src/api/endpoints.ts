@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  CalendarResponse,
   BirthdayItem,
   FestivitiesResponse,
   GreetingTexts,
@@ -243,6 +244,10 @@ export const TeamApi = {
   overview: (office?: Office) => api.get<{ users: TeamOverviewUser[] }>("/team/overview", { params: { office } }).then((r) => r.data.users),
   tasksOf: (userId: string, params: { state?: string; type?: string; q?: string; page?: number }) =>
     api.get<TeamMemberTasksResponse>(`/team/${userId}/tasks`, { params }).then((r) => r.data),
+};
+
+export const CalendarApi = {
+  range: (from: string, to: string) => api.get<CalendarResponse>("/calendar", { params: { from, to } }).then((r) => r.data),
 };
 
 export const GreetingsApi = {

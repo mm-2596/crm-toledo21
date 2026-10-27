@@ -18,6 +18,7 @@ import { notificationsRouter } from "./routes/notifications.js";
 import { greetingsRouter } from "./routes/greetings.js";
 import { leasesRouter } from "./routes/leases.js";
 import { teamRouter } from "./routes/team.js";
+import { calendarRouter } from "./routes/calendar.js";
 import { matchesRouter } from "./routes/matching.js";
 import { zonePricesRouter } from "./routes/zonePrices.js";
 import { prospectionsRouter } from "./routes/prospections.js";
@@ -66,6 +67,7 @@ app.use("/api/prospections", requireAuth, denyAdministracion, prospectionsRouter
 app.use("/api/greetings", requireAuth, greetingsRouter);
 app.use("/api/leases", requireAuth, requireRentals, leasesRouter);
 app.use("/api/team", requireAuth, requireRentals, teamRouter);
+app.use("/api/calendar", requireAuth, calendarRouter);
 app.use("/api/visits", requireAuth, visitsRouter);
 
 // Cualquier /api/* que no haya coincidido con nada anterior es un 404 real.

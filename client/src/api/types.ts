@@ -633,3 +633,22 @@ export interface QuickNoteInput {
   hasTime?: boolean;
   callText?: string;
 }
+
+export interface CalendarTask {
+  id: string;
+  type: ActivityType;
+  description: string;
+  dueDate: string;
+  hasTime: boolean;
+  day: string;
+  completed: boolean;
+  state: NotificationState | "done";
+  agentId: string | null;
+  contact: { id: string; name: string } | null;
+  dwelling: { id: string; buildingId: string; label: string } | null;
+}
+
+export interface CalendarResponse {
+  users: { id: string; name: string; role: Role }[];
+  tasks: CalendarTask[];
+}

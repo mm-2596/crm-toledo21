@@ -16,6 +16,7 @@ import { BuildingsMap } from "./pages/BuildingsMap";
 import { Profile } from "./pages/Profile";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { Calendar } from "./pages/Calendar";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { AdminRoute } from "./auth/AdminRoute";
 import { ZonePrices } from "./pages/ZonePrices";
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="prospeccion" element={<Prospections />} />
           <Route path="captacion" element={<Navigate to="/prospeccion" replace />} />
           <Route path="tareas" element={<Tasks />} />
+          <Route path="calendario" element={<Calendar />} />
           <Route element={<RentalsRoute />}>
             <Route path="alquileres" element={<Rentals />} />
             <Route path="alquileres/:id" element={<RentalDetail />} />
