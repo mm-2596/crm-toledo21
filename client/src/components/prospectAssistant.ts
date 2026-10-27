@@ -14,6 +14,8 @@ export type Reply = string | { text: string; choices?: Choice[] };
 export interface PendingProspect {
   text: string;
   buildingId?: string;
+  /** La frase tal como la escribió la persona: es la que se guarda como nota, sin las respuestas añadidas después. */
+  original?: string;
 }
 export type PendingRef = { current: PendingProspect | null };
 
@@ -109,9 +111,9 @@ function withReminderStep(d: Draft, queryClient: QueryClient): Reply {
   return !d.reminder && d.parsed.reminderUnclear ? askDate(d, queryClient) : confirm(d, queryClient);
 }
 
-function withBuilding(parsed: ParsedNote, building: Building, input: string, pending: PendingRef, queryClient: QueryClient): Reply {
+function withBuilding(parsed: ParsedNote, building: Building, input: string, pending: PendingRef, queryClient: QueryClient, original?: string): Reply {
   if (!parsed.floor) {
-    pending.current = { text: input, buildingId: building.id };
+    pending.current = { text: input, buildingId: building.id, original: original ?? input };
     return `Edificio: ${placeLabel(building)}.\n¿Qué piso es? Dime la planta y la puerta, por ejemplo «3ºB».`;
   }
   const found = findDwelling(parsed, building.dwellings);
@@ -139,8 +141,9 @@ function withBuilding(parsed: ParsedNote, building: Building, input: string, pen
  * Empieza o continúa una nota de captación escrita al asistente. Siempre enseña lo que ha entendido
  * y pide confirmación antes de guardar nada.
  */
-export async function handleProspectNote(input: string, queryClient: QueryClient, pending: PendingRef, forcedBuildingId?: string): Promise<Reply> {
+export async function handleProspectNote(input: string, queryClient: QueryClient, pending: PendingRef, forcedBuildingId?: string, original?: string): Promise<Reply> {
   const parsed = parseProspectNote(input);
+  if (original) parsed.note = original.trim().charAt(0).toUpperCase() + original.trim().slice(1);
   const data = await queryClient.fetchQuery({ queryKey: ["buildings", "assistant"], queryFn: () => BuildingsApi.list(), staleTime: 30_000 });
   if (data.noOffice || data.buildings.length === 0) {
     pending.current = null;
@@ -149,16 +152,16 @@ export async function handleProspectNote(input: string, queryClient: QueryClient
 
   if (forcedBuildingId) {
     const b = data.buildings.find((x) => x.id === forcedBuildingId);
-    if (b) return withBuilding(parsed, b, input, pending, queryClient);
+    if (b) return withBuilding(parsed, b, input, pending, queryClient, original);
   }
 
   const candidates = matchBuildings(parsed, data.buildings, input);
-  if (candidates.length === 1) return withBuilding(parsed, candidates[0], input, pending, queryClient);
+  if (candidates.length === 1) return withBuilding(parsed, candidates[0], input, pending, queryClient, original);
   if (candidates.length > 1) {
     pending.current = null;
     return {
       text: "Hay varios edificios que encajan. ¿Cuál es?",
-      choices: candidates.slice(0, 5).map((b) => ({ label: placeLabel(b), run: async () => withBuilding(parsed, b, input, pending, queryClient) })),
+      choices: candidates.slice(0, 5).map((b) => ({ label: placeLabel(b), run: async () => withBuilding(parsed, b, input, pending, queryClient, original) })),
     };
   }
   // Sin dirección: se busca a la persona entre los propietarios y residentes de los pisos del mapa.
@@ -186,14 +189,14 @@ export async function handleProspectNote(input: string, queryClient: QueryClient
         })),
       };
     }
-    pending.current = { text: input };
+    pending.current = { text: input, original };
     return `No encuentro a «${parsed.person}» como propietario en ningún piso del mapa. ¿De qué edificio hablas? Dime la calle y el número, por ejemplo «Calle Mayor 5».`;
   }
   if (parsed.street) {
     pending.current = null;
     return `No encuentro ningún edificio con «${[parsed.street, parsed.number].filter(Boolean).join(" ")}» en el mapa de viviendas. Revisa la dirección o crea primero el edificio desde el Mapa.`;
   }
-  pending.current = { text: input };
+  pending.current = { text: input, original };
   return "Entendido. ¿De qué edificio hablas? Dime la calle y el número, por ejemplo «Calle Mayor 5».";
 }
 
@@ -203,6 +206,7 @@ export async function continueProspectNote(answer: string, queryClient: QueryCli
   if (!p) return "No tengo nada pendiente.";
   const merged = p.buildingId ? `${p.text}, piso ${answer}` : `${p.text}, en ${answer}`;
   const buildingId = p.buildingId;
+  const original = p.original ?? p.text;
   pending.current = null;
-  return handleProspectNote(merged, queryClient, pending, buildingId);
+  return handleProspectNote(merged, queryClient, pending, buildingId, original);
 }
