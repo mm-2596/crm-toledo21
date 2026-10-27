@@ -171,6 +171,18 @@ async function personNotInMap(parsed: ParsedNote, input: string, original: strin
       run: async () =>
         parsed.reminder || !parsed.reminderUnclear ? saveOnContact(c, parsed, parsed.reminder, queryClient) : pickDate(parsed, (r) => saveOnContact(c, parsed, r, queryClient)),
     })),
+    ...(contacts.length === 0
+      ? [{
+          label: `Crear el contacto «${person}»`,
+          run: async (): Promise<Reply> => {
+            const create = async (r: Reminder) => {
+              const created = await ContactsApi.create({ name: person, source: "MANUAL" });
+              return saveOnContact({ id: created.id, name: created.name }, parsed, r, queryClient);
+            };
+            return parsed.reminder || !parsed.reminderUnclear ? create(parsed.reminder) : pickDate(parsed, create);
+          },
+        }]
+      : []),
     { label: "Es un piso del mapa", run: async () => askBuilding(parsed, input, original, buildings, pending, queryClient, "¿De qué edificio es?") },
     {
       label: "Solo un recordatorio",
@@ -179,7 +191,7 @@ async function personNotInMap(parsed: ParsedNote, input: string, original: strin
     },
     { label: "Cancelar", run: async () => "Vale, lo dejo." },
   ];
-  const known = contacts.length ? ` Sí aparece en tus contactos${contacts.length > 1 ? " (hay varios parecidos)" : ""}.` : "";
+  const known = contacts.length ? ` Sí aparece en tus contactos${contacts.length > 1 ? " (hay varios parecidos)" : ""}.` : " Tampoco está en tus contactos.";
   return { text: `No encuentro a «${person}» como propietario de ningún piso del mapa.${known} ¿Qué hago con la nota?`, choices };
 }
 
