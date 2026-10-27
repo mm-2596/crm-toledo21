@@ -82,7 +82,18 @@ export interface PublicProperty {
   agent?: PublicAgent | null;
 }
 
+export type NearbyCategory = "metro" | "tren" | "bus" | "super" | "farmacia" | "colegio" | "salud" | "parque";
+
+export interface NearbyPlace {
+  category: NearbyCategory;
+  name: string;
+  meters: number;
+  minutes: number;
+}
+
 export interface PropertyDetailResponse extends PublicProperty {
+  /** Transporte y servicios cercanos, calculados y guardados por el CRM. */
+  nearby?: NearbyPlace[];
   similar: PublicProperty[];
 }
 

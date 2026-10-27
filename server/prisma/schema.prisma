@@ -180,6 +180,15 @@ model Contact {
   @@index([phone])
 }
 
+/// Transporte y servicios cercanos de cada propiedad (calculados en segundo plano y guardados;
+/// la web solo los lee). Se rellena desde las coordenadas de la propiedad.
+model PropertyNearby {
+  propertyId String   @id
+  data       Json
+  fetchedAt  DateTime @default(now())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
 model Property {
   id                     String             @id @default(cuid())
   reference              String             @unique
@@ -227,6 +236,7 @@ model Property {
   valuations Valuation[]
   images     PropertyImage[]
   videos     PropertyVideo[]
+  nearby     PropertyNearby?
   activities Activity[]
   dwellings  Dwelling[]
 

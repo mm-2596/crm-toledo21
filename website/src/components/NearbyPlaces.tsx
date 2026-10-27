@@ -1,5 +1,5 @@
 import { Bus, GraduationCap, HeartPulse, Pill, ShoppingCart, TrainFront, TreePine, TramFront } from "lucide-react";
-import { getNearby, type NearbyCategory, type NearbyPlace } from "@/lib/nearby";
+import type { NearbyCategory, NearbyPlace } from "@/lib/types";
 
 const GROUPS: { title: string; categories: NearbyCategory[] }[] = [
   { title: "Transporte", categories: ["metro", "tren", "bus"] },
@@ -77,9 +77,3 @@ export function NearbyPlaces({ places }: { places: NearbyPlace[] }) {
   );
 }
 
-// Se consulta aparte para que la ficha no espere a este servicio externo:
-// si tarda o no responde, la sección simplemente no aparece.
-export async function NearbyPlacesLoader({ lat, lon }: { lat: number; lon: number }) {
-  const places = await getNearby(lat, lon);
-  return <NearbyPlaces places={places} />;
-}

@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
@@ -26,7 +25,7 @@ import { PropertyVideos } from "@/components/PropertyVideos";
 import { ContactForm } from "@/components/ContactForm";
 import { PropertyMap } from "@/components/PropertyMap";
 import { geocodePlace } from "@/lib/geocode";
-import { NearbyPlacesLoader } from "@/components/NearbyPlaces";
+import { NearbyPlaces } from "@/components/NearbyPlaces";
 import { PHONE_DISPLAY, PHONE_TEL, whatsappLink } from "@/lib/contact";
 import { MortgageCalculator } from "@/components/MortgageCalculator";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -143,11 +142,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           )}
 
 
-          {baseLat != null && baseLon != null && (
-            <Suspense fallback={null}>
-              <NearbyPlacesLoader lat={baseLat} lon={baseLon} />
-            </Suspense>
-          )}
+          <NearbyPlaces places={property.nearby ?? []} />
 
           {amenities.length > 0 && (
             <div className="mt-8">

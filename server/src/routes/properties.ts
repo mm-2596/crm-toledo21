@@ -1,4 +1,5 @@
 import { geocodePropertyLater } from "../lib/geocode.js";
+import { refreshNearbyLater } from "../lib/nearby.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Router } from "express";
@@ -138,6 +139,7 @@ propertiesRouter.post(
       data: { ...data, agentId: data.agentId ?? req.user!.userId },
     });
     if (property.latitude == null || property.longitude == null) geocodePropertyLater(property.id);
+    else refreshNearbyLater(property.id);
     res.status(201).json(property);
   }),
 );
@@ -156,6 +158,7 @@ propertiesRouter.put(
     const addressChanged = "address" in data || "zone" in data || "city" in data;
     if (addressChanged && !("latitude" in data) && !("longitude" in data)) geocodePropertyLater(property.id, true);
     else if (property.latitude == null || property.longitude == null) geocodePropertyLater(property.id);
+    else if ("latitude" in data || "longitude" in data) refreshNearbyLater(property.id, true);
     res.json(property);
   }),
 );

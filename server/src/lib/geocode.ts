@@ -1,4 +1,5 @@
 import { prisma } from "./prisma.js";
+import { refreshNearbyLater } from "./nearby.js";
 
 // Coloca cada propiedad en el mapa a partir de su dirección, zona y ciudad.
 // Usa el buscador de OpenStreetMap (Nominatim), que pide como mucho una consulta
@@ -56,6 +57,7 @@ export function geocodePropertyLater(propertyId: string, force = false) {
     }
     failedAt.delete(propertyId);
     await prisma.property.update({ where: { id: propertyId }, data: { latitude: found.lat, longitude: found.lon } });
+    refreshNearbyLater(propertyId, true);
   })
     .catch((e) => console.error("No se pudieron calcular las coordenadas de", propertyId, e instanceof Error ? e.message : e))
     .finally(() => inFlight.delete(propertyId));

@@ -1,4 +1,5 @@
 import { geocodePropertyLater } from "../lib/geocode.js";
+import { getStoredNearby, isStale, refreshNearbyLater } from "../lib/nearby.js";
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -172,8 +173,13 @@ publicRouter.get(
       take: 4,
     });
 
+    // Transporte y servicios cercanos: lo guardado; si falta o es antiguo, se calcula en segundo plano.
+    const stored = await getStoredNearby(property.id);
+    if (isStale(stored) && property.latitude != null && property.longitude != null) refreshNearbyLater(property.id);
+
     res.json({
       ...withAbsoluteMedia(property, baseUrl),
+      nearby: stored?.places ?? [],
       similar: similar.map((p) => withAbsoluteMedia(p, baseUrl)),
     });
   }),
