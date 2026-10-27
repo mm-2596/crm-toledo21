@@ -20,11 +20,10 @@ export default async function Home() {
 
   const destacados = featured.properties.slice(0, 6);
   const alquiler = forRent.properties.slice(0, 6);
-  const heroProperties = [...featured.properties, ...forRent.properties].slice(0, 5);
 
   return (
     <div>
-      <Hero properties={heroProperties} />
+      <Hero />
       <HeroSearchPanel />
 
       <ValuationBanner />

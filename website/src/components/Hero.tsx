@@ -1,107 +1,60 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ShieldCheck, BedDouble, Bath, Maximize, ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ShieldCheck } from "lucide-react";
 import { RotatingWord } from "./RotatingWord";
-import { formatCurrency, listingTypeLabels } from "@/lib/format";
-import type { PublicProperty } from "@/lib/types";
 
 const SLIDE_DURATION = 6000;
 
-interface Slide {
-  id: string;
-  image: string;
-  property: PublicProperty;
-}
+// Fotos de la portada (carrusel a pantalla completa). Son imágenes ilustrativas del tipo de vida y de
+// vivienda de Getafe y Madrid sur, no fichas concretas. Se ponen todas a la vez en la página y solo
+// cambia cuál se ve, así la siguiente ya está cargada y no hay saltos. Con "reducir movimiento"
+// activado no cambian solas ni se acercan.
+const SLIDES = [
+  { src: "/images/hero/hero-1-salon.jpg", alt: "Salón luminoso de un piso con balcón y muebles de madera" },
+  { src: "/images/hero/hero-2-terraza.jpg", alt: "Terraza soleada de un piso con vistas a los edificios del barrio" },
+  { src: "/images/hero/hero-3-calle.jpg", alt: "Calle tranquila y arbolada con comercios de barrio" },
+  { src: "/images/hero/hero-4-parque.jpg", alt: "Familia paseando por un parque junto a edificios residenciales" },
+  { src: "/images/hero/hero-5-llaves.jpg", alt: "Pareja entrando en su nuevo piso con las llaves en la mano" },
+];
 
-// Fondo a pantalla completa con fotos reales de la cartera (no un render
-// genérico): cada inmueble con foto entra en el carrusel, con un zoom lento
-// tipo "Ken Burns" para que el hero se sienta vivo sin ser un vídeo de stock.
-export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
-  const slides: Slide[] = useMemo(
-    () =>
-      properties
-        .filter((p) => p.images[0]?.url)
-        .map((p) => ({ id: p.id, image: p.images[0].url, property: p })),
-    [properties],
-  );
-
+export function Hero() {
   const [active, setActive] = useState(0);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (slides.length < 2 || reduceMotion) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % slides.length), SLIDE_DURATION);
+    if (reduceMotion) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % SLIDES.length), SLIDE_DURATION);
     return () => clearInterval(id);
-  }, [slides.length, reduceMotion]);
-
-  const current = slides[active];
+  }, [reduceMotion, active]);
 
   return (
     <section id="hero" className="relative min-h-[640px] overflow-hidden bg-ink sm:min-h-[720px]">
       <div className="absolute inset-0">
-        {slides.length > 0 ? (
-          <AnimatePresence initial={false}>
+        {SLIDES.map((slide, i) => (
+          <motion.div
+            key={slide.src}
+            aria-hidden={i !== active}
+            initial={false}
+            animate={{ opacity: i === active ? 1 : 0 }}
+            transition={{ duration: 1.1, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
             <motion.div
-              key={current.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.1, ease: "easeInOut" }}
+              initial={false}
+              animate={{ scale: i === active && !reduceMotion ? 1.08 : 1 }}
+              transition={{ duration: i === active && !reduceMotion ? (SLIDE_DURATION * 1.4) / 1000 : 1.1, ease: "linear" }}
               className="absolute inset-0"
             >
-              <motion.div
-                initial={{ scale: 1 }}
-                animate={{ scale: reduceMotion ? 1 : 1.09 }}
-                transition={{ duration: (SLIDE_DURATION * 1.4) / 1000, ease: "linear" }}
-                className="absolute inset-0"
-              >
-                <Image
-                  src={current.image}
-                  alt={current.property.title}
-                  fill
-                  sizes="100vw"
-                  priority
-                  className="object-cover"
-                />
-              </motion.div>
+              <Image src={slide.src} alt={i === active ? slide.alt : ""} fill sizes="100vw" quality={80} priority={i === 0} className="object-cover" />
             </motion.div>
-          </AnimatePresence>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-ink via-[#1c1815] to-ink" />
-        )}
+          </motion.div>
+        ))}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink/80 via-ink/10 to-transparent" />
       </div>
-
-      {/* En escritorio hay hueco de sobra a la derecha de la foto (ya no hay
-          nada del render con lo que chocar), así que la ficha destacada vuelve
-          arriba a la derecha, como al principio. En móvil no cabe al lado del
-          titular, así que se queda debajo del texto, en el flujo normal. */}
-      {slides.length > 0 && (
-        <div className="pointer-events-none absolute inset-x-6 top-24 hidden justify-end lg:inset-x-10 lg:top-28 lg:flex">
-          <div className="pointer-events-auto flex flex-col items-end gap-3">
-            <SpotlightCard property={current.property} />
-            {slides.length > 1 && (
-              <div className="flex gap-1.5 pr-1">
-                {slides.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setActive(i)}
-                    aria-label={`Ver ${s.property.title}`}
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === active ? "w-6 bg-gold" : "w-1.5 bg-paper/30 hover:bg-paper/50"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="relative flex min-h-[640px] flex-col px-6 py-16 sm:min-h-[720px] sm:px-10 sm:py-20">
         <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center">
@@ -137,77 +90,18 @@ export function Hero({ properties = [] }: { properties?: PublicProperty[] }) {
           </motion.p>
         </div>
 
-        {slides.length > 0 && (
-          <div className="mx-auto flex w-full max-w-7xl flex-col items-start gap-5 lg:hidden">
-            <SpotlightCard property={current.property} className="w-full max-w-sm" />
-            {slides.length > 1 && (
-              <div className="flex gap-1.5 self-center">
-                {slides.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setActive(i)}
-                    aria-label={`Ver ${s.property.title}`}
-                    className={`h-1.5 rounded-full transition-all ${
-                      i === active ? "w-6 bg-gold" : "w-1.5 bg-paper/30 hover:bg-paper/50"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="mx-auto flex w-full max-w-7xl justify-center gap-1.5 sm:justify-start" role="group" aria-label="Fotos de la portada">
+          {SLIDES.map((slide, i) => (
+            <button
+              key={slide.src}
+              onClick={() => setActive(i)}
+              aria-label={`Ver la foto ${i + 1} de ${SLIDES.length}`}
+              aria-current={i === active}
+              className={`h-1.5 rounded-full transition-all ${i === active ? "w-6 bg-gold" : "w-1.5 bg-paper/30 hover:bg-paper/50"}`}
+            />
+          ))}
+        </div>
       </div>
     </section>
-  );
-}
-
-function SpotlightCard({ property, className = "" }: { property: PublicProperty; className?: string }) {
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={property.id}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`w-full max-w-xs rounded-2xl border border-paper/15 bg-ink/50 p-4 text-paper shadow-2xl shadow-black/40 backdrop-blur-xl ${className}`}
-      >
-        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-gold">
-          <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-          Destacado · {listingTypeLabels[property.listingType]}
-        </div>
-        <h3 className="mt-1.5 font-display text-base leading-tight text-paper sm:text-lg">{property.title}</h3>
-        <p className="mt-1 text-xs text-paper/60">{property.zone || property.city}</p>
-
-        <div className="mt-3 flex items-center gap-3 text-xs text-paper/70">
-          {property.bedrooms != null && (
-            <span className="flex items-center gap-1">
-              <BedDouble size={13} /> {property.bedrooms}
-            </span>
-          )}
-          {property.bathrooms != null && (
-            <span className="flex items-center gap-1">
-              <Bath size={13} /> {property.bathrooms}
-            </span>
-          )}
-          {property.areaM2 != null && (
-            <span className="flex items-center gap-1">
-              <Maximize size={13} /> {property.areaM2} m²
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 flex items-center justify-between border-t border-paper/10 pt-3">
-          <p className="font-display text-lg text-paper">{formatCurrency(property.price)}</p>
-          <Link
-            href={`/propiedades/${property.id}`}
-            className="group flex items-center gap-1 text-xs font-medium text-gold"
-          >
-            Ver ficha
-            <ArrowRight size={13} className="transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-      </motion.div>
-    </AnimatePresence>
   );
 }
