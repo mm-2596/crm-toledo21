@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Dashboard } from "./pages/Dashboard";
 import { Contacts } from "./pages/Contacts";
@@ -43,7 +43,8 @@ export default function App() {
             <Route path="pipeline" element={<Pipeline />} />
           </Route>
           <Route path="mapa" element={<BuildingsMap />} />
-          <Route path="captacion" element={<Prospections />} />
+          <Route path="prospeccion" element={<Prospections />} />
+          <Route path="captacion" element={<Navigate to="/prospeccion" replace />} />
           <Route path="tareas" element={<Tasks />} />
           <Route element={<RentalsRoute />}>
             <Route path="alquileres" element={<Rentals />} />

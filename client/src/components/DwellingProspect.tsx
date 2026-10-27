@@ -8,7 +8,7 @@ import type { Dwelling, ProspectStatus, SellInterest } from "../api/types";
 
 const selectClass = "w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm";
 
-/** Captación del piso: estado, interés en vender, comercial y nota rápida. */
+/** Prospección del piso: estado, interés en vender, comercial y nota rápida. */
 export function DwellingProspect({ dwelling, onChanged }: { dwelling: Dwelling; onChanged: () => void }) {
   const { showToast } = useToast();
   const { data: people = [] } = useQuery({ queryKey: ["assignable-users"], queryFn: UsersApi.assignable });
@@ -16,7 +16,7 @@ export function DwellingProspect({ dwelling, onChanged }: { dwelling: Dwelling; 
     mutationFn: (patch: { prospectStatus?: ProspectStatus | null; sellInterest?: SellInterest | null; agentId?: string | null }) => DwellingsApi.update(dwelling.id, patch),
     onSuccess: () => {
       onChanged();
-      showToast("Captación actualizada");
+      showToast("Prospección actualizada");
     },
     onError: (error) => showToast(getErrorMessage(error, "No se pudo guardar"), "error"),
   });

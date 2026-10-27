@@ -32,7 +32,7 @@ const links = [
   { to: "/contactos", label: "Contactos", icon: Users },
   { to: "/propiedades", label: "Propiedades", icon: Building2 },
   { to: "/mapa", label: "Mapa", icon: Map },
-  { to: "/captacion", label: "Captación", icon: Target },
+  { to: "/prospeccion", label: "Prospección", icon: Target },
   { to: "/pipeline", label: "Pipeline", icon: Kanban },
   { to: "/visitas", label: "Visitas", icon: CalendarDays },
   { to: "/tareas", label: "Tareas", icon: CheckSquare },
@@ -77,7 +77,7 @@ export function Layout() {
     { to: "/alquileres", label: "Alquileres", icon: KeyRound },
     { to: "/mi-equipo", label: "Equipo hoy", icon: UsersRound },
   ];
-  const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa" && link.to !== "/captacion");
+  const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa" && link.to !== "/prospeccion");
   const visibleLinks: NavItem[] =
     user?.role === "ADMIN"
       ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/felicitaciones", label: "Felicitaciones", icon: Gift }, { to: "/precios-zona", label: "Precios por zona", icon: Calculator }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]

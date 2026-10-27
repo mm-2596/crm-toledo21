@@ -154,7 +154,7 @@ export function DwellingPanel({ building, dwelling, contacts, onBack, onChanged,
       </div>
 
       {!rentalOnly && (dwelling.prospectStatus || dwelling.status === "CENSADA") && (
-        <Section title="Captación (prospección)" hint="Un piso que todavía no tenemos y estamos intentando captar. Escribe lo que hables con el propietario: se guarda en el historial y, si dices cuándo, te avisa para volver a llamar.">
+        <Section title="Prospección" hint="Un piso que todavía no tenemos y estamos intentando captar. Escribe lo que hables con el propietario: se guarda en el historial y, si dices cuándo, te avisa para volver a llamar.">
           <DwellingProspect dwelling={dwelling} onChanged={onChanged} />
         </Section>
       )}

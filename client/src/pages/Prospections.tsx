@@ -29,7 +29,7 @@ const INTEREST_CHIP: Record<string, string> = {
   NO_INTERESADO: "bg-red-50 text-red-700",
 };
 
-/** Captación: las llamadas de seguimiento pendientes y todos los pisos que se están trabajando. */
+/** Prospección: las llamadas de seguimiento pendientes y todos los pisos que se están trabajando. */
 export function Prospections() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
@@ -65,7 +65,7 @@ export function Prospections() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Captación</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Prospección</h1>
       <p className="mt-1 max-w-3xl text-sm text-slate-500">
         Los pisos que todavía no tenemos y estamos intentando captar, y las llamadas para volver a hablar con sus propietarios. Cuando se consigue la nota de encargo, el piso pasa a «A la venta».
       </p>
@@ -121,7 +121,7 @@ export function Prospections() {
 
       <section className="mt-6">
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h2 className="mr-auto text-base font-medium text-[#1c1815]">Pisos en captación</h2>
+          <h2 className="mr-auto text-base font-medium text-[#1c1815]">Pisos en prospección</h2>
           <label className="relative">
             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar edificio, persona o nota…" aria-label="Buscar" className="w-60 rounded-lg border border-slate-300 py-2 pl-8 pr-3 text-sm" />
@@ -145,7 +145,7 @@ export function Prospections() {
         {list.isLoading ? (
           <p className="text-slate-500">Cargando…</p>
         ) : (list.data ?? []).length === 0 ? (
-          <EmptyState icon={Target} title="Aún no hay pisos en captación" description="Abre un edificio en el Mapa, entra en un piso y escribe lo que hables con el propietario, o díselo al asistente: «He hablado con Paca del 3ºB de Calle Mayor 5, que la llame en un mes»." />
+          <EmptyState icon={Target} title="Aún no hay pisos en prospección" description="Abre un edificio en el Mapa, entra en un piso y escribe lo que hables con el propietario, o díselo al asistente: «He hablado con Paca del 3ºB de Calle Mayor 5, que la llame en un mes»." />
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table className="w-full min-w-[56rem] text-left text-sm">
