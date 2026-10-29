@@ -6,6 +6,7 @@ import { DashboardApi, LeasesApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { endBadge } from "../lib/leases";
 import { formatCurrency, formatDate } from "../lib/format";
+import { HomeAgenda } from "../components/HomeAgenda";
 import { TodayTasks } from "../components/TodayTasks";
 import { BirthdaysCard } from "../components/BirthdaysCard";
 
@@ -47,6 +48,7 @@ function SalesDashboard() {
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel general</h1>
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
+      <HomeAgenda />
       <TodayTasks />
       <BirthdaysCard />
 
@@ -102,6 +104,7 @@ function RentalsHome() {
     <div>
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel de alquileres</h1>
       <p className="mb-6 text-sm text-slate-500">Tus tareas de hoy y los contratos que terminan pronto.</p>
+      <HomeAgenda />
       <TodayTasks />
       <BirthdaysCard />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

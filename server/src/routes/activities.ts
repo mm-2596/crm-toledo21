@@ -70,6 +70,22 @@ activitiesRouter.patch(
   }),
 );
 
+/** Reprogramar: nueva fecha (y hora si la tarea la tiene). Reinicia el aviso para que vuelva a sonar. */
+activitiesRouter.patch(
+  "/:id/reschedule",
+  asyncHandler(async (req, res) => {
+    const { dueDate } = z.object({ dueDate: z.string().datetime() }).parse(req.body);
+    const existing = await prisma.activity.findUnique({ where: { id: String(req.params.id) }, select: { agentId: true } });
+    if (!existing) return res.status(404).json({ error: "Tarea no encontrada" });
+    if (req.user!.role !== "ADMIN" && existing.agentId !== req.user!.userId) return res.status(403).json({ error: "Esa tarea es de otra persona" });
+    const activity = await prisma.activity.update({
+      where: { id: String(req.params.id) },
+      data: { dueDate: new Date(dueDate), completed: false, reminderSentAt: null },
+    });
+    res.json(activity);
+  }),
+);
+
 activitiesRouter.patch(
   "/:id/assign",
   asyncHandler(async (req, res) => {

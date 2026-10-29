@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { CalendarCheck, Check } from "lucide-react";
+import { CalendarCheck, Check, CalendarClock } from "lucide-react";
 import { ActivitiesApi, NotificationsApi } from "../api/endpoints";
 import { activityTypeLabels, formatDateTime } from "../lib/format";
 import { useToast } from "./Toast";
@@ -20,7 +21,7 @@ function destination(item: NotificationItem) {
   return "/tareas";
 }
 
-/** Barra de la página de inicio: lo que cada persona tiene que hacer hoy (y lo que se le quedó atrás). */
+/** Bandeja de seguimientos: recordatorios del día sin hora fija (rellamadas, prospección) y las citas atrasadas. Las citas con hora van en la agenda. */
 export function TodayTasks() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -37,15 +38,27 @@ export function TodayTasks() {
     },
   });
 
-  const items = (data?.items ?? []).filter((i) => i.state !== "upcoming");
+  const [moving, setMoving] = useState<string | null>(null);
+  const reschedule = useMutation({
+    mutationFn: ({ id, dueDate }: { id: string; dueDate: string }) => ActivitiesApi.reschedule(id, dueDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
+      setMoving(null);
+      showToast("Seguimiento reprogramado");
+    },
+  });
+
+  const items = (data?.items ?? []).filter((i) => i.state !== "upcoming" && (!i.hasTime || i.state === "overdue"));
   const overdue = items.filter((i) => i.state === "overdue").length;
   const heading =
     items.length === 0
-      ? "Hoy no tienes tareas programadas"
-      : `Hoy tienes ${items.length} ${items.length === 1 ? "tarea" : "tareas"}${overdue ? ` (${overdue} atrasada${overdue === 1 ? "" : "s"})` : ""}`;
+      ? "Hoy no tienes seguimientos pendientes"
+      : `Hoy tienes ${items.length} ${items.length === 1 ? "seguimiento" : "seguimientos"}${overdue ? ` (${overdue} atrasada${overdue === 1 ? "" : "s"})` : ""}`;
 
   return (
-    <section aria-label="Tareas de hoy" className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-label="Seguimientos de hoy" className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 px-5 py-4">
         <h2 className="flex items-center gap-2 text-base font-medium text-[#1c1815]">
           <CalendarCheck size={18} className={items.length ? "text-amber-600" : "text-emerald-600"} /> {heading}
@@ -55,7 +68,7 @@ export function TodayTasks() {
       {items.length > 0 && (
         <ul className="divide-y divide-slate-100 border-t border-slate-100">
           {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-3 px-5 py-3">
+            <li key={item.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
               <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${STATE_STYLES[item.state].className}`}>{STATE_STYLES[item.state].label}</span>
               <Link to={destination(item)} className="min-w-0 flex-1 hover:underline">
                 <span className="block truncate text-sm text-[#2a241f]">
@@ -73,6 +86,25 @@ export function TodayTasks() {
               >
                 <Check size={13} /> Hecha
               </button>
+              <button
+                onClick={() => setMoving(moving === item.id ? null : item.id)}
+                className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                <CalendarClock size={13} /> Reprogramar
+              </button>
+              {moving === item.id && (
+                <form
+                  className="flex w-full flex-wrap items-center gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const value = String(new FormData(e.currentTarget).get("when") || "");
+                    if (value) reschedule.mutate({ id: item.id, dueDate: new Date(value).toISOString() });
+                  }}
+                >
+                  <input name="when" type={item.hasTime ? "datetime-local" : "date"} required aria-label="Nueva fecha" className="rounded-lg border border-slate-300 px-2 py-1 text-xs" />
+                  <button type="submit" disabled={reschedule.isPending} className="rounded-lg bg-[#1c1815] px-3 py-1 text-xs text-white">Guardar</button>
+                </form>
+              )}
             </li>
           ))}
         </ul>

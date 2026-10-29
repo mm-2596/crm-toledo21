@@ -118,6 +118,7 @@ export const ActivitiesApi = {
     api.patch<Activity>(`/activities/${id}/assign`, { agentId }).then((r) => r.data),
   create: (data: Partial<Activity>) => api.post<Activity>("/activities", data).then((r) => r.data),
   complete: (id: string) => api.patch<Activity>(`/activities/${id}/complete`).then((r) => r.data),
+  reschedule: (id: string, dueDate: string) => api.patch<Activity>(`/activities/${id}/reschedule`, { dueDate }).then((r) => r.data),
   remove: (id: string) => api.delete(`/activities/${id}`),
 };
 

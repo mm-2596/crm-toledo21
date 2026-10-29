@@ -36,6 +36,7 @@ export function Calendar() {
   const [view, setView] = useState<"month" | "week" | "day">("month");
   const [cursor, setCursor] = useState(today);
   const [creating, setCreating] = useState(false);
+  const [showFollowups, setShowFollowups] = useState(true);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const monthStart = `${cursor.slice(0, 8)}01`;
@@ -63,13 +64,14 @@ export function Calendar() {
     const map = new Map<string, CalendarTask[]>();
     for (const t of data?.tasks ?? []) {
       if (t.agentId && hidden.has(t.agentId)) continue;
+      if (!showFollowups && !t.hasTime) continue;
       const list = map.get(t.day) ?? [];
       list.push(t);
       map.set(t.day, list);
     }
     for (const list of map.values()) list.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
     return map;
-  }, [data?.tasks, hidden]);
+  }, [data?.tasks, hidden, showFollowups]);
 
   const completeMutation = useMutation({
     mutationFn: ActivitiesApi.complete,
@@ -214,8 +216,13 @@ export function Calendar() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-[#2a241f] first-letter:uppercase">{title}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700">
+            <input id="show-followups" type="checkbox" checked={showFollowups} onChange={(e) => setShowFollowups(e.target.checked)} />
+            Ver seguimientos (sin hora)
+          </label>
         {isAdmin && (data?.users.length ?? 0) > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <>
             {data!.users.map((u) => {
               const off = hidden.has(u.id);
               return (
@@ -237,8 +244,9 @@ export function Calendar() {
                 </button>
               );
             })}
-          </div>
+          </>
         )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -317,7 +325,7 @@ export function Calendar() {
                         style={{ background: colorOf(t.agentId) }}
                         title={`${nameOf(t.agentId)} · ${t.description}`}
                       >
-                        {timeOf(t) && `${timeOf(t)} `}
+                        {timeOf(t) ? `${timeOf(t)} ` : "↻ "}
                         {t.description}
                       </div>
                     ))}
