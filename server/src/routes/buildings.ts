@@ -5,6 +5,7 @@ import type { Office, Prisma } from "@prisma/client";
 import multer from "multer";
 import { propertyBriefSelect, syncDwellingFromProperty } from "../lib/linking.js";
 import { prisma } from "../lib/prisma.js";
+import { logDwellingChanges, logDwellingEvent } from "../lib/dwellingLog.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 
 export const buildingsRouter = Router();
@@ -270,6 +271,7 @@ dwellingsRouter.put(
       await syncDwellingFromProperty(data.propertyId);
       dwelling = (await prisma.dwelling.findUnique({ where: { id }, include: dwellingInclude })) ?? dwelling;
     }
+    await logDwellingChanges(id, current, dwelling, req.user!.userId);
     res.json(dwelling);
   }),
 );
@@ -351,6 +353,7 @@ dwellingsRouter.post(
       data: { dwellingId: id, name, mimeType: file.mimetype, size: file.size, data: new Uint8Array(file.buffer) },
       select: { id: true, name: true, mimeType: true, size: true, createdAt: true },
     });
+    await logDwellingEvent(id, `Documento añadido: ${name}`, req.user!.userId);
     res.status(201).json(saved);
   }),
 );
@@ -379,6 +382,7 @@ dwellingsRouter.delete(
     const file = await loadFileFor(req, String(req.params.fid));
     if (!file) return res.status(404).json({ error: "Archivo no encontrado" });
     await prisma.dwellingFile.delete({ where: { id: file.id } });
+    await logDwellingEvent(file.dwellingId, `Documento eliminado: ${file.name}`, req.user!.userId);
     res.status(204).send();
   }),
 );

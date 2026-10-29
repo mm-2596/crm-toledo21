@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Check } from "lucide-react";
+import { CalendarClock, Check, Flag } from "lucide-react";
 import { ActivitiesApi, DwellingsApi, LeasesApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
-import { activityTypeLabels, formatDate, formatDateTime } from "../lib/format";
+import { activityTypeLabels, formatDateTime } from "../lib/format";
 import { useToast } from "./Toast";
 import { useAuth } from "../auth/AuthContext";
 import type { ActivityType } from "../api/types";
+
+const AUTO_PREFIX = "[Auto] ";
+const FILTERS = [
+  { value: "all", label: "Todo" },
+  { value: "talks", label: "Conversaciones" },
+  { value: "milestones", label: "Hitos" },
+] as const;
 
 const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const LOG_TYPES: ActivityType[] = ["LLAMADA", "VISITA", "WHATSAPP", "EMAIL", "REUNION", "NOTA"];
@@ -27,6 +34,7 @@ export function DwellingDiary({ dwellingId, leaseId }: { dwellingId?: string; le
   const { showToast } = useToast();
   const { user } = useAuth();
   const [log, setLog] = useState({ type: "LLAMADA" as ActivityType, description: "" });
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]["value"]>("all");
   const [next, setNext] = useState({ type: "LLAMADA" as ActivityType, description: "", date: "", time: "" });
 
   const { data: entries = [] } = useQuery({ queryKey: [keyName, id], queryFn: () => api.activities(id) });
@@ -61,7 +69,9 @@ export function DwellingDiary({ dwellingId, leaseId }: { dwellingId?: string; le
   });
 
   const pending = entries.filter((e) => !e.completed && e.dueDate).sort((a, b) => a.dueDate!.localeCompare(b.dueDate!));
-  const history = entries.filter((e) => e.completed || !e.dueDate);
+  const allHistory = entries.filter((e) => e.completed || !e.dueDate);
+  const isMilestone = (e: { description: string }) => e.description.startsWith(AUTO_PREFIX);
+  const history = allHistory.filter((e) => (filter === "all" ? true : filter === "milestones" ? isMilestone(e) : !isMilestone(e)));
   const canSave = Boolean(log.description.trim() || next.date);
 
   return (
@@ -121,19 +131,40 @@ export function DwellingDiary({ dwellingId, leaseId }: { dwellingId?: string; le
         </ul>
       )}
 
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-slate-600">Hoja de seguimiento</p>
+        <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 text-xs">
+          {FILTERS.map((f) => (
+            <button key={f.value} type="button" onClick={() => setFilter(f.value)} className={`px-2 py-1 ${filter === f.value ? "bg-[#1c1815] text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {history.length === 0 && pending.length === 0 ? (
-        <p className="text-xs text-slate-500">Todavía no hay nada anotado.</p>
+        <p className="text-xs text-slate-500">{allHistory.length === 0 ? "Todavía no hay nada anotado." : "Nada que mostrar con este filtro."}</p>
       ) : (
         <ol className="flex flex-col gap-2 border-l border-slate-200 pl-3">
-          {history.map((a) => (
-            <li key={a.id} className="text-sm">
-              <p className="text-xs text-slate-400">
-                {formatDate(a.createdAt)} · {activityTypeLabels[a.type]}{a.agent?.name ? ` · ${a.agent.name}` : ""}
-                {a.dueDate && <span> · hecha ({formatDateTime(a.dueDate, a.hasTime)})</span>}
-              </p>
-              <p className="whitespace-pre-wrap text-[#2a241f]">{a.description}</p>
-            </li>
-          ))}
+          {history.map((a) =>
+            isMilestone(a) ? (
+              <li key={a.id} className="relative text-sm">
+                <Flag size={11} className="absolute -left-[19px] top-1 rounded-full bg-white text-sky-600" />
+                <p className="text-xs text-slate-400">
+                  {formatDateTime(a.createdAt, true)}{a.agent?.name ? ` · ${a.agent.name}` : ""}
+                </p>
+                <p className="font-medium text-sky-900">{a.description.slice(AUTO_PREFIX.length)}</p>
+              </li>
+            ) : (
+              <li key={a.id} className="text-sm">
+                <p className="text-xs text-slate-400">
+                  {formatDateTime(a.createdAt, true)} · {activityTypeLabels[a.type]}{a.agent?.name ? ` · ${a.agent.name}` : ""}
+                  {a.dueDate && <span> · hecha ({formatDateTime(a.dueDate, a.hasTime)})</span>}
+                </p>
+                <p className="whitespace-pre-wrap text-[#2a241f]">{a.description}</p>
+              </li>
+            ),
+          )}
         </ol>
       )}
     </div>
