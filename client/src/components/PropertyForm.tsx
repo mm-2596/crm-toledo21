@@ -1,10 +1,14 @@
 import { useState } from "react";
 import {
+  chargesLabels,
   energyRatingLabels,
   heatingLabels,
   listingTypeLabels,
+  occupancyLabels,
   propertyConditionLabels,
   propertyTypeLabels,
+  protectedHousingLabels,
+  saleReasonLabels,
 } from "../lib/format";
 import type { Property } from "../api/types";
 
@@ -61,6 +65,14 @@ export interface PropertyFormValues {
   hasStorageRoom: boolean;
   isFurnished: boolean;
   isExterior: boolean;
+  protectedHousing: string;
+  saleReason: string;
+  desiredPrice: string;
+  marketValue: string;
+  charges: string;
+  occupancy: string;
+  bathroomsHaveWindow: string;
+  airConditioningWhere: string;
   description: string;
 }
 
@@ -96,6 +108,14 @@ export const emptyPropertyForm: PropertyFormValues = {
   hasStorageRoom: false,
   isFurnished: false,
   isExterior: false,
+  protectedHousing: "",
+  saleReason: "",
+  desiredPrice: "",
+  marketValue: "",
+  charges: "",
+  occupancy: "",
+  bathroomsHaveWindow: "",
+  airConditioningWhere: "",
   description: "",
 };
 
@@ -164,6 +184,14 @@ export function toPropertyPayload(v: PropertyFormValues): Partial<Property> {
     hasStorageRoom: v.hasStorageRoom,
     isFurnished: v.isFurnished,
     isExterior: v.isExterior,
+    protectedHousing: (v.protectedHousing || null) as Property["protectedHousing"],
+    saleReason: (v.saleReason || null) as Property["saleReason"],
+    desiredPrice: parseSpanishInt(v.desiredPrice),
+    marketValue: parseSpanishInt(v.marketValue),
+    charges: (v.charges || null) as Property["charges"],
+    occupancy: (v.occupancy || null) as Property["occupancy"],
+    bathroomsHaveWindow: v.bathroomsHaveWindow === "" ? null : v.bathroomsHaveWindow === "SI",
+    airConditioningWhere: v.airConditioningWhere.trim() || null,
     description: v.description.trim() || null,
   };
 }
@@ -205,6 +233,14 @@ export function fromProperty(p: Property): PropertyFormValues {
     hasStorageRoom: Boolean(p.hasStorageRoom),
     isFurnished: Boolean(p.isFurnished),
     isExterior: Boolean(p.isExterior),
+    protectedHousing: p.protectedHousing ?? "",
+    saleReason: p.saleReason ?? "",
+    desiredPrice: str(p.desiredPrice),
+    marketValue: str(p.marketValue),
+    charges: p.charges ?? "",
+    occupancy: p.occupancy ?? "",
+    bathroomsHaveWindow: p.bathroomsHaveWindow == null ? "" : p.bathroomsHaveWindow ? "SI" : "NO",
+    airConditioningWhere: p.airConditioningWhere ?? "",
     description: p.description ?? "",
   };
 }
@@ -382,6 +418,70 @@ export function PropertyForm({
               </option>
             ))}
           </select>
+        </div>
+      </Section>
+
+      <Section
+        title="Situación del propietario"
+        subtitle="Datos internos de la ficha: no se publican en la web. Rellénalos al captar el inmueble."
+      >
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <label className={labelClass}>Importe deseado por el propietario (€)</label>
+            <input type="text" inputMode="numeric" value={value.desiredPrice} onChange={(e) => set("desiredPrice", e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Valor de mercado (€)</label>
+            <input type="text" inputMode="numeric" value={value.marketValue} onChange={(e) => set("marketValue", e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Motivo de la venta</label>
+            <select value={value.saleReason} onChange={(e) => set("saleReason", e.target.value)} className={inputClass}>
+              <option value="">Sin especificar</option>
+              {Object.entries(saleReasonLabels).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Protección (VPO/VPPL/VPPB)</label>
+            <select value={value.protectedHousing} onChange={(e) => set("protectedHousing", e.target.value)} className={inputClass}>
+              <option value="">Sin especificar</option>
+              {Object.entries(protectedHousingLabels).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Cargas</label>
+            <select value={value.charges} onChange={(e) => set("charges", e.target.value)} className={inputClass}>
+              <option value="">Sin especificar</option>
+              {Object.entries(chargesLabels).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Ocupación</label>
+            <select value={value.occupancy} onChange={(e) => set("occupancy", e.target.value)} className={inputClass}>
+              <option value="">Sin especificar</option>
+              {Object.entries(occupancyLabels).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>¿Los baños tienen ventana?</label>
+            <select value={value.bathroomsHaveWindow} onChange={(e) => set("bathroomsHaveWindow", e.target.value)} className={inputClass}>
+              <option value="">Sin especificar</option>
+              <option value="SI">Sí</option>
+              <option value="NO">No</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Aire acondicionado: dónde</label>
+            <input value={value.airConditioningWhere} onChange={(e) => set("airConditioningWhere", e.target.value)} placeholder="Ej. salón y dormitorio" className={inputClass} />
+          </div>
         </div>
       </Section>
 

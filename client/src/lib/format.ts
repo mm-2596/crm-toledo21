@@ -227,3 +227,29 @@ export const leaseStatusLabels: Record<string, string> = {
 
 /** Segmentos que puede elegir quien gestiona alquileres. */
 export const rentalSegments = ["BUSCA_ALQUILER", "PROPIETARIO", "INQUILINO"] as const;
+
+export const protectedHousingLabels: Record<string, string> = {
+  NINGUNA: "No es protegida",
+  VPO: "VPO",
+  VPPL: "VPPL",
+  VPPB: "VPPB",
+};
+
+export const saleReasonLabels: Record<string, string> = {
+  HERENCIA: "Herencia",
+  DIVORCIO: "Divorcio",
+  EXTINCION_CONDOMINIO: "Extinción de condominio",
+  OTRO: "Otro",
+};
+
+export const chargesLabels: Record<string, string> = {
+  SIN_CARGAS: "Sin cargas",
+  HIPOTECA_PENDIENTE: "Hipoteca pendiente",
+  HIPOTECA_LIQUIDADA: "Hipoteca liquidada",
+};
+
+export const occupancyLabels: Record<string, string> = {
+  VACIO: "Vacío",
+  HABITADO: "Habitado",
+  ALQUILADO: "Alquilado",
+};

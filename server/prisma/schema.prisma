@@ -48,6 +48,32 @@ enum PropertyCondition {
   REFORMADO
 }
 
+enum ProtectedHousing {
+  NINGUNA
+  VPO
+  VPPL
+  VPPB
+}
+
+enum SaleReason {
+  HERENCIA
+  DIVORCIO
+  EXTINCION_CONDOMINIO
+  OTRO
+}
+
+enum PropertyCharges {
+  SIN_CARGAS
+  HIPOTECA_PENDIENTE
+  HIPOTECA_LIQUIDADA
+}
+
+enum Occupancy {
+  VACIO
+  HABITADO
+  ALQUILADO
+}
+
 enum HeatingType {
   NINGUNA
   INDIVIDUAL
@@ -226,6 +252,16 @@ model Property {
   isFurnished            Boolean?
   isExterior             Boolean?
   hoaFees                Int?
+  /// Datos internos de la ficha (nunca se publican en la web ni en el feed).
+  protectedHousing       ProtectedHousing?
+  saleReason             SaleReason?
+  /// Lo que quiere cobrar el propietario, frente al valor de mercado estimado.
+  desiredPrice           Int?
+  marketValue            Int?
+  charges                PropertyCharges?
+  occupancy              Occupancy?
+  bathroomsHaveWindow    Boolean?
+  airConditioningWhere   String?
   description            String?            @db.Text
   houzezId               String?            @unique
   agentId                String?
