@@ -6,6 +6,7 @@ import { LeasesApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { EmptyState } from "../components/EmptyState";
 import { LeaseForm } from "../components/LeaseForm";
+import { RentReviewList } from "../components/RentReview";
 import { useToast } from "../components/Toast";
 import { useAuth } from "../auth/AuthContext";
 import { dwellingTitle } from "../components/DwellingPanel";
@@ -66,6 +67,8 @@ export function Rentals() {
         </button>
       </div>
       <p className="mb-4 text-sm text-slate-500">Viviendas alquiladas con su propietario, arrendatario, contrato, documentos y seguimiento.</p>
+
+      <RentReviewList />
 
       {creating && (
         <div className="mb-6">

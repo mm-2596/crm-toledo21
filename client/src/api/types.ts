@@ -475,6 +475,10 @@ export interface Lease {
   endDate?: string | null;
   status: LeaseStatus;
   notes?: string | null;
+  /** Próxima actualización de la renta (IPC/IGRAF): la fijada a mano o el aniversario del contrato. */
+  rentReviewDate?: string | null;
+  rentReviewedAt?: string | null;
+  previousRent?: number | null;
   dwelling: { id: string; floor?: string | null; door?: string | null; building: { id: string; name: string; address: string; city?: string | null; office: Office } };
   owner?: LeaseParty | null;
   tenant?: LeaseParty | null;

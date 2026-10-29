@@ -7,6 +7,7 @@ import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { dwellingLabel } from "../lib/notifications.js";
 import { syncDwellingFromProperty } from "../lib/linking.js";
+import { ensureRentReviewTasks, isoDate, rentReviewDate, withRentReview } from "../lib/rentReview.js";
 import { canUse, officeAccess, uploadDwellingFile } from "./buildings.js";
 
 export const leasesRouter = Router();
@@ -86,10 +87,12 @@ leasesRouter.get(
     const requested = OFFICES.find((o) => o === req.query.office);
     const status = req.query.status === "VIGENTE" || req.query.status === "FINALIZADO" ? req.query.status : undefined;
     const endingWithin = Number(req.query.endingWithin);
+    const reviewWithin = Number(req.query.reviewWithin);
     const where: Prisma.LeaseWhereInput = {
       AND: [
         { dwelling: { building: { office: access === "ALL" ? requested ?? undefined : access } } },
         status ? { status } : {},
+        reviewWithin > 0 ? { status: "VIGENTE" } : {},
         endingWithin > 0 ? { status: "VIGENTE", endDate: { not: null, lte: new Date(Date.now() + endingWithin * 86_400_000) } } : {},
         q
           ? {
@@ -110,7 +113,12 @@ leasesRouter.get(
       orderBy: endingWithin > 0 ? { endDate: "asc" } : { createdAt: "desc" },
       take: 500,
     });
-    res.json(leases);
+    const shaped = leases.map(withRentReview);
+    if (reviewWithin > 0) {
+      const limit = isoDate(new Date(Date.now() + reviewWithin * 86_400_000));
+      return res.json(shaped.filter((l) => l.rentReviewDate && l.rentReviewDate <= limit).sort((a, b) => a.rentReviewDate!.localeCompare(b.rentReviewDate!)));
+    }
+    res.json(shaped);
   }),
 );
 
@@ -119,7 +127,53 @@ leasesRouter.get(
   asyncHandler(async (req, res) => {
     const lease = await loadLease(req, String(req.params.id));
     if (!lease) return res.status(404).json({ error: "Alquiler no encontrado" });
-    res.json(lease);
+    res.json(withRentReview(lease));
+  }),
+);
+
+/** Cambiar a mano la fecha de la próxima actualización (si el contrato fija otra distinta del aniversario). Vacío = el aniversario. */
+leasesRouter.put(
+  "/:id/rent-review-date",
+  asyncHandler(async (req, res) => {
+    const lease = await loadLease(req, String(req.params.id));
+    if (!lease) return res.status(404).json({ error: "Alquiler no encontrado" });
+    const { date } = z.object({ date: isoDay.nullable() }).parse(req.body);
+    const updated = await prisma.lease.update({ where: { id: lease.id }, data: { nextRentReview: date ? day(date) : null }, include: leaseInclude });
+    await ensureRentReviewTasks();
+    res.json(withRentReview(updated));
+  }),
+);
+
+/** Registrar la actualización: guarda la renta nueva, anota el cambio, cierra el aviso y programa la revisión del año siguiente. */
+leasesRouter.post(
+  "/:id/rent-review",
+  asyncHandler(async (req, res) => {
+    const lease = await loadLease(req, String(req.params.id));
+    if (!lease) return res.status(404).json({ error: "Alquiler no encontrado" });
+    const { newRent } = z.object({ newRent: z.number().int().min(0).max(1_000_000) }).parse(req.body);
+    const review = rentReviewDate(lease);
+    if (!review) return res.status(409).json({ error: "Este alquiler no tiene una revisión de renta pendiente" });
+    const next = new Date(Date.UTC(review.getUTCFullYear() + 1, review.getUTCMonth(), review.getUTCDate()));
+    const euros = (n: number) => `${new Intl.NumberFormat("es-ES").format(n)} €/mes`;
+    const [updated] = await prisma.$transaction([
+      prisma.lease.update({
+        where: { id: lease.id },
+        data: { previousRent: lease.monthlyRent, monthlyRent: newRent, rentReviewedAt: new Date(), nextRentReview: next },
+        include: leaseInclude,
+      }),
+      prisma.activity.updateMany({ where: { leaseId: lease.id, autoKind: { startsWith: "LEASE_RENT_REVIEW_" }, completed: false }, data: { completed: true } }),
+      prisma.activity.create({
+        data: {
+          type: "NOTA",
+          description: `Renta actualizada (IPC/IGRAF): ${euros(lease.monthlyRent)} → ${euros(newRent)}. Próxima revisión: ${isoDate(next)}.`,
+          completed: true,
+          leaseId: lease.id,
+          dwellingId: lease.dwellingId,
+          agentId: req.user!.userId,
+        },
+      }),
+    ]);
+    res.json(withRentReview(updated));
   }),
 );
 
@@ -138,7 +192,7 @@ leasesRouter.post(
     });
     await syncDwellingStatus(dwellingId);
     await syncReminders(lease, dwellingLabel(dwelling), req.user!.userId);
-    res.status(201).json(lease);
+    res.status(201).json(withRentReview(lease));
   }),
 );
 
@@ -159,7 +213,7 @@ leasesRouter.put(
     });
     await syncDwellingStatus(lease.dwellingId);
     await syncReminders(lease, dwellingLabel(lease.dwelling), req.user!.userId);
-    res.json(lease);
+    res.json(withRentReview(lease));
   }),
 );
 

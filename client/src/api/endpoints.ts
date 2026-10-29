@@ -223,11 +223,13 @@ export const VisitsApi = {
 };
 
 export const LeasesApi = {
-  list: (params?: { q?: string; status?: string; office?: Office; endingWithin?: number }) =>
+  list: (params?: { q?: string; status?: string; office?: Office; endingWithin?: number; reviewWithin?: number }) =>
     api.get<Lease[]>("/leases", { params }).then((r) => r.data),
   get: (id: string) => api.get<Lease>(`/leases/${id}`).then((r) => r.data),
   create: (data: LeaseInput & { dwellingId: string }) => api.post<Lease>("/leases", data).then((r) => r.data),
   update: (id: string, data: LeaseInput) => api.put<Lease>(`/leases/${id}`, data).then((r) => r.data),
+  registerRentReview: (id: string, newRent: number) => api.post<Lease>(`/leases/${id}/rent-review`, { newRent }).then((r) => r.data),
+  setRentReviewDate: (id: string, date: string | null) => api.put<Lease>(`/leases/${id}/rent-review-date`, { date }).then((r) => r.data),
   remove: (id: string) => api.delete(`/leases/${id}`),
   uploadFile: (id: string, file: File) => {
     const body = new FormData();

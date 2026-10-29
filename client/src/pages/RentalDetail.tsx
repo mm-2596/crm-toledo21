@@ -7,6 +7,7 @@ import { getErrorMessage } from "../api/client";
 import { DwellingDiary } from "../components/DwellingDiary";
 import { dwellingTitle } from "../components/DwellingPanel";
 import { LeaseForm } from "../components/LeaseForm";
+import { RentReviewCard } from "../components/RentReview";
 import { useToast } from "../components/Toast";
 import { formatCurrency, formatDate, formatFileSize, leaseStatusLabels, officeLabels } from "../lib/format";
 import { endBadge } from "../lib/leases";
@@ -136,6 +137,8 @@ export function RentalDetail() {
           {lease.notes && <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600">{lease.notes}</p>}
         </div>
       )}
+
+      <RentReviewCard lease={lease} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -5,6 +5,7 @@ import { rentalContactWhere } from "./contactScope.js";
 import { BIRTHDAY_DEFAULT, templateFor } from "./greetings.js";
 import { formatMadrid, madridDate, madridHour, taskDay } from "./madrid.js";
 import { sendCampaignBatch, sendDigestEmail, sendReminderEmail, type AgendaLine } from "./email.js";
+import { ensureRentReviewTasks } from "./rentReview.js";
 import { classify, dwellingActivityInclude, dwellingLabel, ownedBy } from "./notifications.js";
 
 const REMIND_BEFORE_MS = 30 * 60 * 1000;
@@ -159,12 +160,18 @@ async function birthdayNamesFor(role: string, today: string): Promise<string[]> 
 }
 
 let running = false;
+let lastRentCheck = 0;
 
 async function tick() {
   if (running) return;
   running = true;
   try {
     const now = new Date();
+    // Una vez por hora basta: crea la tarea de actualizar la renta cuando se acerca la fecha de cada contrato.
+    if (now.getTime() - lastRentCheck > 60 * 60 * 1000) {
+      lastRentCheck = now.getTime();
+      await ensureRentReviewTasks();
+    }
     await sendDueReminders(now);
     await sendMorningDigests(now);
     await sendBirthdayGreetings(now);

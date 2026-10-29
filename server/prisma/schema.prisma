@@ -630,6 +630,11 @@ model Lease {
   endDate     DateTime?
   status      LeaseStatus @default(VIGENTE)
   notes       String?     @db.Text
+  /// Próxima actualización de la renta (IPC/IGRAF). Vacío = el aniversario del contrato.
+  nextRentReview DateTime?
+  rentReviewedAt DateTime?
+  /// Renta anterior a la última actualización (para mostrar el cambio y, más adelante, calcular el nuevo importe).
+  previousRent   Int?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 

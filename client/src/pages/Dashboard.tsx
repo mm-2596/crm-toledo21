@@ -6,6 +6,7 @@ import { DashboardApi, LeasesApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthContext";
 import { endBadge } from "../lib/leases";
 import { formatCurrency, formatDate } from "../lib/format";
+import { RentReviewList } from "../components/RentReview";
 import { HomeAgenda } from "../components/HomeAgenda";
 import { TodayTasks } from "../components/TodayTasks";
 import { BirthdaysCard } from "../components/BirthdaysCard";
@@ -107,6 +108,7 @@ function RentalsHome() {
       <HomeAgenda />
       <TodayTasks />
       <BirthdaysCard />
+      <RentReviewList />
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Contratos que terminan en los próximos 90 días</h2>
         {ending.length === 0 ? (
