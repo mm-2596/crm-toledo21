@@ -82,7 +82,7 @@ export function Layout() {
   const baseLinks = user?.canViewBuildings ? links : links.filter((link) => link.to !== "/mapa" && link.to !== "/prospeccion");
   const visibleLinks: NavItem[] =
     user?.role === "ADMIN"
-      ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/felicitaciones", label: "Felicitaciones", icon: Gift }, { to: "/precios-zona", label: "Precios por zona", icon: Calculator }, { to: "/equipo", label: "Equipo", icon: ShieldCheck }]
+      ? [...baseLinks, ...rentalLinks, { to: "/campanas", label: "Campañas", icon: Megaphone }, { to: "/felicitaciones", label: "Felicitaciones", icon: Gift }, { to: "/precios-zona", label: "Precios por zona", icon: Calculator }, { to: "/equipo", label: "Plantilla", icon: ShieldCheck }]
       : user?.role === "ADMINISTRACION"
         ? [
             links[0],
