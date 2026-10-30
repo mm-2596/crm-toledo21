@@ -6,7 +6,7 @@ import { LeasesApi } from "../api/endpoints";
 import { getErrorMessage } from "../api/client";
 import { useToast } from "./Toast";
 import { dwellingTitle } from "./DwellingPanel";
-import { daysUntil } from "../lib/leases";
+import { daysUntil, endBadge } from "../lib/leases";
 import { formatCurrency, formatDate } from "../lib/format";
 import type { Lease } from "../api/types";
 
@@ -131,5 +131,69 @@ export function RentReviewCard({ lease }: { lease: Lease }) {
         </form>
       </div>
     </div>
+  );
+}
+
+const PREVIEW = 5;
+
+/** Acceso directo del panel: las rentas por actualizar y los contratos que terminan, con enlace a la ficha de cada uno. */
+export function RentalAlertsCard() {
+  const { data: reviews = [] } = useQuery({ queryKey: ["leases", "review", 60], queryFn: () => LeasesApi.list({ reviewWithin: 60 }) });
+  const { data: endings = [] } = useQuery({ queryKey: ["leases", "ending-home"], queryFn: () => LeasesApi.list({ endingWithin: 90 }) });
+  const total = reviews.length + endings.length;
+
+  const Row = ({ lease, right }: { lease: Lease; right: React.ReactNode }) => (
+    <li>
+      <Link to={`/alquileres/${lease.id}`} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm hover:bg-slate-50">
+        <span>
+          <span className="font-medium text-[#2a241f]">{lease.dwelling.building.address}</span>
+          <span className="ml-2 text-xs text-slate-500">{dwellingTitle(lease.dwelling)} · {lease.tenant?.name ?? "Sin inquilino"} · {formatCurrency(lease.monthlyRent)}/mes</span>
+        </span>
+        <span className="flex items-center gap-2 text-xs text-slate-500">{right}</span>
+      </Link>
+    </li>
+  );
+
+  return (
+    <section aria-label="Alertas de alquileres" className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 px-5 py-4">
+        <h2 className="flex items-center gap-2 text-base font-medium text-[#1c1815]">
+          <TrendingUp size={18} className={total ? "text-amber-600" : "text-emerald-600"} /> Alertas de alquileres
+          {total > 0 && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">{total}</span>}
+        </h2>
+        <Link to="/alquileres" className="shrink-0 text-xs font-medium text-slate-500 hover:text-[#1c1815] hover:underline">Ver alquileres</Link>
+      </div>
+      <div className="grid gap-x-8 border-t border-slate-100 px-5 py-3 lg:grid-cols-2">
+        <div>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Rentas por actualizar (60 días)</h3>
+          {reviews.length === 0 ? (
+            <p className="py-2 text-sm text-slate-500">Ninguna renta toca actualizarse pronto.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {reviews.slice(0, PREVIEW).map((l) => (
+                <Row key={l.id} lease={l} right={<>Revisión: {formatDate(l.rentReviewDate)}<span className="rounded bg-amber-50 px-2 py-0.5 font-medium text-amber-700">{whenLabel(l.rentReviewDate as string)}</span></>} />
+              ))}
+            </ul>
+          )}
+          {reviews.length > PREVIEW && <Link to="/alquileres" className="text-xs text-slate-500 hover:underline">+{reviews.length - PREVIEW} más en Alquileres</Link>}
+        </div>
+        <div>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Contratos que terminan (90 días)</h3>
+          {endings.length === 0 ? (
+            <p className="py-2 text-sm text-slate-500">Ningún contrato termina pronto.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {endings.slice(0, PREVIEW).map((l) => {
+                const badge = endBadge(l.endDate);
+                return (
+                  <Row key={l.id} lease={l} right={<>Fin: {formatDate(l.endDate)}{badge && <span className={`rounded px-2 py-0.5 font-medium ${badge.className}`}>{badge.text}</span>}</>} />
+                );
+              })}
+            </ul>
+          )}
+          {endings.length > PREVIEW && <Link to="/alquileres" className="text-xs text-slate-500 hover:underline">+{endings.length - PREVIEW} más en Alquileres</Link>}
+        </div>
+      </div>
+    </section>
   );
 }
