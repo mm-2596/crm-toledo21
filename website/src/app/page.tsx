@@ -35,7 +35,7 @@ export default async function Home() {
       <section className="mx-auto max-w-7xl px-6 pt-20">
         <div className="text-center">
           <h2 className="mx-auto max-w-xl font-display text-3xl text-ink sm:text-4xl">
-            Comprar o vender puede ser abrumador — lo hacemos sencillo.
+            Comprar o vender puede ser difícil, nosotros lo hacemos sencillo.
           </h2>
         </div>
       </section>
