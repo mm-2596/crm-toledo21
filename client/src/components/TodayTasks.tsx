@@ -30,6 +30,7 @@ export function TodayTasks() {
     mutationFn: ActivitiesApi.complete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["followups"] });
       queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
       queryClient.invalidateQueries({ queryKey: ["dwelling-activities"] });
       queryClient.invalidateQueries({ queryKey: ["lease-activities"] });
@@ -43,6 +44,7 @@ export function TodayTasks() {
     mutationFn: ({ id, dueDate }: { id: string; dueDate: string }) => ActivitiesApi.reschedule(id, dueDate),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["followups"] });
       queryClient.invalidateQueries({ queryKey: ["activities-pending"] });
       queryClient.invalidateQueries({ queryKey: ["calendar"] });
       setMoving(null);
@@ -50,6 +52,7 @@ export function TodayTasks() {
     },
   });
 
+  const { data: follow } = useQuery({ queryKey: ["followups"], queryFn: ActivitiesApi.followups, refetchInterval: 60_000 });
   const items = (data?.items ?? []).filter((i) => i.state !== "upcoming" && (!i.hasTime || i.state === "overdue"));
   const overdue = items.filter((i) => i.state === "overdue").length;
   const heading =
@@ -63,11 +66,12 @@ export function TodayTasks() {
         <h2 className="flex items-center gap-2 text-base font-medium text-[#1c1815]">
           <CalendarCheck size={18} className={items.length ? "text-amber-600" : "text-emerald-600"} /> {heading}
         </h2>
-        <Link to="/tareas" className="shrink-0 text-xs font-medium text-slate-500 hover:text-[#1c1815] hover:underline">Ver todas</Link>
+        {follow && follow.doneToday > 0 && <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">{follow.doneToday} hecha{follow.doneToday === 1 ? "" : "s"} hoy</span>}
+        <Link to="/pipeline" className="shrink-0 text-xs font-medium text-slate-500 hover:text-[#1c1815] hover:underline">Abrir seguimiento</Link>
       </div>
       {items.length > 0 && (
         <ul className="divide-y divide-slate-100 border-t border-slate-100">
-          {items.map((item) => (
+          {items.slice(0, 8).map((item) => (
             <li key={item.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
               <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${STATE_STYLES[item.state].className}`}>{STATE_STYLES[item.state].label}</span>
               <Link to={destination(item)} className="min-w-0 flex-1 hover:underline">
@@ -108,6 +112,11 @@ export function TodayTasks() {
             </li>
           ))}
         </ul>
+      )}
+      {items.length > 8 && (
+        <Link to="/pipeline" className="block border-t border-slate-100 px-5 py-3 text-center text-xs font-medium text-slate-500 hover:text-[#1c1815]">
+          Ver los {items.length - 8} seguimientos restantes
+        </Link>
       )}
     </section>
   );

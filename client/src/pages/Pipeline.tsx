@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { GripVertical, PlusCircle } from "lucide-react";
 import { ContactsApi, PipelineApi, PropertiesApi } from "../api/endpoints";
 import { formatCurrency } from "../lib/format";
 import { useToast } from "../components/Toast";
+import { FollowupsBoard } from "../components/FollowupsBoard";
 import type { Deal } from "../api/types";
 
 const stageAccent = ["border-t-slate-400", "border-t-sky-400", "border-t-amber-400", "border-t-violet-400", "border-t-emerald-400"];
 
-export function Pipeline() {
+function Opportunities() {
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -53,7 +55,7 @@ export function Pipeline() {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Seguimiento de ventas</h1>
+        <h2 className="text-lg font-medium text-[#1c1815]">Oportunidades de venta</h2>
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-1.5 rounded-lg bg-[#1c1815] px-4 py-2 text-sm font-medium text-white hover:bg-[#2a241f]"
@@ -141,6 +143,36 @@ export function Pipeline() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Seguimiento: la lista de llamadas del día y, aparte, el tablero de oportunidades de venta. */
+export function Pipeline() {
+  const [params, setParams] = useSearchParams();
+  const view = params.get("vista") === "oportunidades" ? "oportunidades" : "seguimientos";
+  const tabs = [
+    { value: "seguimientos", label: "Seguimientos del día" },
+    { value: "oportunidades", label: "Oportunidades" },
+  ] as const;
+  return (
+    <div>
+      <h1 className="text-2xl font-semibold tracking-tight text-[#1c1815]">Seguimiento</h1>
+      <p className="mb-4 text-sm text-slate-500">Tus rellamadas del día y, en la otra pestaña, el tablero de oportunidades de venta.</p>
+      <div role="tablist" className="mb-6 flex gap-1 border-b border-slate-200">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            role="tab"
+            aria-selected={view === t.value}
+            onClick={() => setParams(t.value === "seguimientos" ? {} : { vista: t.value }, { replace: true })}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${view === t.value ? "border-[#1c1815] text-[#1c1815]" : "border-transparent text-slate-500 hover:text-[#1c1815]"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {view === "seguimientos" ? <FollowupsBoard /> : <Opportunities />}
     </div>
   );
 }

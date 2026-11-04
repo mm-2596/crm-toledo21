@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma.js";
 import { asyncHandler } from "../lib/asyncHandler.js";
 import { safeUserSelect } from "../lib/linking.js";
 import { dwellingActivityInclude, dwellingLabel } from "../lib/notifications.js";
+import { madridDate, taskDay } from "../lib/madrid.js";
 
 export const activitiesRouter = Router();
 
@@ -36,6 +37,45 @@ activitiesRouter.get(
   }),
 );
 
+/** Mis seguimientos: rellamadas sin hora (más las citas con hora ya vencidas) y cuántos he hecho hoy. */
+activitiesRouter.get(
+  "/followups",
+  asyncHandler(async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    const now = new Date();
+    const me = req.user!.userId;
+    const [pending, recentDone] = await Promise.all([
+      prisma.activity.findMany({
+        where: {
+          agentId: me,
+          completed: false,
+          type: { not: "NOTA" },
+          dueDate: { not: null },
+          OR: [{ hasTime: false }, { hasTime: true, dueDate: { lt: now } }],
+        },
+        orderBy: { dueDate: "asc" },
+        take: 500,
+        include: { contact: { select: { id: true, name: true, phone: true } }, dwelling: dwellingActivityInclude },
+      }),
+      prisma.activity.findMany({
+        where: { agentId: me, completed: true, completedAt: { gte: new Date(now.getTime() - 36 * 60 * 60 * 1000) } },
+        select: { completedAt: true },
+      }),
+    ]);
+    const today = madridDate(now);
+    res.json({
+      today,
+      doneToday: recentDone.filter((a) => a.completedAt && madridDate(a.completedAt) === today).length,
+      items: pending.map(({ dwelling, dueDate, ...a }) => ({
+        ...a,
+        dueDate,
+        day: taskDay(dueDate!, a.hasTime),
+        dwelling: dwelling ? { id: dwelling.id, buildingId: dwelling.buildingId, label: dwellingLabel(dwelling) } : null,
+      })),
+    });
+  }),
+);
+
 activitiesRouter.post(
   "/",
   asyncHandler(async (req, res) => {
@@ -62,10 +102,25 @@ activitiesRouter.patch(
   "/:id/complete",
   asyncHandler(async (req, res) => {
     if (!(await ownsDwellingActivity(req, String(req.params.id)))) return res.status(403).json({ error: "Esa tarea es de otra persona" });
+    // Opcional: cómo ha ido (queda anotado en la hoja de seguimiento) y el siguiente seguimiento.
+    const { note, nextDate } = z
+      .object({ note: z.string().trim().max(1000).optional().nullable(), nextDate: z.string().datetime().optional().nullable() })
+      .parse(req.body ?? {});
     const activity = await prisma.activity.update({
       where: { id: String(req.params.id) },
-      data: { completed: true },
+      data: { completed: true, completedAt: new Date() },
     });
+    const links = { contactId: activity.contactId, dealId: activity.dealId, dwellingId: activity.dwellingId, propertyId: activity.propertyId, leaseId: activity.leaseId };
+    if (note) {
+      await prisma.activity.create({
+        data: { type: "NOTA", description: `Resultado de «${activity.description}»: ${note}`, agentId: req.user!.userId, ...links },
+      });
+    }
+    if (nextDate) {
+      await prisma.activity.create({
+        data: { type: activity.type === "NOTA" ? "TAREA" : activity.type, description: activity.description, agentId: activity.agentId ?? req.user!.userId, dueDate: new Date(nextDate), hasTime: false, ...links },
+      });
+    }
     res.json(activity);
   }),
 );
@@ -80,7 +135,7 @@ activitiesRouter.patch(
     if (req.user!.role !== "ADMIN" && existing.agentId !== req.user!.userId) return res.status(403).json({ error: "Esa tarea es de otra persona" });
     const activity = await prisma.activity.update({
       where: { id: String(req.params.id) },
-      data: { dueDate: new Date(dueDate), completed: false, reminderSentAt: null },
+      data: { dueDate: new Date(dueDate), completed: false, completedAt: null, reminderSentAt: null },
     });
     res.json(activity);
   }),

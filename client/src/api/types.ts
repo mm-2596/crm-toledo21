@@ -302,6 +302,19 @@ export interface Activity {
   createdAt: string;
 }
 
+export interface FollowupItem extends Omit<Activity, "contact"> {
+  leaseId?: string | null;
+  /** Día (YYYY-MM-DD) en que toca. */
+  day: string;
+  contact?: { id: string; name: string; phone?: string | null } | null;
+}
+
+export interface FollowupsResponse {
+  today: string;
+  doneToday: number;
+  items: FollowupItem[];
+}
+
 export interface Valuation {
   id: string;
   propertyId?: string | null;

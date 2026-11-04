@@ -48,8 +48,10 @@ function SalesDashboard() {
       <h1 className="mb-1 text-2xl font-semibold tracking-tight text-[#1c1815]">Panel general</h1>
       <p className="mb-6 text-sm text-slate-500">Resumen de la actividad comercial de Toledo21.</p>
 
-      <HomeAgenda />
-      <TodayTasks />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
+        <HomeAgenda />
+        <TodayTasks />
+      </div>
       {user?.role === "ADMIN" && <RentalAlertsCard />}
       <BirthdaysCard />
 

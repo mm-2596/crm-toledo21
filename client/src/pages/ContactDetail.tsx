@@ -191,7 +191,7 @@ export function ContactDetail() {
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Actividad y tareas</h2>
+        <h2 className="mb-3 text-lg font-medium text-[#1c1815]">Hoja de seguimiento</h2>
 
         <form onSubmit={handleAddActivity} className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <select name="type" className="col-span-2 rounded-lg sm:col-span-1 border border-slate-300 px-2 py-2 text-sm">

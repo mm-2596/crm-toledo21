@@ -365,6 +365,8 @@ model Activity {
   leaseId        String?
   /// Marca los recordatorios que crea el CRM solo (p. ej. fin de contrato) para poder recalcularlos.
   autoKind       String?
+  /// Cuándo se marcó como hecha (para contar los seguimientos hechos hoy).
+  completedAt    DateTime?
   createdAt      DateTime     @default(now())
 
   contact  Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
