@@ -7,7 +7,7 @@ import { geocodePlace } from "@/lib/geocode";
 export const metadata: Metadata = {
   title: "Nuestras oficinas",
   description:
-    "Toledo21 - Somos Tu Inmobiliaria, con oficinas en Getafe, Leganés, Las Rozas y Puerto de Sagunto (Valencia). Ven a visitarnos.",
+    "Toledo21 - Somos Tu Inmobiliaria, con inmobiliarias en Getafe, Leganés y Puerto de Sagunto (Valencia) y gestorías en Getafe, Fuenlabrada, Leganés, Madrid, Las Rozas y Humanes. Ven a visitarnos.",
 };
 
 interface Office {
@@ -20,6 +20,10 @@ interface Office {
   services: string;
   mapsUrl: string;
   phone?: string;
+  /** Horario, una línea por tramo. */
+  hours?: string[];
+  /** Solo atención telefónica: sin mapa ni "Cómo llegar". */
+  phoneOnly?: boolean;
   featured?: boolean;
 }
 
@@ -39,8 +43,9 @@ const OFFICES: Office[] = [
   {
     name: "Gestoría Sampablo · Somos Tu Gestoría",
     city: "Getafe",
-    address: "C. Toledo, 38, 28901 Getafe, Madrid",
+    address: "C. Toledo, 38, Bajo 8, 28901 Getafe, Madrid",
     services: "Gestoría",
+    hours: ["L-V: 09:00-14:00 / 16:00-20:00"],
     lat: 40.3014095,
     lon: -3.7339528,
     mapsUrl:
@@ -62,7 +67,8 @@ const OFFICES: Office[] = [
     city: "Leganés",
     address: "Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid",
     services: "Gestoría",
-    phone: "910 08 21 21",
+    phone: "910 05 45 41",
+    hours: ["L-V: 09:00-14:00 / 16:00-19:00"],
     // Mismo local que la inmobiliaria: el enlace cambia solo para que no sean dos tarjetas con la misma clave.
     mapsUrl:
       "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Av. Rey Juan Carlos I, 26, 28915 Leganés, Madrid"),
@@ -72,7 +78,35 @@ const OFFICES: Office[] = [
     city: "Las Rozas, Madrid",
     address: "C. Esperanza, 2, Local 4, Las Rozas de Madrid",
     services: "Gestoría",
+    phone: "916 40 71 90",
+    hours: ["L-V: 09:00-14:00 / 16:00-20:00"],
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("C. Esperanza, 2, Local 4, Las Rozas de Madrid"),
+  },
+  {
+    name: "Gestoría Fuenlabrada",
+    city: "Fuenlabrada, Madrid",
+    address: "C. Zamora, 9, Local 1, Fuenlabrada, Madrid",
+    services: "Gestoría",
+    hours: ["L-J: 09:00-14:00 / 16:00-19:00", "V: 09:00-14:00"],
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("C. Zamora, 9, Local 1, Fuenlabrada, Madrid"),
+  },
+  {
+    name: "Gestoría Madrid",
+    city: "Madrid",
+    address: "C. Carvajales, 2, Madrid",
+    services: "Gestoría",
+    phone: "915 17 85 97",
+    hours: ["L-V: 09:00-14:00 / 16:00-20:00"],
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("C. Carvajales, 2, Madrid"),
+  },
+  {
+    name: "Gestoría Humanes",
+    city: "Humanes de Madrid",
+    address: "C. Sierra Nevada, 2, Humanes de Madrid",
+    services: "Gestoría",
+    hours: ["Solo atención telefónica"],
+    phoneOnly: true,
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("C. Sierra Nevada, 2, Humanes de Madrid"),
   },
   {
     name: "Toledo21 · Somos Tu Inmobiliaria",
@@ -96,14 +130,23 @@ function OfficeCard({ office }: { office: Office }) {
         <MapPin size={15} className="mt-0.5 shrink-0 text-gold" /> {office.address}
       </p>
       {office.phone && <p className="mt-1 text-sm text-ink-soft">{office.phone}</p>}
-      <a
-        href={office.mapsUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline"
-      >
-        <Navigation size={13} /> Cómo llegar
-      </a>
+      {office.hours && (
+        <p className="mt-1 text-sm text-ink-soft">
+          {office.hours.map((h) => (
+            <span key={h} className="block">{h}</span>
+          ))}
+        </p>
+      )}
+      {!office.phoneOnly && (
+        <a
+          href={office.mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline"
+        >
+          <Navigation size={13} /> Cómo llegar
+        </a>
+      )}
     </div>
   );
 }
@@ -113,7 +156,7 @@ export default async function OfficesPage() {
   // comparte local con la inmobiliaria y no se repite) y los inmuebles publicados de venta y alquiler.
   const [list, ...coords] = await Promise.all([
     getProperties({ pageSize: "48" }).catch(() => ({ properties: [] })),
-    ...OFFICES.map(async (o) => (o.lat != null && o.lon != null ? { lat: o.lat, lon: o.lon } : await geocodePlace(o.address).then((g) => (g ? { lat: g.lat, lon: g.lon } : null)))),
+    ...OFFICES.map(async (o) => (o.phoneOnly ? null : o.lat != null && o.lon != null ? { lat: o.lat, lon: o.lon } : await geocodePlace(o.address).then((g) => (g ? { lat: g.lat, lon: g.lon } : null)))),
   ]);
   const seen = new Set<string>();
   const mapOffices: MapOffice[] = [];
@@ -135,8 +178,8 @@ export default async function OfficesPage() {
       <div className="max-w-2xl">
         <h1 className="font-display text-3xl text-ink sm:text-4xl">Nuestras oficinas</h1>
         <p className="mt-3 text-sm text-ink-soft sm:text-base">
-          Desde 1997 acompañando a nuestros clientes. Hoy tenemos presencia en Madrid sur y en Valencia — ven a
-          visitarnos o contáctanos desde la oficina que te quede más cerca.
+          Desde 1997 acompañando a nuestros clientes. Hoy tenemos inmobiliarias en Getafe, Leganés y Puerto de Sagunto
+          (Valencia) y seis gestorías en Madrid y alrededores — ven a visitarnos o contáctanos desde la oficina que te quede más cerca.
         </p>
       </div>
 
