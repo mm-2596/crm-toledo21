@@ -13,6 +13,7 @@ import {
 } from "../lib/format";
 import { ContactProfile } from "../components/ContactProfile";
 import { ContactGreetings } from "../components/ContactGreetings";
+import { ContactIdentity } from "../components/ContactIdentity";
 import { ContactLinks } from "../components/ContactLinks";
 import { segmentBadgeClasses, segmentLabels } from "../lib/format";
 import { LeadQualifier } from "../components/LeadQualifier";
@@ -157,6 +158,7 @@ export function ContactDetail() {
 
       <ContactLinks contactId={contact.id} />
 
+      <ContactIdentity key={`${contact.id}-${contact.updatedAt ?? ""}`} contact={contact} />
       <ContactProfile key={`${contact.id}-${contact.updatedAt ?? ""}-${(contact.searches ?? []).length}`} contact={contact} />
 
       {hasPreferences && (matches ?? []).length > 0 && (

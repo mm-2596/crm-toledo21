@@ -102,6 +102,15 @@ export function PropertyDetail() {
               {propertyStatusLabels[property.status]}
             </span>
           </p>
+          {property.owner && (
+            <p className="mt-1 text-sm text-slate-600">
+              Propietario:{" "}
+              <Link to={`/contactos/${property.owner.id}`} className="font-medium text-[#2a241f] hover:underline">{property.owner.name}</Link>
+              {property.owner.phone && <> · <a href={`tel:${property.owner.phone}`} className="hover:underline">{property.owner.phone}</a></>}
+              {property.owner.email && <> · <a href={`mailto:${property.owner.email}`} className="hover:underline">{property.owner.email}</a></>}
+              {property.owner.dni && <> · DNI {property.owner.dni}</>}
+            </p>
+          )}
           <a
             href={`${WEBSITE_URL}/api/properties/${property.id}/pdf`}
             target="_blank"

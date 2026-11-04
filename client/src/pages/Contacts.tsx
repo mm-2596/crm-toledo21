@@ -60,6 +60,8 @@ export function Contacts() {
       name: String(form.get("name")),
       email: String(form.get("email") || "") || null,
       phone: String(form.get("phone") || "") || null,
+      dni: String(form.get("dni") || "").trim() || null,
+      address: String(form.get("address") || "").trim() || null,
       preferredZone: String(form.get("preferredZone") || "") || null,
       segment: (String(form.get("segment") || "") || null) as Contact["segment"],
       notes: String(form.get("notes") || "") || null,
@@ -113,6 +115,8 @@ export function Contacts() {
           <input name="name" required placeholder="Nombre" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="email" type="email" placeholder="Email" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="phone" placeholder="Teléfono" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="dni" placeholder="DNI / NIE (opcional)" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="address" placeholder="Domicilio (opcional)" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <input name="preferredZone" placeholder="Zona de interés" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <select name="segment" defaultValue="" aria-label="Tipo de cliente" className="col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm">
             <option value="">Tipo de cliente (sin clasificar)</option>

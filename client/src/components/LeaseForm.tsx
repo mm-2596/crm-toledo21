@@ -1,55 +1,14 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BuildingsApi, ContactsApi } from "../api/endpoints";
-import { getErrorMessage } from "../api/client";
+import { useQuery } from "@tanstack/react-query";
+import { BuildingsApi } from "../api/endpoints";
+import { PartyPicker } from "./PartyPicker";
 import { dwellingTitle } from "./DwellingPanel";
 import { leaseStatusLabels } from "../lib/format";
 import { isoDay } from "../lib/leases";
-import { useToast } from "./Toast";
-import type { ClientSegment, Lease, LeaseInput, LeaseStatus } from "../api/types";
+import type { Lease, LeaseInput, LeaseStatus } from "../api/types";
 
 const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const num = (v: string) => (v.trim() === "" ? null : Number(v));
-
-function PartyPicker({ label, segment, value, onChange }: { label: string; segment: ClientSegment; value: string; onChange: (id: string) => void }) {
-  const queryClient = useQueryClient();
-  const { showToast } = useToast();
-  const { data: contacts = [] } = useQuery({ queryKey: ["contacts", "", "", ""], queryFn: () => ContactsApi.list() });
-  const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState({ name: "", phone: "" });
-  const create = useMutation({
-    mutationFn: () => ContactsApi.create({ name: draft.name.trim(), phone: draft.phone.trim() || null, segment }),
-    onSuccess: (contact) => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      onChange(contact.id);
-      setCreating(false);
-      setDraft({ name: "", phone: "" });
-    },
-    onError: (error) => showToast(getErrorMessage(error, "No se pudo crear el contacto"), "error"),
-  });
-
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs text-slate-500">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} className={inputClass}>
-        <option value="">Sin indicar</option>
-        {contacts.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
-      </select>
-      {creating ? (
-        <div className="grid grid-cols-2 gap-2">
-          <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Nombre" aria-label={`Nombre (${label})`} className={inputClass} />
-          <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} placeholder="Teléfono" aria-label={`Teléfono (${label})`} className={inputClass} />
-          <button type="button" disabled={!draft.name.trim() || create.isPending} onClick={() => create.mutate()} className="rounded-lg bg-[#1c1815] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40">Crear y elegir</button>
-          <button type="button" onClick={() => setCreating(false)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600">Cancelar</button>
-        </div>
-      ) : (
-        <button type="button" onClick={() => setCreating(true)} className="w-fit text-xs font-medium text-[#2a241f] hover:underline">+ Crear contacto nuevo</button>
-      )}
-    </div>
-  );
-}
 
 interface Props {
   /** Al editar viene el alquiler; al crear, la vivienda se elige o llega ya fijada. */

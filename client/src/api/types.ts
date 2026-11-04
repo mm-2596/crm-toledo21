@@ -68,6 +68,8 @@ export interface Contact {
   name: string;
   email?: string | null;
   phone?: string | null;
+  dni?: string | null;
+  address?: string | null;
   source: ContactSource;
   budgetMin?: number | null;
   budgetMax?: number | null;
@@ -239,6 +241,8 @@ export interface Property {
   bathroomsHaveWindow?: boolean | null;
   airConditioningWhere?: string | null;
   description?: string | null;
+  ownerId?: string | null;
+  owner?: { id: string; name: string; phone?: string | null; email?: string | null; dni?: string | null; address?: string | null } | null;
   agentId?: string | null;
   agent?: User | null;
   images?: PropertyImage[];

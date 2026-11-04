@@ -38,6 +38,8 @@ const contactInput = z.object({
   name: z.string().min(1),
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
+  dni: z.string().trim().max(20).optional().nullable(),
+  address: z.string().trim().max(200).optional().nullable(),
   source: z
     .enum(["WEB_HOUZEZ", "MANUAL", "WHATSAPP", "EMAIL", "PHONE", "REFERRAL", "OTHER"])
     .optional(),

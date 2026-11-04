@@ -10,6 +10,7 @@ import {
   protectedHousingLabels,
   saleReasonLabels,
 } from "../lib/format";
+import { PartyPicker } from "./PartyPicker";
 import type { Property } from "../api/types";
 
 const inputClass =
@@ -73,6 +74,7 @@ export interface PropertyFormValues {
   occupancy: string;
   bathroomsHaveWindow: string;
   airConditioningWhere: string;
+  ownerId: string;
   description: string;
 }
 
@@ -116,6 +118,7 @@ export const emptyPropertyForm: PropertyFormValues = {
   occupancy: "",
   bathroomsHaveWindow: "",
   airConditioningWhere: "",
+  ownerId: "",
   description: "",
 };
 
@@ -192,6 +195,7 @@ export function toPropertyPayload(v: PropertyFormValues): Partial<Property> {
     occupancy: (v.occupancy || null) as Property["occupancy"],
     bathroomsHaveWindow: v.bathroomsHaveWindow === "" ? null : v.bathroomsHaveWindow === "SI",
     airConditioningWhere: v.airConditioningWhere.trim() || null,
+    ownerId: v.ownerId || null,
     description: v.description.trim() || null,
   };
 }
@@ -241,6 +245,7 @@ export function fromProperty(p: Property): PropertyFormValues {
     occupancy: p.occupancy ?? "",
     bathroomsHaveWindow: p.bathroomsHaveWindow == null ? "" : p.bathroomsHaveWindow ? "SI" : "NO",
     airConditioningWhere: p.airConditioningWhere ?? "",
+    ownerId: p.ownerId ?? "",
     description: p.description ?? "",
   };
 }
@@ -418,6 +423,15 @@ export function PropertyForm({
               </option>
             ))}
           </select>
+        </div>
+      </Section>
+
+      <Section
+        title="Propietario"
+        subtitle="Quién es el dueño del piso y cómo contactarle. Dato interno: no se publica en la web."
+      >
+        <div className="sm:max-w-md">
+          <PartyPicker label="Propietario" segment="PROPIETARIO" value={value.ownerId} onChange={(id) => set("ownerId", id)} withDetails />
         </div>
       </Section>
 

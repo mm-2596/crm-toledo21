@@ -161,6 +161,9 @@ model Contact {
   name           String
   email          String?
   phone          String?
+  /// DNI / NIE / pasaporte y domicilio, para los propietarios y para los contratos (uso interno).
+  dni            String?
+  address        String?
   source         ContactSource    @default(MANUAL)
   budgetMin      Int?
   budgetMax      Int?
@@ -200,6 +203,7 @@ model Contact {
   dwellings         Dwelling[]
   searches          ContactSearch[]
   ownerLeases       Lease[]            @relation("LeaseOwner")
+  ownedProperties   Property[]         @relation("PropertyOwner")
   tenantLeases      Lease[]            @relation("LeaseTenant")
   whatsappGreetings WhatsappGreeting[]
 
@@ -265,10 +269,13 @@ model Property {
   description            String?            @db.Text
   houzezId               String?            @unique
   agentId                String?
+  /// Propietario del inmueble (un contacto del CRM), solo para uso interno.
+  ownerId                String?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
   agent      User?           @relation(fields: [agentId], references: [id])
+  owner      Contact?        @relation("PropertyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   deals      Deal[]
   valuations Valuation[]
   images     PropertyImage[]
@@ -279,6 +286,7 @@ model Property {
 
   @@index([city])
   @@index([status])
+  @@index([ownerId])
 }
 
 model PropertyImage {

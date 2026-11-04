@@ -72,7 +72,10 @@ const propertyInput = z.object({
   airConditioningWhere: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   agentId: z.string().optional().nullable(),
+  ownerId: z.string().optional().nullable(),
 });
+
+const ownerSelect = { select: { id: true, name: true, phone: true, email: true, dni: true, address: true } };
 
 /** Administración solo trabaja con las propiedades en alquiler: el resto no existe para ese perfil. */
 propertiesRouter.param("id", async (req, res, next, id) => {
@@ -112,6 +115,7 @@ propertiesRouter.get(
       orderBy: { createdAt: "desc" },
       include: {
         agent: { select: safeUserSelect },
+        owner: ownerSelect,
         images: { orderBy: { order: "asc" } },
         videos: { orderBy: { order: "asc" } },
       },
@@ -127,6 +131,7 @@ propertiesRouter.get(
       where: { id: String(req.params.id) },
       include: {
         agent: { select: safeUserSelect },
+        owner: ownerSelect,
         // Los negocios y valoraciones son de compraventa: Administración no los ve.
         ...(req.user!.role === "ADMINISTRACION" ? {} : { deals: { include: { contact: true, stage: true } }, valuations: true }),
         images: { orderBy: { order: "asc" } },
@@ -144,7 +149,7 @@ propertiesRouter.post(
     const data = propertyInput.parse(req.body);
     if (req.user!.role === "ADMINISTRACION") data.listingType = "ALQUILER";
     const property = await prisma.property.create({
-      data: { ...data, agentId: data.agentId ?? req.user!.userId },
+      data: { ...data, ownerId: data.ownerId || null, agentId: data.agentId ?? req.user!.userId },
     });
     if (property.latitude == null || property.longitude == null) geocodePropertyLater(property.id);
     else refreshNearbyLater(property.id);
@@ -157,6 +162,7 @@ propertiesRouter.put(
   asyncHandler(async (req, res) => {
     const data = propertyInput.partial().parse(req.body);
     if (req.user!.role === "ADMINISTRACION") delete data.listingType;
+    if ("ownerId" in data) data.ownerId = data.ownerId || null;
     const property = await prisma.property.update({
       where: { id: String(req.params.id) },
       data,
