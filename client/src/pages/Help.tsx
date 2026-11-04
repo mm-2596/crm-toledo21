@@ -56,7 +56,7 @@ export function Help() {
         />
         <GuideCard
           icon={Kanban}
-          title="Pipeline de ventas"
+          title="Seguimiento de ventas"
           steps={[
             "Cada oportunidad comercial (un lead interesado en algo concreto) se representa como una tarjeta.",
             "Arrastra la tarjeta entre columnas a medida que avanza: Nuevo lead → Contactado → Visita programada → Negociación → Cerrado.",

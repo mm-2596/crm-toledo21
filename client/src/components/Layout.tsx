@@ -34,7 +34,7 @@ const links = [
   { to: "/propiedades", label: "Propiedades", icon: Building2 },
   { to: "/mapa", label: "Mapa", icon: Map },
   { to: "/prospeccion", label: "Prospección", icon: Target },
-  { to: "/pipeline", label: "Pipeline", icon: Kanban },
+  { to: "/pipeline", label: "Seguimiento", icon: Kanban },
   { to: "/visitas", label: "Visitas", icon: CalendarDays },
   { to: "/tareas", label: "Tareas", icon: CheckSquare },
   { to: "/calendario", label: "Calendario", icon: CalendarRange },
