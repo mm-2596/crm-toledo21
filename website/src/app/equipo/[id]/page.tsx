@@ -33,9 +33,11 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-ink-soft">
-          <span className="flex items-center gap-1.5">
-            <Building2 size={15} /> {agent.properties.length} propiedades en cartera
-          </span>
+          {agent.properties.length > 0 && (
+            <span className="flex items-center gap-1.5">
+              <Building2 size={15} /> {agent.properties.length} propiedades en cartera
+            </span>
+          )}
           {agent.averageRating != null ? (
             <span className="flex items-center gap-1.5">
               <Star size={15} className="fill-gold text-gold" /> {agent.averageRating.toFixed(1)} · {agent.reviews.length}{" "}

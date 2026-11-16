@@ -29,9 +29,11 @@ export function AgentCard({ agent, index = 0 }: { agent: PublicAgentSummary; ind
         </p>
 
         <div className="mt-4 flex items-center gap-4 text-xs text-ink-soft">
-          <span className="flex items-center gap-1">
-            <Building2 size={13} /> {agent.propertiesCount} en cartera
-          </span>
+          {agent.propertiesCount > 0 && (
+            <span className="flex items-center gap-1">
+              <Building2 size={13} /> {agent.propertiesCount} en cartera
+            </span>
+          )}
           {agent.averageRating != null ? (
             <span className="flex items-center gap-1">
               <Star size={13} className="fill-gold text-gold" /> {agent.averageRating.toFixed(1)} ({agent.reviewsCount})
