@@ -24,4 +24,12 @@ export const TEAM: TeamGroup[] = [
       { name: "Fao Assadiki", role: "Agente", qrUrl: QR_URL_PROVISIONAL },
     ],
   },
+  {
+    office: "Toledo 21 Puerto de Sagunto",
+    members: [
+      { name: "Raúl Marugan Pérez", role: "Agente", qrUrl: QR_URL_PROVISIONAL },
+      { name: "Isabel Ruiz López", role: "Agente", qrUrl: QR_URL_PROVISIONAL },
+      { name: "Anastasia Shishova", role: "Agente", qrUrl: QR_URL_PROVISIONAL },
+    ],
+  },
 ];
