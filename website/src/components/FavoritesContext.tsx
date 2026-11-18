@@ -5,11 +5,21 @@ import type { ReactNode } from "react";
 
 const STORAGE_KEY = "toledo21-favorites";
 
+export interface FavoriteInfo {
+  title: string;
+  reference?: string;
+  image?: string | null;
+}
+
 interface FavoritesContextValue {
   ids: string[];
   isFavorite: (id: string) => boolean;
-  toggle: (id: string) => void;
+  /** Si se pasa la información de la propiedad, al añadirla salta el aviso «Guardada» (ver FavoritePrompt). */
+  toggle: (id: string, info?: FavoriteInfo) => void;
   remove: (id: string) => void;
+  /** Última propiedad guardada: la usa el pop-up de contacto. */
+  lastAdded: (FavoriteInfo & { id: string; at: number }) | null;
+  dismissLastAdded: () => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null);
@@ -17,6 +27,7 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [ids, setIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [lastAdded, setLastAdded] = useState<FavoritesContextValue["lastAdded"]>(null);
 
   useEffect(() => {
     // Igual que el comparador: leer localStorage espera al montaje en
@@ -40,8 +51,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
   }, [ids, hydrated]);
 
-  function toggle(id: string) {
+  function toggle(id: string, info?: FavoriteInfo) {
+    const adding = !ids.includes(id);
     setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    if (adding && info) setLastAdded({ id, ...info, at: Date.now() });
+    else if (!adding) setLastAdded((cur) => (cur?.id === id ? null : cur));
   }
 
   function remove(id: string) {
@@ -49,7 +63,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FavoritesContext.Provider value={{ ids, isFavorite: (id) => ids.includes(id), toggle, remove }}>
+    <FavoritesContext.Provider
+      value={{ ids, isFavorite: (id) => ids.includes(id), toggle, remove, lastAdded, dismissLastAdded: () => setLastAdded(null) }}
+    >
       {children}
     </FavoritesContext.Provider>
   );

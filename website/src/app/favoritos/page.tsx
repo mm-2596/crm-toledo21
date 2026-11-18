@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useFavorites } from "@/components/FavoritesContext";
 import { PropertyCard } from "@/components/PropertyCard";
+import { ContactBanner } from "@/components/ContactBanner";
 import type { PublicProperty } from "@/lib/types";
 
 export default function FavoritesPage() {
@@ -52,11 +53,14 @@ export default function FavoritesPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleProperties.map((property, index) => (
-            <PropertyCard key={property.id} property={property} index={index} />
-          ))}
-        </div>
+        <>
+          <ContactBanner variant="favoritos" items={visibleProperties.map((p) => ({ id: p.id, title: p.title, reference: p.reference }))} />
+          <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {visibleProperties.map((property, index) => (
+              <PropertyCard key={property.id} property={property} index={index} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

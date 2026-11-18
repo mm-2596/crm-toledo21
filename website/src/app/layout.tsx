@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CompareProvider } from "@/components/CompareContext";
 import { FavoritesProvider } from "@/components/FavoritesContext";
+import { FavoritePrompt } from "@/components/FavoritePrompt";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import "./globals.css";
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <main className="flex-1">{children}</main>
             <Footer />
             <WhatsAppButton />
+            <FavoritePrompt />
             <CookieConsentBanner />
           </FavoritesProvider>
         </CompareProvider>

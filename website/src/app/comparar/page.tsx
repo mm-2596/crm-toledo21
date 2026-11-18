@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { useCompare } from "@/components/CompareContext";
+import { ContactBanner } from "@/components/ContactBanner";
 import {
   conditionLabels,
   formatCurrency,
@@ -86,6 +87,8 @@ export default function ComparePage() {
           </Link>
         </div>
       ) : (
+        <>
+        <ContactBanner variant="comparar" items={visibleProperties.map((p) => ({ id: p.id, title: p.title, reference: p.reference }))} />
         <div className="mt-10 overflow-x-auto">
           <table className="w-full min-w-[640px] border-separate border-spacing-0">
             <thead>
@@ -132,6 +135,7 @@ export default function ComparePage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

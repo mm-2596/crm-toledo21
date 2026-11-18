@@ -43,7 +43,7 @@ export function DarkPropertyCard({ property, index = 0 }: { property: PublicProp
           <button
             onClick={(e) => {
               e.preventDefault();
-              toggleFavorite(property.id);
+              toggleFavorite(property.id, { title: property.title, reference: property.reference, image: property.images[0]?.url ?? null });
             }}
             title={favorite ? "Quitar de favoritos" : "Guardar en favoritos"}
             className={`flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors ${
